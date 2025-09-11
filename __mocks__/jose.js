@@ -1,0 +1,35 @@
+// Mock for jose library
+module.exports = {
+  compactDecrypt: jest.fn(),
+  compactSign: jest.fn(),
+  compactVerify: jest.fn(),
+  decodeJwt: jest.fn(),
+  decodeProtectedHeader: jest.fn(),
+  EncryptJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    setSubject: jest.fn().mockReturnThis(),
+    setAudience: jest.fn().mockReturnThis(),
+    setIssuer: jest.fn().mockReturnThis(),
+    setJti: jest.fn().mockReturnThis(),
+    encrypt: jest.fn().mockResolvedValue('mock-jwt-token')
+  })),
+  SignJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    setSubject: jest.fn().mockReturnThis(),
+    setAudience: jest.fn().mockReturnThis(),
+    setIssuer: jest.fn().mockReturnThis(),
+    setJti: jest.fn().mockReturnThis(),
+    sign: jest.fn().mockResolvedValue('mock-jwt-token')
+  })),
+  jwtVerify: jest.fn().mockResolvedValue({
+    payload: { sub: 'mock-user-id', exp: Date.now() + 3600000 },
+    protectedHeader: { alg: 'HS256' }
+  }),
+  generateSecret: jest.fn().mockResolvedValue('mock-secret'),
+  importJWK: jest.fn().mockResolvedValue('mock-key'),
+  exportJWK: jest.fn().mockResolvedValue({ kty: 'oct' })
+}

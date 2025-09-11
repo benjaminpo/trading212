@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String?
+  email               String               @unique
+  password            String?
+  emailVerified       DateTime?
+  image               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  trading212Accounts  Trading212Account[]
+  trailStopLossOrders TrailStopLossOrder[]
+  tradingHistory      TradingHistory[]
+  positions           Position[]
+  aiRecommendations   AIRecommendation[]
+  aiAnalysisLogs      AIAnalysisLog[]
+  accounts            Account[]
+  notifications       Notification[]
+  sessions            Session[]
+}
+
+model Trading212Account {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  apiKey        String
+  isPractice    Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  isDefault     Boolean   @default(false)
+  accountId     String?
+  currency      String?
+  cash          Float?
+  lastConnected DateTime?
+  lastError     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+}
+
+model TrailStopLossOrder {
+  id           String   @id @default(cuid())
+  userId       String
+  accountId    String?
+  symbol       String
+  quantity     Float
+  trailAmount  Float
+  trailPercent Float?
+  stopPrice    Float?
+  isActive     Boolean  @default(true)
+  isPractice   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  data      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AIAnalysisLog {
+  id              String   @id @default(cuid())
+  userId          String
+  analysisType    String
+  totalPositions  Int
+  recommendations Int
+  executionTime   Int
+  success         Boolean
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TradingHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  symbol      String
+  action      String   // BUY, SELL
+  quantity    Float
+  price       Float
+  pnl         Float?
+  pnlPercent  Float?
+  date        DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Position {
+  id            String   @id @default(cuid())
+  userId        String
+  symbol        String
+  quantity      Float
+  averagePrice  Float
+  currentPrice  Float
+  pnl           Float
+  pnlPercent    Float
+  marketValue   Float
+  lastUpdated   DateTime
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiRecommendations AIRecommendation[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([userId, symbol])
+}
+
+model AIRecommendation {
+  id                String   @id @default(cuid())
+  userId            String
+  positionId        String
+  symbol            String
+  recommendationType String  // EXIT, HOLD, REDUCE, INCREASE
+  confidence        Float    // 0-1 confidence score
+  reasoning         String   // AI explanation
+  suggestedAction   String   // Detailed action recommendation
+  targetPrice       Float?
+  stopLoss          Float?
+  riskLevel         String   // LOW, MEDIUM, HIGH
+  timeframe         String   // SHORT, MEDIUM, LONG
+  isActive          Boolean  @default(true)
+  userFeedback      String?  // User can rate the recommendation
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  position          Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model MarketData {
+  id            String   @id
+  symbol        String   @unique
+  price         Float
+  volume        BigInt
+  change        Float
+  changePercent Float
+  high52Week    Float
+  low52Week     Float
+  lastUpdated   DateTime @default(now())
+}

@@ -1,0 +1,126 @@
+name: Database Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Database action to perform'
+        required: true
+        default: 'migrate'
+        type: choice
+        options:
+          - migrate
+          - seed
+          - reset
+          - backup
+          - restore
+
+jobs:
+  database-action:
+    name: Database Action
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run database migration
+        if: ${{ github.event.inputs.action == 'migrate' }}
+        run: npx prisma db push
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Seed database
+        if: ${{ github.event.inputs.action == 'seed' }}
+        run: npm run db:seed
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Reset database
+        if: ${{ github.event.inputs.action == 'reset' }}
+        run: npm run db:reset
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Create database backup
+        if: ${{ github.event.inputs.action == 'backup' }}
+        run: |
+          echo "Creating database backup..."
+          pg_dump ${{ secrets.DATABASE_URL }} > backup_$(date +%Y%m%d_%H%M%S).sql
+          echo "Backup created successfully"
+
+      - name: Upload backup artifact
+        if: ${{ github.event.inputs.action == 'backup' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: database-backup
+          path: backup_*.sql
+
+  database-health-check:
+    name: Database Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check database connection
+        run: |
+          node -e "
+          const { PrismaClient } = require('@prisma/client');
+          const prisma = new PrismaClient();
+          
+          async function checkConnection() {
+            try {
+              await prisma.\$queryRaw\`SELECT 1\`;
+              console.log('✅ Database connection successful');
+              process.exit(0);
+            } catch (error) {
+              console.error('❌ Database connection failed:', error);
+              process.exit(1);
+            } finally {
+              await prisma.\$disconnect();
+            }
+          }
+          
+          checkConnection();
+          "
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Check database schema
+        run: |
+          npx prisma db pull --print
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Notify on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#alerts'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
