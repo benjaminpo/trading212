@@ -313,11 +313,11 @@ export default function TrailStopPage() {
                         </label>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="any"
                           min="0"
                           value={formData.quantity}
                           onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-                          placeholder="Number of shares"
+                          placeholder="Number of shares (e.g., 91.20073327)"
                           required
                           className="bg-white dark:bg-slate-800"
                         />

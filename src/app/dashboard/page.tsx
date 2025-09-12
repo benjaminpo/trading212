@@ -120,7 +120,19 @@ export default function Dashboard() {
       aiCount = aiData.recommendations?.length || 0
     }
 
-    if (accountData && accountData.connected && !accountData.error) {
+    // If the request failed (including 429), show demo data
+    if (!accountResponse || !accountResponse.ok) {
+      setStats({
+        totalPnL: 0,
+        totalPnLPercent: 0,
+        todayPnL: 0,
+        todayPnLPercent: 0,
+        activePositions: 0,
+        trailStopOrders: 0,
+        aiRecommendations: aiCount,
+      })
+      setConnectionStatus({ connected: false })
+    } else if (accountData && accountData.connected && !accountData.error) {
       setStats({
         totalPnL: accountData.stats.totalPnL || 0,
         totalPnLPercent: accountData.stats.totalPnLPercent || 0,
