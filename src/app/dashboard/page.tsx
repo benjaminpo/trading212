@@ -69,21 +69,53 @@ export default function Dashboard() {
     setMounted(true)
   }, [])
 
+  // Redirect unauthenticated users to sign-in
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+    }
+  }, [status, router])
+
   // Define data loaders before using them in loadDashboardData
+  const fetchWithRetry = useCallback(async (input: RequestInfo | URL, init?: RequestInit, retries: number = 2, delayMs: number = 500): Promise<Response | null> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const res = await fetch(input, init)
+        if (res.ok) return res
+        // Retry on 429/5xx transient issues
+        if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+          if (attempt < retries) {
+            await new Promise(r => setTimeout(r, delayMs * (attempt + 1)))
+            continue
+          }
+        }
+        // Non-retryable
+        return res
+      } catch {
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, delayMs * (attempt + 1)))
+          continue
+        }
+        return null
+      }
+    }
+    return null
+  }, [])
+
   const loadSingleAccountData = useCallback(async () => {
     const accountUrl = `/api/trading212/account?accountId=${selectedAccountId}`
-    const accountResponse = await fetch(accountUrl)
+    const accountResponse = await fetchWithRetry(accountUrl)
     let accountData = null
     
-    if (accountResponse.ok) {
+    if (accountResponse && accountResponse.ok) {
       accountData = await accountResponse.json()
-    } else if (accountResponse.status === 429) {
+    } else if (accountResponse && accountResponse.status === 429) {
       console.log('Trading212 API rate limited, using cached data')
     }
 
-    const aiResponse = await fetch('/api/ai/analyze-positions')
+    const aiResponse = await fetchWithRetry('/api/ai/analyze-positions')
     let aiCount = 0
-    if (aiResponse.ok) {
+    if (aiResponse && aiResponse.ok) {
       const aiData = await aiResponse.json()
       aiCount = aiData.recommendations?.length || 0
     }
@@ -107,7 +139,7 @@ export default function Dashboard() {
         cash: accountData.account?.cash,
         currency: accountData.account?.currency
       })
-    } else {
+    } else if (accountResponse && accountResponse.ok) {
       const reason = accountData?.error || 'Trading212 not connected'
       console.log(`${reason}, using demo data`)
       setStats({
@@ -126,23 +158,23 @@ export default function Dashboard() {
 
   const loadAggregatedAccountData = useCallback(async () => {
     // Load all accounts first
-    const accountsResponse = await fetch('/api/trading212/accounts')
+    const accountsResponse = await fetchWithRetry('/api/trading212/accounts')
     let accounts = []
     
-    if (accountsResponse.ok) {
+    if (accountsResponse && accountsResponse.ok) {
       const accountsData = await accountsResponse.json()
       accounts = accountsData.accounts || []
     }
 
     // Load AI recommendations count
-    const aiResponse = await fetch('/api/ai/analyze-positions')
+    const aiResponse = await fetchWithRetry('/api/ai/analyze-positions')
     let aiCount = 0
-    if (aiResponse.ok) {
+    if (aiResponse && aiResponse.ok) {
       const aiData = await aiResponse.json()
       aiCount = aiData.recommendations?.length || 0
     }
 
-    if (accounts.length === 0) {
+    if (accounts.length === 0 && accountsResponse && accountsResponse.ok) {
       // No accounts found
       setStats({
         totalPnL: 0,
@@ -165,8 +197,8 @@ export default function Dashboard() {
       .filter((account: Trading212Account) => account.isActive)
       .map(async (account: Trading212Account) => {
         try {
-          const response = await fetch(`/api/trading212/account?accountId=${account.id}`)
-          if (response.ok) {
+          const response = await fetchWithRetry(`/api/trading212/account?accountId=${account.id}`)
+          if (response && response.ok) {
             const data = await response.json()
             return { account, data }
           }
@@ -251,6 +283,33 @@ export default function Dashboard() {
     
     setLoading(false)
   }, [])
+
+  // Load dashboard data when authenticated and component is mounted
+  useEffect(() => {
+    if (!mounted || status !== 'authenticated') return
+
+    setLoading(true)
+    if (selectedAccountId) {
+      void loadSingleAccountData()
+    } else {
+      void loadAggregatedAccountData()
+    }
+  }, [mounted, status, selectedAccountId, loadSingleAccountData, loadAggregatedAccountData])
+
+  // Reload data when window gains focus (helps after login redirect/cookie propagation)
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    const onFocus = () => {
+      setLoading(true)
+      if (selectedAccountId) {
+        void loadSingleAccountData()
+      } else {
+        void loadAggregatedAccountData()
+      }
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [status, selectedAccountId, loadSingleAccountData, loadAggregatedAccountData])
 
   if (!mounted || status === 'loading' || loading) {
     return (
