@@ -115,15 +115,15 @@ export async function POST(request: NextRequest) {
         try {
           accountData = await trading212.getAccount()
           console.log(`✅ Account data fetched for ${name}:`, accountData)
-        } catch (err) {
+        } catch {
           console.log(`⚠️ Could not fetch account data for ${name}, but connection is valid`)
         }
       } else {
         connectionError = 'Invalid API key or connection failed'
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ Connection test failed for ${name}:`, error)
-      connectionError = error.message || 'Connection failed'
+      connectionError = error instanceof Error ? error.message : 'Connection failed'
     }
 
     // If this is the first account or isDefault is true, make it default

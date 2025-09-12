@@ -36,7 +36,7 @@ jest.mock('@/lib/scheduler', () => ({
 
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>
-const mockedScheduler = DailyAnalysisScheduler as jest.MockedClass<typeof DailyAnalysisScheduler>
+const _mockedScheduler = DailyAnalysisScheduler as jest.MockedClass<typeof DailyAnalysisScheduler>
 const mockedDailyScheduler = dailyScheduler as jest.Mocked<typeof dailyScheduler>
 
 describe('/api/ai/daily-analysis', () => {

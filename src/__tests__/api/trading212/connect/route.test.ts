@@ -36,7 +36,7 @@ describe('/api/trading212/connect', () => {
 
   describe('DELETE /api/trading212/connect', () => {
     it('should return 410 Gone for deprecated endpoint', async () => {
-      const request = new NextRequest('http://localhost:3000/api/trading212/connect', {
+      const _request = new NextRequest('http://localhost:3000/api/trading212/connect', {
         method: 'DELETE'
       })
 

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   // This endpoint is deprecated. Redirect to the new accounts endpoint.
   return NextResponse.json(
     { 

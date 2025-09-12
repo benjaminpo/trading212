@@ -59,7 +59,7 @@ describe('/api/trading212/account', () => {
       user: { id: 'user-1', email: 'test@example.com' }
     } as any)
     
-    mockPrisma.user.findUnique.mockResolvedValue(mockUser as any)
+    ;(mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser as any)
     
     const mockAPIInstance = {
       getAccount: jest.fn().mockResolvedValue(mockAccountInfo),
@@ -115,7 +115,7 @@ describe('/api/trading212/account', () => {
   })
 
   it('should return 404 for user not found', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(null)
+    ;(mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(null)
     
     const request = new NextRequest('http://localhost:3000/api/trading212/account?accountId=account-1')
     
@@ -220,7 +220,7 @@ describe('/api/trading212/account', () => {
         }
       ]
     }
-    mockPrisma.user.findUnique.mockResolvedValue(userWithoutDefault as any)
+    ;(mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(userWithoutDefault as any)
     
     const request = new NextRequest('http://localhost:3000/api/trading212/account')
     

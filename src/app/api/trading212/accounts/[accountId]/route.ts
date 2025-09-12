@@ -128,15 +128,15 @@ export async function PUT(
           try {
             accountData = await trading212.getAccount()
             console.log(`✅ Updated account data fetched for ${account.name}:`, accountData)
-          } catch (err) {
+          } catch {
             console.log(`⚠️ Could not fetch account data for ${account.name}, but connection is valid`)
           }
         } else {
           connectionError = 'Invalid API key or connection failed'
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`❌ Connection test failed for ${account.name}:`, error)
-        connectionError = error.message || 'Connection failed'
+        connectionError = error instanceof Error ? error.message : 'Connection failed'
       }
     }
 

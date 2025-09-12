@@ -58,18 +58,19 @@ export async function retryDatabaseOperation<T>(
   for (let i = 0; i < retries; i++) {
     try {
       return await operation()
-    } catch (error: any) {
-      const isPreparedStatementError = error.message?.includes('prepared statement') || 
-                                      error.message?.includes('connection') ||
-                                      error.message?.includes('timeout') ||
-                                      error.code === '26000' || 
-                                      error.code === '42P05' ||
-                                      error.code === '08P01' ||
-                                      error.code === 'ECONNREFUSED' ||
-                                      error.code === 'ETIMEDOUT'
+    } catch (error: unknown) {
+      const errorObj = error as { message?: string; code?: string }
+      const isPreparedStatementError = errorObj.message?.includes('prepared statement') || 
+                                      errorObj.message?.includes('connection') ||
+                                      errorObj.message?.includes('timeout') ||
+                                      errorObj.code === '26000' || 
+                                      errorObj.code === '42P05' ||
+                                      errorObj.code === '08P01' ||
+                                      errorObj.code === 'ECONNREFUSED' ||
+                                      errorObj.code === 'ETIMEDOUT'
       
       if (isPreparedStatementError && i < retries - 1) {
-        console.log(`Retrying database operation (attempt ${i + 2}/${retries}) - ${error.message}`)
+        console.log(`Retrying database operation (attempt ${i + 2}/${retries}) - ${errorObj.message}`)
         
         // Recreate Prisma client to clear prepared statement cache
         if (globalForPrisma.prisma) {

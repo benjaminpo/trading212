@@ -216,7 +216,7 @@ export default function Home() {
               Why Choose Trading212 Extra?
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Built by traders, for traders. Our platform combines cutting-edge AI technology with intuitive design to give you the edge in today's markets.
+              Built by traders, for traders. Our platform combines cutting-edge AI technology with intuitive design to give you the edge in today&apos;s markets.
             </p>
           </div>
 

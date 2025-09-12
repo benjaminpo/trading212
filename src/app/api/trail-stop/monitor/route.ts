@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Trading212API } from '@/lib/trading212'
 import { createTrailStopNotification } from '@/app/api/notifications/route'
 
 // POST /api/trail-stop/monitor - Monitor and process trail stop orders
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Get all active trail stop orders
     const activeOrders = await prisma.trailStopLossOrder.findMany({

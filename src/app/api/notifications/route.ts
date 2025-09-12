@@ -93,9 +93,7 @@ export async function createTrailStopNotification(
   }
 ) {
   try {
-    const trailDescription = orderData.trailPercent 
-      ? `${orderData.trailPercent}%`
-      : `$${orderData.trailAmount}`
+    // Compute trail description if needed in the future
 
     const notification = await retryDatabaseOperation(() =>
       prisma.notification.create({

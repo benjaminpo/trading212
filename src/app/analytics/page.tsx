@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,7 @@ import ClientWrapper from '@/components/client-wrapper'
 import AccountSelector from '@/components/account-selector'
 import { ThemeToggle } from '@/components/theme-toggle'
 import MobileNav from '@/components/mobile-nav'
-import { formatCurrency, getCurrencySymbol } from '@/lib/currency'
+import { formatCurrency } from '@/lib/currency'
 import PositionsTable from '@/components/positions-table'
 
 interface Position {
@@ -69,42 +69,12 @@ export default function AnalyticsPage() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (!mounted || status === 'loading') return
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-    
-    loadAnalyticsData()
-  }, [mounted, session, status, router, selectedAccountId])
+  // Moved up to satisfy initialization order for dependencies
+  
 
-  const loadAnalyticsData = async () => {
-    try {
-      console.log('📊 Loading P/L analytics data...');
-      
-      if (selectedAccountId) {
-        // Load data for specific account
-        await loadSingleAccountAnalytics()
-      } else {
-        // Load aggregated data for all accounts
-        await loadAggregatedAnalytics()
-      }
-    } catch (error) {
-      console.error('Error loading analytics data:', error)
-      setAnalyticsData({
-        connected: false,
-        positions: [],
-        totalValue: 0,
-        totalPnL: 0,
-        totalPnLPercent: 0
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
+  
 
-  const loadSingleAccountAnalytics = async () => {
+  const loadSingleAccountAnalytics = useCallback(async () => {
     const portfolioUrl = `/api/trading212/portfolio?accountId=${selectedAccountId}`
     const response = await fetch(portfolioUrl)
     
@@ -130,9 +100,9 @@ export default function AnalyticsPage() {
       const errorData = await response.json().catch(() => ({}));
       console.log('Error details:', errorData);
     }
-  }
+  }, [selectedAccountId])
 
-  const loadAggregatedAnalytics = async () => {
+  const loadAggregatedAnalytics = useCallback(async () => {
     // Load all accounts first
     const accountsResponse = await fetch('/api/trading212/accounts')
     let accounts = []
@@ -156,8 +126,8 @@ export default function AnalyticsPage() {
 
     // Fetch portfolio data for each active account
     const portfolioPromises = accounts
-      .filter((account: any) => account.isActive)
-      .map(async (account: any) => {
+      .filter((account: { isActive: boolean }) => account.isActive)
+      .map(async (account: { id: string; name: string }) => {
         try {
           const response = await fetch(`/api/trading212/portfolio?accountId=${account.id}`)
           if (response.ok) {
@@ -174,11 +144,11 @@ export default function AnalyticsPage() {
     const portfolioResults = await Promise.allSettled(portfolioPromises)
     
     // Aggregate all positions and statistics
-    let aggregatedPositions: any[] = []
+    const aggregatedPositions: Position[] = []
     let totalCurrentValue = 0
     let totalPnL = 0
     let connectedAccounts = 0
-    let accountNames: string[] = []
+    const accountNames: string[] = []
     let primaryCurrency = 'USD' // Default currency
 
     for (const result of portfolioResults) {
@@ -193,14 +163,14 @@ export default function AnalyticsPage() {
         }
 
         // Add account name to each position for identification
-        const accountPositions = (data.positions || []).map((pos: any) => ({
+        const accountPositions = (data.positions || []).map((pos: Position) => ({
           ...pos,
           accountName: account.name,
           accountId: account.id,
           isPractice: account.isPractice
         }))
 
-        aggregatedPositions = [...aggregatedPositions, ...accountPositions]
+        aggregatedPositions.push(...accountPositions)
         
         // Aggregate totals
         totalCurrentValue += data.totalValue || 0
@@ -208,37 +178,56 @@ export default function AnalyticsPage() {
       }
     }
 
-    // Calculate aggregated percentage
-    const totalInvestedValue = totalCurrentValue - totalPnL
-    const totalPnLPercent = totalInvestedValue > 0 ? (totalPnL / totalInvestedValue) * 100 : 0
-
-    const aggregatedData = {
+    const aggregatedData: AnalyticsData = {
       connected: connectedAccounts > 0,
       positions: aggregatedPositions,
       totalValue: totalCurrentValue,
-      totalPnL,
-      totalPnLPercent,
+      totalPnL: totalPnL,
+      totalPnLPercent: totalCurrentValue !== 0 ? (totalPnL / totalCurrentValue) * 100 : 0,
       account: {
-        cash: 0, // Aggregated view doesn't show individual account cash
-        currency: primaryCurrency
-      },
-      accountSummary: {
-        connectedAccounts,
-        accountNames,
-        totalInvestedValue
+        currency: primaryCurrency,
+        cash: 0
       }
     }
-
-    console.log('✅ Aggregated analytics data loaded:', {
-      ...aggregatedData,
-      positionCount: aggregatedPositions.length,
-      samplePosition: aggregatedPositions[0] || null,
-      topPerformers: aggregatedPositions.filter(p => p.pplPercent > 0).slice(0, 3),
-      worstPerformers: aggregatedPositions.filter(p => p.pplPercent < 0).slice(0, 3)
-    })
-
+    
     setAnalyticsData(aggregatedData)
-  }
+  }, [])
+
+  const loadAnalyticsData = useCallback(async () => {
+    try {
+      console.log('📊 Loading P/L analytics data...');
+      
+      if (selectedAccountId) {
+        // Load data for specific account
+        await loadSingleAccountAnalytics()
+      } else {
+        // Load aggregated data for all accounts
+        await loadAggregatedAnalytics()
+      }
+    } catch (error) {
+      console.error('Error loading analytics data:', error)
+      setAnalyticsData({
+        connected: false,
+        positions: [],
+        totalValue: 0,
+        totalPnL: 0,
+        totalPnLPercent: 0
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedAccountId, loadSingleAccountAnalytics, loadAggregatedAnalytics])
+
+  useEffect(() => {
+    if (!mounted || status === 'loading') return
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+    
+    loadAnalyticsData()
+  }, [mounted, session, status, router, selectedAccountId, loadAnalyticsData])
+
 
   const handleRefresh = async () => {
     setLoading(true)
@@ -463,7 +452,7 @@ export default function AnalyticsPage() {
                     <CardDescription>Best performing positions by percentage</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {getTopPerformers().length > 0 ? getTopPerformers().map((position, index) => (
+                    {getTopPerformers().length > 0 ? getTopPerformers().map((position) => (
                       <div key={position.ticker} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                         <div>
                           <div className="font-semibold text-slate-900 dark:text-slate-100">{position.ticker}</div>
@@ -500,7 +489,7 @@ export default function AnalyticsPage() {
                     <CardDescription>Positions with the largest losses</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {getWorstPerformers().length > 0 ? getWorstPerformers().map((position, index) => (
+                    {getWorstPerformers().length > 0 ? getWorstPerformers().map((position) => (
                       <div key={position.ticker} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
                         <div>
                           <div className="font-semibold text-slate-900 dark:text-slate-100">{position.ticker}</div>

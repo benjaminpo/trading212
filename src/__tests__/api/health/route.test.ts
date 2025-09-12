@@ -11,7 +11,7 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 describe('/api/health', () => {
-  const { prisma, checkDatabaseConnection } = require('@/lib/prisma')
+  const { checkDatabaseConnection } = require('@/lib/prisma')
 
   beforeEach(() => {
     jest.clearAllMocks()

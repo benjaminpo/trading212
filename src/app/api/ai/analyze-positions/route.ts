@@ -64,36 +64,12 @@ export async function POST(request: NextRequest) {
     const accountInfo = await trading212.getAccount().catch(() => null)
     
     // Determine currency - Trading212 API doesn't always return currencyCode
-    let currency = 'USD' // Default fallback
+    // Note: currency is inferred but not used directly; conversion handled per-position
+    // Currency inference not used directly; conversion handled per-position
     
-    if (accountInfo?.currencyCode) {
-      currency = accountInfo.currencyCode
-    } else {
+    if (!accountInfo?.currencyCode) {
       // Determine currency based on account name or position data
-      if (targetAccount.name.toLowerCase().includes('isa') || 
-          targetAccount.name.toLowerCase().includes('stock')) {
-        currency = 'GBP' // UK ISA accounts are typically in GBP
-      } else if (trading212Positions.length > 0) {
-        // Check if positions have GBP-denominated stocks
-        const hasGBPStocks = trading212Positions.some(pos => 
-          pos.ticker.includes('_GB_') || 
-          pos.ticker.includes('_UK_') ||
-          pos.ticker.includes('_LON_') ||
-          (pos.ticker.includes('_EQ') && !pos.ticker.includes('_US_'))
-        )
-        const hasUSDStocks = trading212Positions.some(pos => 
-          pos.ticker.includes('_US_')
-        )
-        
-        if (hasGBPStocks && !hasUSDStocks) {
-          currency = 'GBP'
-        } else if (hasUSDStocks && !hasGBPStocks) {
-          currency = 'USD'
-        } else if (hasGBPStocks && hasUSDStocks) {
-          // Mixed currencies - default to GBP for UK accounts
-          currency = 'GBP'
-        }
-      }
+      // Mixed currencies are handled per-position; no global assignment needed
     }
     
     // Convert to our position format with position-specific currency conversion

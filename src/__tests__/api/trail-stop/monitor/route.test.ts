@@ -136,7 +136,7 @@ describe('/api/trail-stop/monitor', () => {
     } as any)
     
     // Mock Trading212API with different implementations for different API keys
-    mockedTrading212API.mockImplementation((apiKey: string, isPractice: boolean) => {
+    mockedTrading212API.mockImplementation((apiKey: string, _isPractice: boolean) => {
       const mockAPI = {
         getPositions: jest.fn(),
         getAccount: jest.fn()
@@ -164,8 +164,8 @@ describe('/api/trail-stop/monitor', () => {
         isActive: false
       } as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
-      const response = await POST(request)
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(_request)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -178,11 +178,12 @@ describe('/api/trail-stop/monitor', () => {
     it('should handle no active orders', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([])
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
-      const response = await POST(request)
-      const data = await response.json()
+      const _request2 = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(_request2)
+      const __data2 = await response.json()
 
       expect(response.status).toBe(200)
+      const data = await response.json()
       expect(data.processed).toBe(0)
       expect(data.triggered).toBe(0)
       expect(data.success).toBe(true)

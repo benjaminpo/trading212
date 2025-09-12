@@ -107,7 +107,7 @@ export default function SettingsPage() {
         alert(data.message || 'Account added successfully!')
       } else {
         console.error('Failed to add account:', data)
-        let errorMessage = data.error || 'Failed to add Trading212 account'
+        const errorMessage = data.error || 'Failed to add Trading212 account'
         alert(errorMessage)
       }
     } catch (error) {

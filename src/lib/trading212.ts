@@ -149,28 +149,30 @@ export class Trading212API {
       console.log(`🔍 Testing Trading212 API connection to: ${this.api.defaults.baseURL}`);
       console.log(`🎯 Mode: ${this.isPractice ? 'Practice' : 'Live'}`);
       
-      const response = await this.getAccount();
+      await this.getAccount();
       console.log('✅ Trading212 API connection successful');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorObj = error as { response?: { status?: number; statusText?: string; data?: unknown }; message?: string }
       console.error('❌ Trading212 API validation failed:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message,
+        status: errorObj.response?.status,
+        statusText: errorObj.response?.statusText,
+        data: errorObj.response?.data,
+        message: errorObj.message || 'Unknown error',
         baseURL: this.api.defaults.baseURL,
         isPractice: this.isPractice,
         headers: this.api.defaults.headers
       });
       
       // Additional debugging information
-      if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      const errCode = (error as { code?: string } | undefined)?.code
+      if (errCode === 'ENOTFOUND' || errCode === 'ECONNREFUSED') {
         console.error('🌐 Network connectivity issue - check internet connection and API URL');
-      } else if (error.response?.status === 401) {
+      } else if (errorObj.response?.status === 401) {
         console.error('🔑 Authentication failed - check API key validity');
-      } else if (error.response?.status === 403) {
+      } else if (errorObj.response?.status === 403) {
         console.error('🚫 Access forbidden - check API key permissions');
-      } else if (error.response?.status === 404) {
+      } else if (errorObj.response?.status === 404) {
         console.error('🔍 API endpoint not found - check API URL and version');
       }
       

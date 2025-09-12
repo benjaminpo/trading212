@@ -4,10 +4,10 @@ export const dynamic = 'force-dynamic'
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TrendingUp, TrendingDown, DollarSign, Activity, Settings, Brain, Target, BarChart3, Zap } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Settings, Brain, Target, BarChart3, Zap } from 'lucide-react'
 import Link from 'next/link'
 import ClientWrapper from '@/components/client-wrapper'
 import LogoutButton from '@/components/logout-button'
@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import AccountSelector from '@/components/account-selector'
 import NotificationBell from '@/components/notification-bell'
 import MobileNav from '@/components/mobile-nav'
-import { formatCurrency, getCurrencySymbol } from '@/lib/currency'
+import { formatCurrency } from '@/lib/currency'
 
 interface DashboardStats {
   totalPnL: number
@@ -69,47 +69,8 @@ export default function Dashboard() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (!mounted || status === 'loading') return
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-    
-    loadDashboardData()
-  }, [mounted, session, status, router, selectedAccountId])
-
-  const loadDashboardData = async () => {
-    try {
-      if (selectedAccountId) {
-        // Load data for specific account
-        await loadSingleAccountData()
-      } else {
-        // Load aggregated data for all accounts
-        await loadAggregatedAccountData()
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error)
-      // Fallback to demo data on error
-      setStats({
-        totalPnL: 0,
-        totalPnLPercent: 0,
-        todayPnL: 0,
-        todayPnLPercent: 0,
-        activePositions: 0,
-        trailStopOrders: 0,
-        aiRecommendations: 0,
-        currency: 'USD',
-      })
-      setConnectionStatus({
-        connected: false
-      })
-      setLoading(false)
-    }
-  }
-
-  const loadSingleAccountData = async () => {
-    // Load real Trading212 account data for specific account
+  // Define data loaders before using them in loadDashboardData
+  const loadSingleAccountData = useCallback(async () => {
     const accountUrl = `/api/trading212/account?accountId=${selectedAccountId}`
     const accountResponse = await fetch(accountUrl)
     let accountData = null
@@ -117,11 +78,9 @@ export default function Dashboard() {
     if (accountResponse.ok) {
       accountData = await accountResponse.json()
     } else if (accountResponse.status === 429) {
-      // Rate limited, use cached data or show message
       console.log('Trading212 API rate limited, using cached data')
     }
 
-    // Load AI recommendations count
     const aiResponse = await fetch('/api/ai/analyze-positions')
     let aiCount = 0
     if (aiResponse.ok) {
@@ -130,7 +89,6 @@ export default function Dashboard() {
     }
 
     if (accountData && accountData.connected && !accountData.error) {
-      // Use real data from Trading212 account
       setStats({
         totalPnL: accountData.stats.totalPnL || 0,
         totalPnLPercent: accountData.stats.totalPnLPercent || 0,
@@ -150,7 +108,6 @@ export default function Dashboard() {
         currency: accountData.account?.currency
       })
     } else {
-      // Fallback to demo data if Trading212 is not connected or rate limited
       const reason = accountData?.error || 'Trading212 not connected'
       console.log(`${reason}, using demo data`)
       setStats({
@@ -162,15 +119,12 @@ export default function Dashboard() {
         trailStopOrders: 0,
         aiRecommendations: aiCount,
       })
-      setConnectionStatus({
-        connected: false
-      })
+      setConnectionStatus({ connected: false })
     }
-    
     setLoading(false)
-  }
+  }, [selectedAccountId])
 
-  const loadAggregatedAccountData = async () => {
+  const loadAggregatedAccountData = useCallback(async () => {
     // Load all accounts first
     const accountsResponse = await fetch('/api/trading212/accounts')
     let accounts = []
@@ -226,7 +180,7 @@ export default function Dashboard() {
     const accountResults = await Promise.allSettled(accountDataPromises)
     
     // Aggregate the data
-    let aggregatedStats = {
+    const aggregatedStats = {
       totalPnL: 0,
       totalPnLPercent: 0,
       todayPnL: 0,
@@ -240,7 +194,7 @@ export default function Dashboard() {
     let connectedAccounts = 0
     let totalCurrentValue = 0
     let totalInvestedValue = 0
-    let accountNames = []
+    const accountNames = []
 
     for (const result of accountResults) {
       if (result.status === 'fulfilled' && result.value.data?.connected && !result.value.data.error) {
@@ -255,7 +209,7 @@ export default function Dashboard() {
         aggregatedStats.trailStopOrders += data.stats.trailStopOrders || 0
 
         // Calculate current portfolio value from positions
-        const accountCurrentValue = data.portfolio?.reduce((sum: number, pos: any) => 
+        const accountCurrentValue = data.portfolio?.reduce((sum: number, pos: { quantity: number; currentPrice: number }) => 
           sum + (pos.quantity * pos.currentPrice), 0) || 0
         
         // Calculate invested value (current value - P&L)
@@ -296,7 +250,7 @@ export default function Dashboard() {
     })
     
     setLoading(false)
-  }
+  }, [])
 
   if (!mounted || status === 'loading' || loading) {
     return (

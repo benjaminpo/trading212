@@ -12,8 +12,7 @@ import {
   Brain, 
   TrendingDown, 
   Settings, 
-  User,
-  Bell
+  User
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import LogoutButton from '@/components/logout-button'

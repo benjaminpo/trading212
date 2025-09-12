@@ -140,19 +140,12 @@ export class DailyAnalysisScheduler {
         return
       }
 
-      // Get account info to determine currency conversion factor
-      const accountInfo = await trading212.getAccount().catch(() => null)
+      // Optionally fetch account info (not used directly)
+      await trading212.getAccount().catch(() => null)
       
       // Determine currency - Trading212 API doesn't always return currencyCode
-      let currency = 'USD' // Default fallback
-      
-      if (accountInfo?.currencyCode) {
-        currency = accountInfo.currencyCode
-      } else {
-        // For scheduler, we'll default to USD since we don't have account name context
-        // This could be improved by passing account info to the scheduler
-        currency = 'USD'
-      }
+      // Note: currency is inferred but not used directly; conversion handled per-position
+      // Currency inference not used directly; conversion handled per-position
       
       // Convert to our position format with position-specific currency conversion
       const positions: PositionData[] = trading212Positions.map(pos => {

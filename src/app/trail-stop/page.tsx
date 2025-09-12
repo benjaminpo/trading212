@@ -4,12 +4,12 @@ export const dynamic = 'force-dynamic'
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Plus, TrendingDown, AlertTriangle, CheckCircle, XCircle, Trash2, Edit, Activity } from 'lucide-react'
+import { ArrowLeft, Plus, TrendingDown, AlertTriangle, CheckCircle, XCircle, Trash2, Activity } from 'lucide-react'
 import Link from 'next/link'
 import ClientWrapper from '@/components/client-wrapper'
 import AccountSelector from '@/components/account-selector'
@@ -61,17 +61,7 @@ export default function TrailStopPage() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (!mounted || status === 'loading') return
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-    
-    loadData()
-  }, [mounted, session, status, router, selectedAccountId])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -96,7 +86,17 @@ export default function TrailStopPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedAccountId])
+
+  useEffect(() => {
+    if (!mounted || status === 'loading') return
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+    
+    loadData()
+  }, [mounted, session, status, router, selectedAccountId, loadData])
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,7 +111,7 @@ export default function TrailStopPage() {
         const accountsResponse = await fetch('/api/trading212/accounts')
         if (accountsResponse.ok) {
           const accountsData = await accountsResponse.json()
-          const selectedAccount = accountsData.accounts?.find((acc: any) => acc.id === selectedAccountId)
+          const selectedAccount = accountsData.accounts?.find((acc: { id: string; isPractice: boolean }) => acc.id === selectedAccountId)
           isPractice = selectedAccount?.isPractice || false
         }
       }

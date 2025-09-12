@@ -38,7 +38,7 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
 
   // Filter and sort positions
   const filteredAndSortedPositions = useMemo(() => {
-    let filtered = positions.filter(position => {
+    const filtered = positions.filter(position => {
       const searchLower = searchTerm.toLowerCase()
       return (
         position.ticker.toLowerCase().includes(searchLower) ||
@@ -48,8 +48,8 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
 
     // Sort positions
     filtered.sort((a, b) => {
-      let aValue: any
-      let bValue: any
+      let aValue: string | number
+      let bValue: string | number
 
       switch (sortField) {
         case 'ticker':

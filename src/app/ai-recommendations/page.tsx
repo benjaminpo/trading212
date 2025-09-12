@@ -88,7 +88,7 @@ export default function AIRecommendationsPage() {
       } else {
         alert(data.error || 'Failed to run analysis')
       }
-    } catch (error) {
+    } catch {
       alert('Error running analysis')
     } finally {
       setAnalyzing(false)
