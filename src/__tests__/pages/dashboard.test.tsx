@@ -212,7 +212,6 @@ describe('Dashboard page behaviors', () => {
   })
 
   it('handles 429 gracefully and stays in Demo Mode when single-account is rate-limited', async () => {
-
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (url.includes('/api/trading212/accounts')) {

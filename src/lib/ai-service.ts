@@ -254,4 +254,5 @@ Consider:
   }
 }
 
+export { AIAnalysisService }
 export const aiAnalysisService = new AIAnalysisService()

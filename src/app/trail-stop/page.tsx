@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -61,7 +61,12 @@ export default function TrailStopPage() {
     setMounted(true)
   }, [])
 
+  const loadingRef = useRef(false)
+
   const loadData = useCallback(async () => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+    
     try {
       setLoading(true)
       
@@ -85,6 +90,7 @@ export default function TrailStopPage() {
       console.error('Error loading data:', error)
     } finally {
       setLoading(false)
+      loadingRef.current = false
     }
   }, [selectedAccountId])
 
@@ -95,8 +101,35 @@ export default function TrailStopPage() {
       return
     }
     
-    loadData()
-  }, [mounted, session, status, router, selectedAccountId, loadData])
+    const loadDataAsync = async () => {
+      try {
+        setLoading(true)
+        
+        // Load trail stop orders
+        const ordersResponse = await fetch('/api/trail-stop/orders')
+        if (ordersResponse.ok) {
+          const ordersData = await ordersResponse.json()
+          setOrders(ordersData.orders || [])
+        }
+
+        // Load current positions for the form
+        const portfolioUrl = selectedAccountId 
+          ? `/api/trading212/portfolio?accountId=${selectedAccountId}`
+          : '/api/trading212/portfolio'
+        const portfolioResponse = await fetch(portfolioUrl)
+        if (portfolioResponse.ok) {
+          const portfolioData = await portfolioResponse.json()
+          setPositions(portfolioData.positions || [])
+        }
+      } catch (error) {
+        console.error('Error loading data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadDataAsync()
+  }, [mounted, session, status, router, selectedAccountId])
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault()

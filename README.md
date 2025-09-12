@@ -292,7 +292,7 @@ See [`.github/README.md`](.github/README.md) for detailed workflow documentation
 1. **Clone & Install**:
    ```bash
    git clone https://github.com/benjaminpo/trading212.git
-   cd trading212-extra
+   cd trading212
    npm install
    ```
 
