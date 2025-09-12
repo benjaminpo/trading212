@@ -169,3 +169,4 @@ jobs:
           VERSION="${{ github.event.inputs.version }}"
           git tag $VERSION
           git push origin $VERSION
+

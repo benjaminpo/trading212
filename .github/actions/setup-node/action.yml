@@ -26,3 +26,4 @@ runs:
     - name: Generate Prisma client
       shell: bash
       run: npx prisma generate
+

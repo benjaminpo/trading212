@@ -97,25 +97,27 @@ export async function createTrailStopNotification(
       ? `${orderData.trailPercent}%`
       : `$${orderData.trailAmount}`
 
-    const notification = await prisma.notification.create({
-      data: {
-        userId,
-        type: 'trail_stop_triggered',
-        title: `🚨 Trail Stop Triggered - ${orderData.symbol}`,
-        message: orderData.isPractice
-          ? `Your trail stop order for ${orderData.quantity} shares of ${orderData.symbol} has been executed at $${orderData.stopPrice.toFixed(2)}.`
-          : `Your trail stop order for ${orderData.quantity} shares of ${orderData.symbol} has been triggered at $${orderData.stopPrice.toFixed(2)}. Please manually execute the sell order in Trading212.`,
-        data: JSON.stringify({
-          symbol: orderData.symbol,
-          quantity: orderData.quantity,
-          stopPrice: orderData.stopPrice,
-          trailAmount: orderData.trailAmount,
-          trailPercent: orderData.trailPercent,
-          isPractice: orderData.isPractice,
-          action: orderData.isPractice ? 'executed' : 'notification_only'
-        })
-      }
-    })
+    const notification = await retryDatabaseOperation(() =>
+      prisma.notification.create({
+        data: {
+          userId,
+          type: 'trail_stop_triggered',
+          title: `🚨 Trail Stop Triggered - ${orderData.symbol}`,
+          message: orderData.isPractice
+            ? `Your trail stop order for ${orderData.quantity} shares of ${orderData.symbol} has been executed at $${orderData.stopPrice.toFixed(2)}.`
+            : `Your trail stop order for ${orderData.quantity} shares of ${orderData.symbol} has been triggered at $${orderData.stopPrice.toFixed(2)}. Please manually execute the sell order in Trading212.`,
+          data: JSON.stringify({
+            symbol: orderData.symbol,
+            quantity: orderData.quantity,
+            stopPrice: orderData.stopPrice,
+            trailAmount: orderData.trailAmount,
+            trailPercent: orderData.trailPercent,
+            isPractice: orderData.isPractice,
+            action: orderData.isPractice ? 'executed' : 'notification_only'
+          })
+        }
+      })
+    )
 
     console.log(`📧 Trail stop notification created for ${orderData.symbol} - ${orderData.isPractice ? 'Executed' : 'Manual action required'}`)
     

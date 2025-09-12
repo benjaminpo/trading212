@@ -3,6 +3,7 @@ import { POST } from '@/app/api/trail-stop/monitor/route'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { Trading212API } from '@/lib/trading212'
+import { createTrailStopNotification } from '@/app/api/notifications/route'
 
 // Mock dependencies
 jest.mock('next-auth', () => ({
@@ -22,9 +23,14 @@ jest.mock('@/lib/prisma', () => ({
 
 jest.mock('@/lib/trading212')
 
+jest.mock('@/app/api/notifications/route', () => ({
+  createTrailStopNotification: jest.fn()
+}))
+
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>
 const mockedTrading212API = Trading212API as jest.MockedClass<typeof Trading212API>
+const mockedCreateTrailStopNotification = createTrailStopNotification as jest.MockedFunction<typeof createTrailStopNotification>
 
 // Mock user data
 const mockUser = {
@@ -119,6 +125,16 @@ describe('/api/trail-stop/monitor', () => {
     // Mock getServerSession to return user
     mockedGetServerSession.mockResolvedValue(mockUser as any)
     
+    // Mock createTrailStopNotification
+    mockedCreateTrailStopNotification.mockResolvedValue({
+      id: 'notification-1',
+      userId: 'user-1',
+      type: 'trail_stop_triggered',
+      title: 'Trail Stop Triggered',
+      message: 'AAPL trail stop order triggered',
+      createdAt: new Date()
+    } as any)
+    
     // Mock Trading212API with different implementations for different API keys
     mockedTrading212API.mockImplementation((apiKey: string, isPractice: boolean) => {
       const mockAPI = {
@@ -142,15 +158,6 @@ describe('/api/trail-stop/monitor', () => {
   describe('POST /api/trail-stop/monitor', () => {
     it('should process active trail stop orders', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
-
-      mockedPrisma.notification.create.mockResolvedValue({
-        id: 'notification-1',
-        userId: 'user-1',
-        type: 'trail_stop_triggered',
-        title: 'Trail Stop Triggered',
-        message: 'AAPL trail stop order triggered',
-        createdAt: new Date()
-      } as any)
 
       mockedPrisma.trailStopLossOrder.update.mockResolvedValue({
         id: 'order-1',
@@ -203,15 +210,6 @@ describe('/api/trail-stop/monitor', () => {
     it('should create notifications for triggered orders', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
 
-      mockedPrisma.notification.create.mockResolvedValue({
-        id: 'notification-1',
-        userId: 'user-1',
-        type: 'trail_stop_triggered',
-        title: 'Trail Stop Triggered',
-        message: 'AAPL trail stop order triggered',
-        createdAt: new Date()
-      } as any)
-
       mockedPrisma.trailStopLossOrder.update.mockResolvedValue({
         id: 'order-1',
         isActive: false
@@ -222,28 +220,18 @@ describe('/api/trail-stop/monitor', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: {
-          userId: 'user-1',
-          type: 'trail_stop_triggered',
-          title: '🚨 Trail Stop Triggered - AAPL',
-          message: expect.stringContaining('Your trail stop order for 10 shares of AAPL has been triggered at $145.00'),
-          data: expect.stringContaining('"action":"notification_only"')
-        }
+      expect(mockedCreateTrailStopNotification).toHaveBeenCalledWith('user-1', {
+        symbol: 'AAPL',
+        quantity: 10,
+        stopPrice: 145.00,
+        trailAmount: 5.00,
+        trailPercent: 3.5,
+        isPractice: false
       })
     })
 
     it('should deactivate triggered orders', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
-
-      mockedPrisma.notification.create.mockResolvedValue({
-        id: 'notification-1',
-        userId: 'user-1',
-        type: 'trail_stop_triggered',
-        title: 'Trail Stop Triggered',
-        message: 'AAPL trail stop order triggered',
-        createdAt: new Date()
-      } as any)
 
       mockedPrisma.trailStopLossOrder.update.mockResolvedValue({
         id: 'order-1',
@@ -264,15 +252,6 @@ describe('/api/trail-stop/monitor', () => {
     it('should handle practice vs production accounts differently', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
 
-      mockedPrisma.notification.create.mockResolvedValue({
-        id: 'notification-1',
-        userId: 'user-1',
-        type: 'trail_stop_triggered',
-        title: 'Trail Stop Triggered',
-        message: 'AAPL trail stop order triggered',
-        createdAt: new Date()
-      } as any)
-
       mockedPrisma.trailStopLossOrder.update.mockResolvedValue({
         id: 'order-1',
         isActive: false
@@ -286,10 +265,13 @@ describe('/api/trail-stop/monitor', () => {
       expect(data.processed).toBe(2)
       
       // Should create notification for production account (triggered)
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          data: expect.stringContaining('"action":"notification_only"')
-        })
+      expect(mockedCreateTrailStopNotification).toHaveBeenCalledWith('user-1', {
+        symbol: 'AAPL',
+        quantity: 10,
+        stopPrice: 145.00,
+        trailAmount: 5.00,
+        trailPercent: 3.5,
+        isPractice: false
       })
     })
 
@@ -307,7 +289,7 @@ describe('/api/trail-stop/monitor', () => {
     it('should handle notification creation errors', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
 
-      mockedPrisma.notification.create.mockRejectedValue(new Error('Notification creation failed'))
+      mockedCreateTrailStopNotification.mockRejectedValue(new Error('Notification creation failed'))
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
@@ -321,15 +303,6 @@ describe('/api/trail-stop/monitor', () => {
 
     it('should handle order update errors', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
-
-      mockedPrisma.notification.create.mockResolvedValue({
-        id: 'notification-1',
-        userId: 'user-1',
-        type: 'trail_stop_triggered',
-        title: 'Trail Stop Triggered',
-        message: 'AAPL trail stop order triggered',
-        createdAt: new Date()
-      } as any)
 
       mockedPrisma.trailStopLossOrder.update.mockRejectedValue(new Error('Order update failed'))
 

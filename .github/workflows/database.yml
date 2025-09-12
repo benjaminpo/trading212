@@ -124,3 +124,4 @@ jobs:
           channel: '#alerts'
           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
           fields: repo,message,commit,author,action,eventName,ref,workflow
+
