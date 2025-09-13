@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload backup artifact
         if: ${{ github.event.inputs.action == 'backup' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: database-backup
           path: backup_*.sql
