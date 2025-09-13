@@ -60,6 +60,13 @@ export default function AIRecommendationsPage() {
       const response = await fetch('/api/ai/analyze-positions')
       if (response.ok) {
         const data = await response.json()
+        console.log('🔍 AI Recommendations data:', data.recommendations?.map(rec => ({
+          symbol: rec.symbol,
+          pnlPercent: rec.position?.pnlPercent,
+          averagePrice: rec.position?.averagePrice,
+          currentPrice: rec.position?.currentPrice,
+          pnl: rec.position?.pnl
+        })))
         setRecommendations(data.recommendations || [])
       }
     } catch (error) {

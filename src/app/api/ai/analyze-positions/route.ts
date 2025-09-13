@@ -116,8 +116,10 @@ export async function POST(request: NextRequest) {
       }
       
       // Debug logging for conversion factors
-      if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ') {
-        console.log(`🔍 AI Analysis ${pos.ticker}: isGBPStock=${isGBPStock}, isUSDStock=${isUSDStock}, conversionFactor=${conversionFactor}, rawValue=${pos.currentPrice}, convertedValue=${pos.currentPrice / conversionFactor}`)
+      if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ' || pos.ticker === 'GOOGL_US_EQ' || pos.ticker === 'SNII_US_EQ') {
+        console.log(`🔍 AI Analysis ${pos.ticker}: isGBPStock=${isGBPStock}, isUSDStock=${isUSDStock}, conversionFactor=${conversionFactor}`)
+        console.log(`🔍 Raw API values: avgPrice=${pos.averagePrice}, currentPrice=${pos.currentPrice}, pnl=${pos.ppl}`)
+        console.log(`🔍 Converted values: avgPrice=${pos.averagePrice / conversionFactor}, currentPrice=${pos.currentPrice / conversionFactor}, pnl=${pos.ppl / conversionFactor}`)
       }
       
       const averagePrice = pos.averagePrice / conversionFactor
@@ -128,8 +130,9 @@ export async function POST(request: NextRequest) {
       const pnlPercent = averagePrice !== 0 ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0
       
       // Debug logging for P/L % calculation
-      if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ') {
+      if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ' || pos.ticker === 'GOOGL_US_EQ' || pos.ticker === 'SNII_US_EQ') {
         console.log(`💰 P/L % Calculation ${pos.ticker}: avgPrice=${averagePrice.toFixed(2)}, currentPrice=${currentPrice.toFixed(2)}, pnlPercent=${pnlPercent.toFixed(2)}%`)
+        console.log(`💰 Calculation: (${currentPrice.toFixed(2)} - ${averagePrice.toFixed(2)}) / ${averagePrice.toFixed(2)} * 100 = ${((currentPrice - averagePrice) / averagePrice * 100).toFixed(2)}%`)
       }
       
       return {
@@ -156,6 +159,13 @@ export async function POST(request: NextRequest) {
 
     // Update positions in database
     for (const position of positions) {
+      console.log(`💾 Updating position ${position.symbol}:`, {
+        pnlPercent: position.pnlPercent,
+        averagePrice: position.averagePrice,
+        currentPrice: position.currentPrice,
+        pnl: position.pnl
+      })
+      
       await retryDatabaseOperation(() =>
         prisma.position.upsert({
           where: {
@@ -332,6 +342,16 @@ export async function GET() {
         take: 20
       })
     )
+
+    // Debug logging for recommendations
+    console.log('🔍 AI Recommendations from DB:', recommendations.map(rec => ({
+      symbol: rec.symbol,
+      pnlPercent: rec.position?.pnlPercent,
+      averagePrice: rec.position?.averagePrice,
+      currentPrice: rec.position?.currentPrice,
+      pnl: rec.position?.pnl,
+      lastUpdated: rec.position?.lastUpdated
+    })))
 
     return NextResponse.json({ recommendations })
 
