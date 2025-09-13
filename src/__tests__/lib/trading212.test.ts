@@ -61,7 +61,11 @@ describe('Trading212API', () => {
     })
 
     it('should return true for successful connection', async () => {
-      const mockResponse = { data: { cash: 1000, currency: 'USD' } }
+      const mockResponse = { 
+        data: { cash: 1000, currency: 'USD' },
+        config: { url: '/equity/account/cash' },
+        status: 200
+      }
       ;(trading212API as any).api.get.mockResolvedValue(mockResponse)
 
       const result = await trading212API.validateConnection()
@@ -100,7 +104,12 @@ describe('Trading212API', () => {
         currency: 'USD',
         total: 15000,
       }
-      ;(trading212API as any).api.get.mockResolvedValue({ data: mockAccountData })
+      const mockResponse = {
+        data: mockAccountData,
+        config: { url: '/equity/account/cash' },
+        status: 200
+      }
+      ;(trading212API as any).api.get.mockResolvedValue(mockResponse)
 
       const result = await trading212API.getAccount()
 
