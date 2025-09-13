@@ -2,11 +2,11 @@
 
 A comprehensive trading analytics and portfolio management application built for Trading212 users. This application provides advanced features for analyzing your Trading212 portfolio, managing trail stop orders, and getting AI-powered trading insights.
 
-[![CI/CD Pipeline](https://github.com/benjaminpo212/trading212/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/benjaminpo212/trading212/actions)
+[![CI/CD Pipeline](https://github.com/benjaminpo/trading212/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/benjaminpo/trading212/actions)
 [![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-vercel-black?logo=vercel)](https://trading212.vercel.app)
 [![Built with Next.js](https://img.shields.io/badge/built%20with-next.js-black?logo=next.js)](https://nextjs.org)
 [![Database: Supabase](https://img.shields.io/badge/database-supabase-green?logo=supabase)](https://supabase.com)
-[![Code Quality](https://github.com/benjaminpo212/trading212/workflows/Code%20Quality/badge.svg)](https://github.com/benjaminpo212/trading212/actions)
+[![Code Quality](https://github.com/benjaminpo/trading212/workflows/Code%20Quality/badge.svg)](https://github.com/benjaminpo/trading212/actions)
 
 ## Features
 
