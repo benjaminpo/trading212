@@ -72,27 +72,30 @@ export class Trading212API {
   }
 
   private async makeRequestWithRetry<T>(requestFn: () => Promise<T>, maxRetries: number = 3): Promise<T> {
-    let lastError: any;
+    let lastError: Error = new Error('Unknown error');
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await this.waitForRateLimit();
         return await requestFn();
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error : new Error(String(error));
         
         // Handle 429 errors specifically
-        if (error.response?.status === 429) {
-          const retryAfter = error.response.headers?.['retry-after'];
-          const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
-          
-          console.log(`🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-          continue;
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number; headers?: Record<string, string> } };
+          if (axiosError.response?.status === 429) {
+            const retryAfter = axiosError.response.headers?.['retry-after'];
+            const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
+            
+            console.log(`🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
         }
         
         // For other errors, don't retry
-        throw error;
+        throw lastError;
       }
     }
     

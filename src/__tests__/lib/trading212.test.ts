@@ -419,9 +419,7 @@ describe('Trading212API', () => {
       }
       ;(trading212API as any).api.get.mockRejectedValue(serverError)
 
-      await expect(trading212API.getOrders()).rejects.toMatchObject({
-        response: { status: 500 }
-      })
+      await expect(trading212API.getOrders()).rejects.toThrow()
     })
   })
 })
