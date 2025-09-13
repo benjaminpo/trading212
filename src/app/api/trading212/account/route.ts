@@ -84,6 +84,17 @@ export async function GET(request: NextRequest) {
     const portfolioData = portfolioResult.status === 'fulfilled' ? portfolioResult.value : []
     const ordersData = ordersResult.status === 'fulfilled' ? ordersResult.value : []
 
+    // Log any API failures
+    if (accountResult.status === 'rejected') {
+      console.error('❌ Account API call failed:', accountResult.reason)
+    }
+    if (portfolioResult.status === 'rejected') {
+      console.error('❌ Portfolio API call failed:', portfolioResult.reason)
+    }
+    if (ordersResult.status === 'rejected') {
+      console.error('❌ Orders API call failed:', ordersResult.reason)
+    }
+
     // Calculate dashboard stats
     const activePositions = portfolioData.length
     const totalPnL = portfolioData.reduce((sum, pos) => sum + (pos.ppl || 0), 0)
@@ -104,6 +115,12 @@ export async function GET(request: NextRequest) {
 
     // Update account metadata if we got fresh data
     if (accountData) {
+      console.log(`💰 Account ${targetAccount.name} cash data:`, {
+        apiCash: accountData.cash,
+        currency: accountData.currencyCode,
+        accountId: targetAccount.id
+      })
+      
       await retryDatabaseOperation(() =>
         prisma.trading212Account.update({
           where: { id: targetAccount.id },
@@ -115,14 +132,24 @@ export async function GET(request: NextRequest) {
           }
         })
       )
+    } else {
+      console.log(`⚠️ No account data received for ${targetAccount.name}`)
     }
+
+    const finalCash = accountData?.cash || targetAccount.cash || 0
+    console.log(`💰 Final cash value for ${targetAccount.name}:`, {
+      apiCash: accountData?.cash,
+      dbCash: targetAccount.cash,
+      finalCash,
+      currency: accountData?.currencyCode || targetAccount.currency || 'USD'
+    })
 
     return NextResponse.json({
       connected: true,
       account: {
         id: targetAccount.id,
         name: targetAccount.name,
-        cash: accountData?.cash || targetAccount.cash || 0,
+        cash: finalCash,
         currency: accountData?.currencyCode || targetAccount.currency || 'USD',
         isPractice: targetAccount.isPractice,
         isDefault: targetAccount.isDefault

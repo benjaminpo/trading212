@@ -105,6 +105,11 @@ export class Trading212API {
   async getAccount(): Promise<Trading212Account> {
     return this.makeRequestWithRetry(async () => {
       const response = await this.api.get('/equity/account/cash');
+      console.log('💰 Trading212 API account response:', {
+        status: response.status,
+        data: response.data,
+        isPractice: this.isPractice
+      });
       return response.data;
     });
   }
