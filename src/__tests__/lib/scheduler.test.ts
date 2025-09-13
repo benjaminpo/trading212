@@ -52,7 +52,7 @@ describe('DailyAnalysisScheduler', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     scheduler = DailyAnalysisScheduler.getInstance()
-  }, 10000)
+  })
 
   describe('getInstance', () => {
     it('should return singleton instance', () => {
