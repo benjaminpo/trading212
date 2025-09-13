@@ -111,13 +111,13 @@ export default function AIRecommendationsPage() {
   const getRecommendationColor = (type: string) => {
     switch (type) {
       case 'EXIT':
-        return 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+        return 'border-red-200/60 dark:border-red-800/60 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm shadow-lg dark:shadow-red-900/10'
       case 'INCREASE':
-        return 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+        return 'border-green-200/60 dark:border-green-800/60 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm shadow-lg dark:shadow-green-900/10'
       case 'REDUCE':
-        return 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20'
+        return 'border-orange-200/60 dark:border-orange-800/60 bg-orange-50/80 dark:bg-orange-900/20 backdrop-blur-sm shadow-lg dark:shadow-orange-900/10'
       default:
-        return 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20'
+        return 'border-blue-200/60 dark:border-blue-800/60 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm shadow-lg dark:shadow-blue-900/10'
     }
   }
 
@@ -146,29 +146,33 @@ export default function AIRecommendationsPage() {
 
   return (
     <ClientWrapper>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900 dark:to-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow dark:shadow-gray-700/50">
+      <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-slate-700/50 shadow-lg dark:shadow-slate-900/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="mr-4">
+                <Button variant="ghost" size="sm" className="mr-4 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100 flex items-center">
                   <Brain className="h-8 w-8 mr-3 text-blue-600 dark:text-blue-400" />
                   AI Recommendations
                 </h1>
-                <p className="text-gray-600 dark:text-gray-300">AI-powered exit strategy suggestions for your positions</p>
+                <p className="text-gray-600 dark:text-slate-300">AI-powered exit strategy suggestions for your positions</p>
               </div>
             </div>
             <div className="flex space-x-4">
               <ThemeToggle />
-              <Button onClick={runAnalysis} disabled={analyzing}>
+              <Button 
+                onClick={runAnalysis} 
+                disabled={analyzing}
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
                 <RefreshCw className={`h-4 w-4 mr-2 ${analyzing ? 'animate-spin' : ''}`} />
                 {analyzing ? 'Analyzing...' : 'Run Analysis'}
               </Button>
@@ -180,14 +184,18 @@ export default function AIRecommendationsPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {recommendations.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-12 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-gray-200/50 dark:border-slate-700/50 shadow-xl dark:shadow-slate-900/20">
             <CardContent>
-              <Brain className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No AI Recommendations Yet</h3>
-              <p className="text-gray-600 mb-6">
+              <Brain className="h-16 w-16 mx-auto text-gray-400 dark:text-slate-500 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">No AI Recommendations Yet</h3>
+              <p className="text-gray-600 dark:text-slate-300 mb-6">
                 Run an AI analysis to get personalized exit strategy recommendations for your positions.
               </p>
-              <Button onClick={runAnalysis} disabled={analyzing}>
+              <Button 
+                onClick={runAnalysis} 
+                disabled={analyzing}
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
                 <Brain className="h-4 w-4 mr-2" />
                 {analyzing ? 'Analyzing...' : 'Start AI Analysis'}
               </Button>
@@ -196,38 +204,38 @@ export default function AIRecommendationsPage() {
         ) : (
           <div className="space-y-6">
             {/* Summary */}
-            <Card>
+            <Card className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-gray-200/50 dark:border-slate-700/50 shadow-xl dark:shadow-slate-900/20">
               <CardHeader>
-                <CardTitle>Analysis Summary</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gray-900 dark:text-slate-100">Analysis Summary</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-slate-300">
                   Latest AI analysis results for your portfolio
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">
+                  <div className="text-center p-4 rounded-lg bg-red-50/80 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/30">
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                       {recommendations.filter(r => r.recommendationType === 'EXIT').length}
                     </div>
-                    <div className="text-sm text-gray-600">Exit Recommendations</div>
+                    <div className="text-sm text-gray-600 dark:text-slate-300">Exit Recommendations</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-center p-4 rounded-lg bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200/50 dark:border-blue-800/30">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {recommendations.filter(r => r.recommendationType === 'HOLD').length}
                     </div>
-                    <div className="text-sm text-gray-600">Hold Recommendations</div>
+                    <div className="text-sm text-gray-600 dark:text-slate-300">Hold Recommendations</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                  <div className="text-center p-4 rounded-lg bg-orange-50/80 dark:bg-orange-900/20 border border-orange-200/50 dark:border-orange-800/30">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       {recommendations.filter(r => r.recommendationType === 'REDUCE').length}
                     </div>
-                    <div className="text-sm text-gray-600">Reduce Recommendations</div>
+                    <div className="text-sm text-gray-600 dark:text-slate-300">Reduce Recommendations</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="text-center p-4 rounded-lg bg-green-50/80 dark:bg-green-900/20 border border-green-200/50 dark:border-green-800/30">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {recommendations.filter(r => r.recommendationType === 'INCREASE').length}
                     </div>
-                    <div className="text-sm text-gray-600">Increase Recommendations</div>
+                    <div className="text-sm text-gray-600 dark:text-slate-300">Increase Recommendations</div>
                   </div>
                 </div>
               </CardContent>
@@ -236,10 +244,10 @@ export default function AIRecommendationsPage() {
             {/* Recommendations List */}
             <div className="space-y-4">
               {recommendations.map((rec) => (
-                <Card key={rec.id} className={`${getRecommendationColor(rec.recommendationType)} border-l-4`}>
+                <Card key={rec.id} className={`${getRecommendationColor(rec.recommendationType)} border-l-4 transition-all duration-200 hover:shadow-xl dark:hover:shadow-slate-900/20`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center">
+                      <CardTitle className="flex items-center text-gray-900 dark:text-slate-100">
                         {getRecommendationIcon(rec.recommendationType)}
                         <span className="ml-2">{rec.symbol}</span>
                         <span className="ml-4 text-lg font-bold">
@@ -250,7 +258,7 @@ export default function AIRecommendationsPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(rec.riskLevel)}`}>
                           {rec.riskLevel} Risk
                         </span>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 dark:text-slate-300">
                           {Math.round(rec.confidence * 100)}% confidence
                         </span>
                       </div>
@@ -258,23 +266,23 @@ export default function AIRecommendationsPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Position Info */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white rounded-lg">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-slate-700/50">
                       <div>
-                        <div className="text-sm text-gray-600">Quantity</div>
-                        <div className="font-semibold">{rec.position.quantity}</div>
+                        <div className="text-sm text-gray-600 dark:text-slate-400">Quantity</div>
+                        <div className="font-semibold text-gray-900 dark:text-slate-100">{rec.position.quantity}</div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600">Current Price</div>
-                        <div className="font-semibold">${rec.position.currentPrice.toFixed(2)}</div>
+                        <div className="text-sm text-gray-600 dark:text-slate-400">Current Price</div>
+                        <div className="font-semibold text-gray-900 dark:text-slate-100">${rec.position.currentPrice.toFixed(2)}</div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600">P/L</div>
+                        <div className="text-sm text-gray-600 dark:text-slate-400">P/L</div>
                         <div className={`font-semibold ${rec.position.pnl >= 0 ? 'profit' : 'loss'}`}>
                           ${rec.position.pnl.toFixed(2)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">P/L %</div>
+                        <div className="text-sm text-gray-600 dark:text-slate-400">P/L %</div>
                         <div className={`font-semibold ${rec.position.pnlPercent >= 0 ? 'profit' : 'loss'}`}>
                           {rec.position.pnlPercent >= 0 ? '+' : ''}{rec.position.pnlPercent.toFixed(2)}%
                         </div>
@@ -283,46 +291,46 @@ export default function AIRecommendationsPage() {
 
                     {/* AI Analysis */}
                     <div>
-                      <h4 className="font-semibold mb-2">AI Analysis</h4>
-                      <p className="text-gray-700 mb-3">{rec.reasoning}</p>
+                      <h4 className="font-semibold mb-2 text-gray-900 dark:text-slate-100">AI Analysis</h4>
+                      <p className="text-gray-700 dark:text-slate-300 mb-3">{rec.reasoning}</p>
                     </div>
 
                     {/* Suggested Action */}
                     <div>
-                      <h4 className="font-semibold mb-2">Suggested Action</h4>
-                      <p className="text-gray-700 mb-3">{rec.suggestedAction}</p>
+                      <h4 className="font-semibold mb-2 text-gray-900 dark:text-slate-100">Suggested Action</h4>
+                      <p className="text-gray-700 dark:text-slate-300 mb-3">{rec.suggestedAction}</p>
                     </div>
 
                     {/* Price Targets */}
                     {(rec.targetPrice || rec.stopLoss) && (
                       <div className="grid grid-cols-2 gap-4">
                         {rec.targetPrice && (
-                          <div className="p-3 bg-green-50 rounded-lg">
-                            <div className="text-sm text-green-600 font-medium">Target Price</div>
-                            <div className="text-lg font-bold text-green-700">${rec.targetPrice.toFixed(2)}</div>
+                          <div className="p-3 bg-green-50/80 dark:bg-green-900/20 rounded-lg border border-green-200/50 dark:border-green-800/30 backdrop-blur-sm">
+                            <div className="text-sm text-green-600 dark:text-green-400 font-medium">Target Price</div>
+                            <div className="text-lg font-bold text-green-700 dark:text-green-300">${rec.targetPrice.toFixed(2)}</div>
                           </div>
                         )}
                         {rec.stopLoss && (
-                          <div className="p-3 bg-red-50 rounded-lg">
-                            <div className="text-sm text-red-600 font-medium">Stop Loss</div>
-                            <div className="text-lg font-bold text-red-700">${rec.stopLoss.toFixed(2)}</div>
+                          <div className="p-3 bg-red-50/80 dark:bg-red-900/20 rounded-lg border border-red-200/50 dark:border-red-800/30 backdrop-blur-sm">
+                            <div className="text-sm text-red-600 dark:text-red-400 font-medium">Stop Loss</div>
+                            <div className="text-lg font-bold text-red-700 dark:text-red-300">${rec.stopLoss.toFixed(2)}</div>
                           </div>
                         )}
                       </div>
                     )}
 
                     {/* Feedback */}
-                    <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200/50 dark:border-slate-700/50">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">Was this helpful?</span>
-                        <Button variant="ghost" size="sm">
+                        <span className="text-sm text-gray-600 dark:text-slate-400">Was this helpful?</span>
+                        <Button variant="ghost" size="sm" className="hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                           <ThumbsUp className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" className="hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                           <ThumbsDown className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-slate-500">
                         {new Date(rec.createdAt).toLocaleDateString()} • {rec.timeframe} term
                       </div>
                     </div>

@@ -120,13 +120,25 @@ export async function POST(request: NextRequest) {
         console.log(`🔍 AI Analysis ${pos.ticker}: isGBPStock=${isGBPStock}, isUSDStock=${isUSDStock}, conversionFactor=${conversionFactor}, rawValue=${pos.currentPrice}, convertedValue=${pos.currentPrice / conversionFactor}`)
       }
       
+      const averagePrice = pos.averagePrice / conversionFactor
+      const currentPrice = pos.currentPrice / conversionFactor
+      const pnl = pos.ppl / conversionFactor
+      
+      // Calculate P/L % correctly: (currentPrice - averagePrice) / averagePrice * 100
+      const pnlPercent = averagePrice !== 0 ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0
+      
+      // Debug logging for P/L % calculation
+      if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ') {
+        console.log(`💰 P/L % Calculation ${pos.ticker}: avgPrice=${averagePrice.toFixed(2)}, currentPrice=${currentPrice.toFixed(2)}, pnlPercent=${pnlPercent.toFixed(2)}%`)
+      }
+      
       return {
         symbol: pos.ticker,
         quantity: pos.quantity,
-        averagePrice: pos.averagePrice / conversionFactor,
-        currentPrice: pos.currentPrice / conversionFactor,
-        pnl: pos.ppl / conversionFactor,
-        pnlPercent: pos.pplPercent,
+        averagePrice,
+        currentPrice,
+        pnl,
+        pnlPercent,
         marketValue: (pos.currentPrice * pos.quantity) / conversionFactor
       }
     })
@@ -157,7 +169,7 @@ export async function POST(request: NextRequest) {
             averagePrice: position.averagePrice,
             currentPrice: position.currentPrice,
             pnl: position.pnl,
-            pnlPercent: position.pnlPercent,
+            pnlPercent: position.pnlPercent || 0,
             marketValue: position.marketValue,
             lastUpdated: new Date()
           },
@@ -168,7 +180,7 @@ export async function POST(request: NextRequest) {
             averagePrice: position.averagePrice,
             currentPrice: position.currentPrice,
             pnl: position.pnl,
-            pnlPercent: position.pnlPercent,
+            pnlPercent: position.pnlPercent || 0,
             marketValue: position.marketValue,
             lastUpdated: new Date()
           }

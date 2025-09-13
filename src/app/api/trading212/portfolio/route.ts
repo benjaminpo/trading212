@@ -133,9 +133,8 @@ export async function GET(request: NextRequest) {
       // Calculate P/L percentage if not provided by API
       let pplPercent = position.pplPercent
       if (pplPercent == null || isNaN(pplPercent)) {
-        // Calculate P/L percentage: (current price - average price) / average price * 100
-        const investedValue = position.quantity * position.averagePrice
-        pplPercent = investedValue > 0 ? (position.ppl / investedValue) * 100 : 0
+        // Calculate P/L percentage correctly: (current price - average price) / average price * 100
+        pplPercent = position.averagePrice > 0 ? ((position.currentPrice - position.averagePrice) / position.averagePrice) * 100 : 0
       }
       
       // Determine position-specific currency and conversion factor
