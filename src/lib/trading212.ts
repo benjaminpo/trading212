@@ -104,13 +104,35 @@ export class Trading212API {
 
   async getAccount(): Promise<Trading212Account> {
     return this.makeRequestWithRetry(async () => {
-      const response = await this.api.get('/equity/account/cash');
-      console.log('💰 Trading212 API account response:', {
-        status: response.status,
-        data: response.data,
-        isPractice: this.isPractice
-      });
-      return response.data;
+      try {
+        // Try the account/cash endpoint first
+        const response = await this.api.get('/equity/account/cash');
+        console.log('💰 Trading212 API account response:', {
+          status: response.status,
+          data: response.data,
+          isPractice: this.isPractice,
+          url: response.config.url
+        });
+        return response.data;
+      } catch (error) {
+        console.error('❌ Trading212 API account/cash error:', error);
+        
+        // Try alternative endpoint if the first one fails
+        try {
+          console.log('🔄 Trying alternative account endpoint...');
+          const altResponse = await this.api.get('/equity/account');
+          console.log('💰 Trading212 API alternative account response:', {
+            status: altResponse.status,
+            data: altResponse.data,
+            isPractice: this.isPractice,
+            url: altResponse.config.url
+          });
+          return altResponse.data;
+        } catch (altError) {
+          console.error('❌ Trading212 API alternative account error:', altError);
+          throw error; // Throw the original error
+        }
+      }
     });
   }
 

@@ -136,12 +136,27 @@ export async function GET(request: NextRequest) {
       console.log(`⚠️ No account data received for ${targetAccount.name}`)
     }
 
-    const finalCash = accountData?.cash || targetAccount.cash || 0
+    // Handle case where API doesn't return cash data
+    let finalCash = 0
+    if (accountData?.cash !== undefined && accountData.cash !== null) {
+      finalCash = accountData.cash
+    } else if (targetAccount.cash !== undefined && targetAccount.cash !== null) {
+      finalCash = targetAccount.cash
+    } else {
+      // If no cash data available, try to calculate from portfolio
+      const totalValue = portfolioData.reduce((sum, pos) => sum + (pos.quantity * pos.currentPrice), 0)
+      const totalPnL = portfolioData.reduce((sum, pos) => sum + (pos.ppl || 0), 0)
+      // This is a rough estimate - in reality, we'd need more account data
+      finalCash = Math.max(0, totalValue - totalPnL)
+    }
+
     console.log(`💰 Final cash value for ${targetAccount.name}:`, {
       apiCash: accountData?.cash,
       dbCash: targetAccount.cash,
       finalCash,
-      currency: accountData?.currencyCode || targetAccount.currency || 'USD'
+      currency: accountData?.currencyCode || targetAccount.currency || 'USD',
+      hasApiData: !!accountData,
+      hasDbData: targetAccount.cash !== null
     })
 
     return NextResponse.json({
