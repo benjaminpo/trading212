@@ -211,6 +211,183 @@ describe('Trading212API', () => {
     })
   })
 
+  describe('createTrailingStopOrder', () => {
+    beforeEach(() => {
+      trading212API = new Trading212API(mockApiKey, true) // Practice mode
+    })
+
+    it('should create trailing stop order successfully', async () => {
+      const mockOrder = {
+        id: 123,
+        ticker: 'AAPL',
+        quantity: 10,
+        type: 'STOP',
+        status: 'WORKING'
+      }
+      ;(trading212API as any).api.post.mockResolvedValue({ data: mockOrder })
+
+      const result = await trading212API.createTrailingStopOrder('AAPL', 10, 5)
+
+      expect(result).toEqual(mockOrder)
+      expect((trading212API as any).api.post).toHaveBeenCalledWith('/equity/orders', {
+        ticker: 'AAPL',
+        quantity: 10,
+        orderType: 'STOP',
+        timeValidity: 'GTC',
+        trailAmount: 5
+      })
+    })
+
+    it('should create trailing stop order with trail percent', async () => {
+      const mockOrder = {
+        id: 123,
+        ticker: 'AAPL',
+        quantity: 10,
+        type: 'STOP',
+        status: 'WORKING'
+      }
+      ;(trading212API as any).api.post.mockResolvedValue({ data: mockOrder })
+
+      const result = await trading212API.createTrailingStopOrder('AAPL', 10, 5, 2.5)
+
+      expect(result).toEqual(mockOrder)
+      expect((trading212API as any).api.post).toHaveBeenCalledWith('/equity/orders', {
+        ticker: 'AAPL',
+        quantity: 10,
+        orderType: 'STOP',
+        timeValidity: 'GTC',
+        trailAmount: 5,
+        trailPercent: 2.5
+      })
+    })
+
+    it('should throw error when not in practice mode', async () => {
+      const liveAPI = new Trading212API(mockApiKey, false) // Live mode
+
+      await expect(liveAPI.createTrailingStopOrder('AAPL', 10, 5))
+        .rejects.toThrow('Trail stop orders are only available in practice mode due to API limitations')
+    })
+  })
+
+  describe('cancelOrder', () => {
+    beforeEach(() => {
+      trading212API = new Trading212API(mockApiKey)
+    })
+
+    it('should cancel order successfully', async () => {
+      ;(trading212API as any).api.delete.mockResolvedValue({})
+
+      await trading212API.cancelOrder(123)
+
+      expect((trading212API as any).api.delete).toHaveBeenCalledWith('/equity/orders/123')
+    })
+
+    it('should throw error when cancel fails', async () => {
+      const mockError = new Error('Cancel failed')
+      ;(trading212API as any).api.delete.mockRejectedValue(mockError)
+
+      await expect(trading212API.cancelOrder(123)).rejects.toThrow('Cancel failed')
+    })
+  })
+
+  describe('getHistoricalData', () => {
+    beforeEach(() => {
+      trading212API = new Trading212API(mockApiKey)
+    })
+
+    it('should return historical data successfully', async () => {
+      const mockData = [
+        { date: '2023-01-01', open: 100, high: 105, low: 95, close: 102 },
+        { date: '2023-01-02', open: 102, high: 108, low: 98, close: 106 }
+      ]
+      ;(trading212API as any).api.get.mockResolvedValue({ data: mockData })
+
+      const result = await trading212API.getHistoricalData('AAPL')
+
+      expect(result).toEqual(mockData)
+      expect((trading212API as any).api.get).toHaveBeenCalledWith('/equity/historical/AAPL', {
+        params: { period: '1DAY' }
+      })
+    })
+
+    it('should return historical data with custom period', async () => {
+      const mockData = [{ date: '2023-01-01', open: 100, close: 102 }]
+      ;(trading212API as any).api.get.mockResolvedValue({ data: mockData })
+
+      const result = await trading212API.getHistoricalData('AAPL', '1HOUR')
+
+      expect(result).toEqual(mockData)
+      expect((trading212API as any).api.get).toHaveBeenCalledWith('/equity/historical/AAPL', {
+        params: { period: '1HOUR' }
+      })
+    })
+  })
+
+  describe('getInstrumentDetails', () => {
+    beforeEach(() => {
+      trading212API = new Trading212API(mockApiKey)
+    })
+
+    it('should return instrument details successfully', async () => {
+      const mockDetails = {
+        ticker: 'AAPL',
+        name: 'Apple Inc.',
+        exchange: 'NASDAQ',
+        currency: 'USD'
+      }
+      ;(trading212API as any).api.get.mockResolvedValue({ data: mockDetails })
+
+      const result = await trading212API.getInstrumentDetails('AAPL')
+
+      expect(result).toEqual(mockDetails)
+      expect((trading212API as any).api.get).toHaveBeenCalledWith('/equity/metadata/instruments', {
+        params: { ticker: 'AAPL' }
+      })
+    })
+  })
+
+  describe('validateConnection error handling', () => {
+    beforeEach(() => {
+      trading212API = new Trading212API(mockApiKey)
+    })
+
+    it('should handle ENOTFOUND error', async () => {
+      const mockError = { code: 'ENOTFOUND' }
+      ;(trading212API as any).api.get.mockRejectedValue(mockError)
+
+      const result = await trading212API.validateConnection()
+
+      expect(result).toBe(false)
+    })
+
+    it('should handle ECONNREFUSED error', async () => {
+      const mockError = { code: 'ECONNREFUSED' }
+      ;(trading212API as any).api.get.mockRejectedValue(mockError)
+
+      const result = await trading212API.validateConnection()
+
+      expect(result).toBe(false)
+    })
+
+    it('should handle 403 forbidden error', async () => {
+      const mockError = { response: { status: 403 } }
+      ;(trading212API as any).api.get.mockRejectedValue(mockError)
+
+      const result = await trading212API.validateConnection()
+
+      expect(result).toBe(false)
+    })
+
+    it('should handle 404 not found error', async () => {
+      const mockError = { response: { status: 404 } }
+      ;(trading212API as any).api.get.mockRejectedValue(mockError)
+
+      const result = await trading212API.validateConnection()
+
+      expect(result).toBe(false)
+    })
+  })
+
   describe('error handling', () => {
     beforeEach(() => {
       trading212API = new Trading212API(mockApiKey)

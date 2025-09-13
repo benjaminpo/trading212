@@ -166,13 +166,13 @@ describe('/api/trail-stop/monitor', () => {
 
       const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(_request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.message).toBe('Monitored 2 orders, 1 triggered')
-      expect(data.processed).toBe(2)
-      expect(data.triggered).toBe(1)
-      expect(data.success).toBe(true)
+      expect(_data.message).toBe('Monitored 2 orders, 1 triggered')
+      expect(_data.processed).toBe(2)
+      expect(_data.triggered).toBe(1)
+      expect(_data.success).toBe(true)
     })
 
     it('should handle no active orders', async () => {
@@ -183,10 +183,10 @@ describe('/api/trail-stop/monitor', () => {
       const __data2 = await response.json()
 
       expect(response.status).toBe(200)
-      const data = await response.json()
-      expect(data.processed).toBe(0)
-      expect(data.triggered).toBe(0)
-      expect(data.success).toBe(true)
+      const _data = await response.json()
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+      expect(_data.success).toBe(true)
     })
 
     it('should handle API errors gracefully', async () => {
@@ -200,12 +200,12 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.processed).toBe(0)
-      expect(data.triggered).toBe(0)
-      expect(data.success).toBe(true)
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+      expect(_data.success).toBe(true)
     })
 
     it('should create notifications for triggered orders', async () => {
@@ -218,7 +218,7 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
       expect(mockedCreateTrailStopNotification).toHaveBeenCalledWith('user-1', {
@@ -241,7 +241,7 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
       expect(mockedPrisma.trailStopLossOrder.update).toHaveBeenCalledWith({
@@ -260,10 +260,10 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.processed).toBe(2)
+      expect(_data.processed).toBe(2)
       
       // Should create notification for production account (triggered)
       expect(mockedCreateTrailStopNotification).toHaveBeenCalledWith('user-1', {
@@ -281,10 +281,10 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.error).toBe('Failed to monitor trail stop orders')
+      expect(_data.error).toBe('Failed to monitor trail stop orders')
     })
 
     it('should handle notification creation errors', async () => {
@@ -294,12 +294,12 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.processed).toBe(1)
-      expect(data.triggered).toBe(1)
-      expect(data.success).toBe(true)
+      expect(_data.processed).toBe(1)
+      expect(_data.triggered).toBe(1)
+      expect(_data.success).toBe(true)
     })
 
     it('should handle order update errors', async () => {
@@ -309,12 +309,12 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.processed).toBe(1)
-      expect(data.triggered).toBe(1)
-      expect(data.success).toBe(true)
+      expect(_data.processed).toBe(1)
+      expect(_data.triggered).toBe(1)
+      expect(_data.success).toBe(true)
     })
 
     it('should handle missing position data', async () => {
@@ -328,12 +328,294 @@ describe('/api/trail-stop/monitor', () => {
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST(request)
-      const data = await response.json()
+      const _data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.processed).toBe(0)
-      expect(data.triggered).toBe(0)
-      expect(data.success).toBe(true)
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with no Trading212 account', async () => {
+      const orderWithoutAccount = {
+        ...mockActiveOrders[0],
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: []
+        }
+      }
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithoutAccount] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+    })
+
+    it('should handle orders with Trading212 account but no API key', async () => {
+      const orderWithoutApiKey = {
+        ...mockActiveOrders[0],
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: [{
+            id: 'acc-1',
+            apiKey: null,
+            isPractice: false
+          }]
+        }
+      }
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithoutApiKey] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+    })
+
+    it('should handle orders with specific account ID', async () => {
+      const orderWithAccountId = {
+        ...mockActiveOrders[0],
+        accountId: 'specific-account-id'
+      }
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithAccountId] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with fallback to default account', async () => {
+      const orderWithDefaultAccount = {
+        ...mockActiveOrders[0],
+        accountId: null,
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: [
+            { id: 'acc-1', isDefault: false, isActive: true, apiKey: 'test-key', isPractice: false },
+            { id: 'acc-2', isDefault: true, isActive: true, apiKey: 'default-key', isPractice: false }
+          ]
+        }
+      }
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithDefaultAccount] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with fallback to first active account', async () => {
+      const orderWithActiveAccount = {
+        ...mockActiveOrders[0],
+        accountId: null,
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: [
+            { id: 'acc-1', isDefault: false, isActive: true, apiKey: 'active-key', isPractice: false },
+            { id: 'acc-2', isDefault: false, isActive: false, apiKey: 'inactive-key', isPractice: false }
+          ]
+        }
+      }
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithActiveAccount] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with fallback to first account when no default or active', async () => {
+      const orderWithFirstAccount = {
+        ...mockActiveOrders[0],
+        accountId: null,
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: [
+            { id: 'acc-1', isDefault: false, isActive: false, apiKey: 'first-key', isPractice: false }
+          ]
+        }
+      }
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithFirstAccount] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle positions not found for order symbol', async () => {
+      const mockTrading212API = {
+        getPositions: jest.fn().mockResolvedValue([
+          { ticker: 'GOOGL', currentPrice: 2800.00 }
+        ])
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+    })
+
+    it('should handle Trading212 API errors', async () => {
+      const mockTrading212API = {
+        getPositions: jest.fn().mockRejectedValue(new Error('API Error'))
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.processed).toBe(0)
+      expect(_data.triggered).toBe(0)
+    })
+
+    it('should handle orders with no positions data', async () => {
+      const mockTrading212API = {
+        getAccountInfo: jest.fn().mockResolvedValue({ account: { currency: 'USD', cash: 1000 } }),
+        getPositions: jest.fn().mockResolvedValue({ positions: [] })
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with null positions data', async () => {
+      const mockTrading212API = {
+        getAccountInfo: jest.fn().mockResolvedValue({ account: { currency: 'USD', cash: 1000 } }),
+        getPositions: jest.fn().mockResolvedValue({ positions: null })
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with undefined positions data', async () => {
+      const mockTrading212API = {
+        getAccountInfo: jest.fn().mockResolvedValue({ account: { currency: 'USD', cash: 1000 } }),
+        getPositions: jest.fn().mockResolvedValue({})
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with positions but no matching symbol', async () => {
+      const orderWithDifferentSymbol = {
+        ...mockActiveOrders[0],
+        symbol: 'DIFFERENT'
+      }
+      const mockTrading212API = {
+        getAccountInfo: jest.fn().mockResolvedValue({ account: { currency: 'USD', cash: 1000 } }),
+        getPositions: jest.fn().mockResolvedValue({ positions: [{ ticker: 'AAPL', quantity: 100, currentPrice: 150 }] })
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithDifferentSymbol] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with practice account', async () => {
+      const orderWithPracticeAccount = {
+        ...mockActiveOrders[0],
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: [
+            { id: 'acc-1', isDefault: true, isActive: true, apiKey: 'test-key', isPractice: true }
+          ]
+        }
+      }
+      const mockTrading212API = {
+        getAccountInfo: jest.fn().mockResolvedValue({ account: { currency: 'USD', cash: 1000 } }),
+        getPositions: jest.fn().mockResolvedValue({ positions: [{ ticker: 'AAPL', quantity: 100, currentPrice: 150 }] })
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithPracticeAccount] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
+    })
+
+    it('should handle orders with live account', async () => {
+      const orderWithLiveAccount = {
+        ...mockActiveOrders[0],
+        user: {
+          ...mockActiveOrders[0].user,
+          trading212Accounts: [
+            { id: 'acc-1', isDefault: true, isActive: true, apiKey: 'test-key', isPractice: false }
+          ]
+        }
+      }
+      const mockTrading212API = {
+        getAccountInfo: jest.fn().mockResolvedValue({ account: { currency: 'USD', cash: 1000 } }),
+        getPositions: jest.fn().mockResolvedValue({ positions: [{ ticker: 'AAPL', quantity: 100, currentPrice: 150 }] })
+      }
+      mockedTrading212API.mockImplementation(() => mockTrading212API)
+
+      mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithLiveAccount] as any)
+
+      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const response = await POST(request)
+      const _data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(_data.success).toBe(true)
     })
   })
 })

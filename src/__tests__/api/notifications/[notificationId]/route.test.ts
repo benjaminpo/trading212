@@ -200,5 +200,156 @@ describe('/api/notifications/[notificationId]', () => {
       const data = await response.json()
       expect(data.error).toBe('Failed to delete notification')
     })
+
+    it('handles deletion of non-existent notification', async () => {
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue({
+        user: { id: 'test-user-id' }
+      })
+
+      const { prisma } = require('@/lib/prisma')
+      prisma.notification.findFirst.mockResolvedValue(null)
+
+      const request = new NextRequest('http://localhost:3000/api/notifications/nonexistent', {
+        method: 'DELETE',
+      })
+
+      const response = await DELETE(request, { params: { notificationId: 'nonexistent' } })
+
+      expect(response.status).toBe(404)
+      const data = await response.json()
+      expect(data.error).toBe('Notification not found')
+    })
+  })
+
+  describe('PUT', () => {
+    const mockNotification = {
+      id: '1',
+      userId: 'test-user-id',
+      title: 'Test Notification',
+      message: 'Test message',
+      isRead: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    it('marks notification as read successfully', async () => {
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue({
+        user: { id: 'test-user-id' }
+      })
+
+      const { prisma } = require('@/lib/prisma')
+      prisma.notification.findFirst.mockResolvedValue(mockNotification)
+      prisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        isRead: true
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/notifications/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isRead: true }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { notificationId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.notification.isRead).toBe(true)
+    })
+
+    it('marks notification as unread successfully', async () => {
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue({
+        user: { id: 'test-user-id' }
+      })
+
+      const { prisma } = require('@/lib/prisma')
+      prisma.notification.findFirst.mockResolvedValue(mockNotification)
+      prisma.notification.update.mockResolvedValue({
+        ...mockNotification,
+        isRead: false
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/notifications/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isRead: false }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { notificationId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.notification.isRead).toBe(false)
+    })
+
+    it('handles non-existent notification in PUT', async () => {
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue({
+        user: { id: 'test-user-id' }
+      })
+
+      const { prisma } = require('@/lib/prisma')
+      prisma.notification.findFirst.mockResolvedValue(null)
+
+      const request = new NextRequest('http://localhost:3000/api/notifications/nonexistent', {
+        method: 'PUT',
+        body: JSON.stringify({ isRead: true }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { notificationId: 'nonexistent' } })
+
+      expect(response.status).toBe(404)
+      const data = await response.json()
+      expect(data.error).toBe('Notification not found')
+    })
+
+    it('handles database errors during update', async () => {
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue({
+        user: { id: 'test-user-id' }
+      })
+
+      const { prisma } = require('@/lib/prisma')
+      prisma.notification.findFirst.mockResolvedValue(mockNotification)
+      prisma.notification.update.mockRejectedValue(new Error('Database error'))
+
+      const request = new NextRequest('http://localhost:3000/api/notifications/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isRead: true }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { notificationId: '1' } })
+
+      expect(response.status).toBe(500)
+      const data = await response.json()
+      expect(data.error).toBe('Failed to update notification')
+    })
+
+    it('handles invalid JSON in PUT request', async () => {
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue({
+        user: { id: 'test-user-id' }
+      })
+
+      const { prisma } = require('@/lib/prisma')
+      prisma.notification.findFirst.mockResolvedValue(mockNotification)
+
+      const request = new NextRequest('http://localhost:3000/api/notifications/1', {
+        method: 'PUT',
+        body: 'invalid json',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { notificationId: '1' } })
+
+      expect(response.status).toBe(500)
+      const data = await response.json()
+      expect(data.error).toBe('Failed to update notification')
+    })
   })
 })

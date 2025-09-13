@@ -223,6 +223,74 @@ describe('/api/trading212/accounts/[accountId]', () => {
       const data = await response.json()
       expect(data.error).toBe('Failed to update account')
     })
+
+    it('handles invalid JSON in request body', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: 'invalid json',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(500)
+      const data = await response.json()
+      expect(data.error).toBe('Failed to update account')
+    })
+
+    it('handles empty request body', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: '',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(500)
+      const data = await response.json()
+      expect(data.error).toBe('Failed to update account')
+    })
+
+    it('handles setting account as default when no other accounts exist', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+      prisma.trading212Account.updateMany.mockResolvedValue({ count: 0 })
+      prisma.trading212Account.update.mockResolvedValue({ ...mockAccount, isDefault: true })
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isDefault: true }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.message).toBe('Account updated successfully')
+    })
   })
 
   describe('DELETE', () => {
@@ -280,6 +348,203 @@ describe('/api/trading212/accounts/[accountId]', () => {
       expect(response.status).toBe(500)
       const data = await response.json()
       expect(data.error).toBe('Failed to delete account')
+    })
+
+    it('handles deletion of non-existent account', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: []
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(null)
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/nonexistent', {
+        method: 'DELETE',
+      })
+
+      const response = await DELETE(request, { params: { accountId: 'nonexistent' } })
+
+      expect(response.status).toBe(404)
+      const data = await response.json()
+      expect(data.error).toBe('Account not found')
+    })
+
+    it('handles deletion of account belonging to different user', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: []
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(null)
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/other-user-account', {
+        method: 'DELETE',
+      })
+
+      const response = await DELETE(request, { params: { accountId: 'other-user-account' } })
+
+      expect(response.status).toBe(404)
+      const data = await response.json()
+      expect(data.error).toBe('Account not found')
+    })
+
+    it('handles successful deletion with multiple accounts', async () => {
+      const { prisma } = require('@/lib/prisma')
+      const multipleAccounts = [
+        { id: '1', name: 'Account 1', userId: 'user1' },
+        { id: '2', name: 'Account 2', userId: 'user1' }
+      ]
+      
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: multipleAccounts
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(multipleAccounts[0])
+      prisma.trading212Account.delete.mockResolvedValue(multipleAccounts[0])
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'DELETE',
+      })
+
+      const response = await DELETE(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.message).toBe('Account deleted successfully')
+    })
+
+    it('handles update with partial data', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+      prisma.trading212Account.update.mockResolvedValue({
+        ...mockAccount,
+        name: 'Updated Account'
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: JSON.stringify({ name: 'Updated Account' }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.account.name).toBe('Updated Account')
+    })
+
+    it('handles update with isDefault true', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+      prisma.trading212Account.updateMany.mockResolvedValue({ count: 1 })
+      prisma.trading212Account.update.mockResolvedValue({
+        ...mockAccount,
+        isDefault: true
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isDefault: true }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.account.isDefault).toBe(true)
+    })
+
+    it('handles update with isDefault false', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+      prisma.trading212Account.update.mockResolvedValue({
+        ...mockAccount,
+        isDefault: false
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isDefault: false }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.account.isDefault).toBe(false)
+    })
+
+    it('handles update with isActive true', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+      prisma.trading212Account.update.mockResolvedValue({
+        ...mockAccount,
+        isActive: true
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: true }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.account.isActive).toBe(true)
+    })
+
+    it('handles update with isActive false', async () => {
+      const { prisma } = require('@/lib/prisma')
+      prisma.user.findUnique.mockResolvedValue({ 
+        id: 'user1', 
+        email: 'test@example.com',
+        trading212Accounts: [mockAccount]
+      })
+      prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
+      prisma.trading212Account.update.mockResolvedValue({
+        ...mockAccount,
+        isActive: false
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1', {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: false }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const response = await PUT(request, { params: { accountId: '1' } })
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.account.isActive).toBe(false)
     })
   })
 })

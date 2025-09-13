@@ -276,5 +276,93 @@ describe('Dashboard Aggregation Logic', () => {
       expect(result.totalPnLPercent).toBeCloseTo(6.67, 2) // 100 / 1500 * 100
       expect(result.todayPnLPercent).toBeCloseTo(1.33, 2) // 20 / 1500 * 100
     })
+
+    it('should handle null data gracefully', () => {
+      const accountResults = [
+        {
+          data: null,
+        },
+        {
+          data: {
+            stats: {
+              totalPnL: 50,
+              todayPnL: 10,
+              activePositions: 1,
+            },
+            portfolio: [
+              { quantity: 5, currentPrice: 100 },
+            ],
+            cash: 100,
+          },
+        },
+      ]
+
+      const result = aggregateAccountStats(accountResults as any)
+
+      expect(result.totalPnL).toBe(50)
+      expect(result.todayPnL).toBe(10)
+      expect(result.activePositions).toBe(1)
+      expect(result.totalCash).toBe(100)
+      expect(result.totalCurrentValue).toBe(500)
+    })
+
+    it('should handle accounts with zero current value', () => {
+      const accountResults = [
+        {
+          data: {
+            stats: {
+              totalPnL: 0,
+              todayPnL: 0,
+              activePositions: 0,
+            },
+            portfolio: [
+              { quantity: 0, currentPrice: 100 }, // Zero quantity
+              { quantity: 5, currentPrice: 0 },   // Zero price
+            ],
+            cash: 0,
+          },
+        },
+      ]
+
+      const result = aggregateAccountStats(accountResults)
+
+      expect(result.totalPnL).toBe(0)
+      expect(result.todayPnL).toBe(0)
+      expect(result.activePositions).toBe(0)
+      expect(result.totalCash).toBe(0)
+      expect(result.totalCurrentValue).toBe(0)
+      expect(result.totalInvestedValue).toBe(0)
+      expect(result.totalPnLPercent).toBe(0)
+      expect(result.todayPnLPercent).toBe(0)
+    })
+
+    it('should handle very large numbers', () => {
+      const accountResults = [
+        {
+          data: {
+            stats: {
+              totalPnL: 1000000,
+              todayPnL: 50000,
+              activePositions: 100,
+            },
+            portfolio: [
+              { quantity: 1000, currentPrice: 10000 }, // $10,000,000
+            ],
+            cash: 100000,
+          },
+        },
+      ]
+
+      const result = aggregateAccountStats(accountResults)
+
+      expect(result.totalPnL).toBe(1000000)
+      expect(result.todayPnL).toBe(50000)
+      expect(result.activePositions).toBe(100)
+      expect(result.totalCash).toBe(100000)
+      expect(result.totalCurrentValue).toBe(10000000)
+      expect(result.totalInvestedValue).toBe(9000000) // 10M - 1M
+      expect(result.totalPnLPercent).toBeCloseTo(11.11, 2) // 1M / 9M * 100
+      expect(result.todayPnLPercent).toBeCloseTo(0.56, 2) // 50K / 9M * 100
+    })
   })
 })

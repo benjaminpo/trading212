@@ -34,6 +34,38 @@ describe('currency utils edge cases', () => {
     expect(typeof formatted).toBe('string')
     expect(formatted).toContain('100')
   })
+
+  it('handles edge case amounts', () => {
+    expect(formatCurrency(0.0001, 'USD')).toBe('$0.00')
+    expect(formatCurrency(0.0009, 'USD')).toBe('$0.00')
+    expect(formatCurrency(0.001, 'USD')).toBe('$0.00')
+    expect(formatCurrency(0.004, 'USD')).toBe('$0.00')
+    expect(formatCurrency(0.005, 'USD')).toBe('$0.01')
+  })
+
+  it('handles negative edge case amounts', () => {
+    expect(formatCurrency(-0.0001, 'USD')).toBe('$-0.00')
+    expect(formatCurrency(-0.0009, 'USD')).toBe('$-0.00')
+    expect(formatCurrency(-0.001, 'USD')).toBe('$-0.00')
+    expect(formatCurrency(-0.004, 'USD')).toBe('$-0.00')
+    expect(formatCurrency(-0.005, 'USD')).toBe('$-0.01')
+  })
+
+  it('handles very large numbers', () => {
+    expect(formatCurrency(999999999999.99, 'USD')).toBe('$999,999,999,999.99')
+    expect(formatCurrency(1000000000000, 'USD')).toBe('$1,000,000,000,000.00')
+  })
+
+  it('handles scientific notation inputs', () => {
+    expect(formatCurrency(1e6, 'USD')).toBe('$1,000,000.00')
+    expect(formatCurrency(1e-6, 'USD')).toBe('$0.00')
+  })
+
+  it('handles different currency symbols consistently', () => {
+    expect(getCurrencySymbol('CAD')).toBe('C$')
+    expect(getCurrencySymbol('AUD')).toBe('A$')
+    expect(getCurrencySymbol('CHF')).toBe('CHF')
+  })
 })
 
 

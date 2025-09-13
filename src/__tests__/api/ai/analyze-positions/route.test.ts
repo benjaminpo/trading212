@@ -141,10 +141,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(200)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       message: 'AI analysis completed successfully',
       recommendations: expect.arrayContaining([
         expect.objectContaining({
@@ -165,10 +165,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(401)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       error: 'Unauthorized'
     })
   })
@@ -182,10 +182,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(400)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       error: 'No active Trading212 accounts found'
     })
   })
@@ -205,10 +205,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(500)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       error: 'Failed to analyze positions'
     })
   })
@@ -222,10 +222,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(500)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       error: 'Failed to analyze positions'
     })
   })
@@ -237,7 +237,7 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(200)
     expect(mockAiAnalysisService.analyzeBulkPositions).toHaveBeenCalledWith(
@@ -265,10 +265,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(200)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       message: 'No positions found to analyze',
       recommendations: [],
       analysisLog: null
@@ -282,10 +282,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(500)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       error: 'Failed to analyze positions'
     })
   })
@@ -296,10 +296,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(200)
-    expect(data).toEqual({
+    expect(_data).toEqual({
       message: 'AI analysis completed successfully',
       recommendations: expect.any(Array),
       analysisLog: expect.any(Object),
@@ -348,10 +348,10 @@ describe('/api/ai/analyze-positions', () => {
     })
     
     const response = await POST(request)
-    const data = await response.json()
+    const _data = await response.json()
     
     expect(response.status).toBe(200)
-    expect(data.recommendations[0]).toEqual(
+    expect(_data.recommendations[0]).toEqual(
       expect.objectContaining({
         symbol: 'RRl_EQ'
       })

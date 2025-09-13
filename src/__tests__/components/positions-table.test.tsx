@@ -223,4 +223,119 @@ describe('PositionsTable', () => {
     // Check that the component renders with EUR currency
     expect(screen.getByText('AAPL')).toBeInTheDocument()
   })
+
+  it('handles positions with zero values', () => {
+    const zeroPositions = [
+      {
+        ticker: 'ZERO',
+        quantity: 0,
+        averagePrice: 0,
+        currentPrice: 0,
+        ppl: 0,
+        pplPercent: 0,
+        marketValue: 0,
+        maxBuy: 0,
+        maxSell: 0,
+        accountName: 'Test Account',
+        accountId: '1',
+        isPractice: false,
+      }
+    ]
+
+    render(<PositionsTable positions={zeroPositions} showAccountColumn={true} />)
+
+    expect(screen.getByText('ZERO')).toBeInTheDocument()
+    expect(screen.getAllByText('$0.00')).toHaveLength(3) // Multiple cells with $0.00
+  })
+
+  it('handles positions with very large values', () => {
+    const largePositions = [
+      {
+        ticker: 'LARGE',
+        quantity: 1000000,
+        averagePrice: 999999.99,
+        currentPrice: 1000000.00,
+        ppl: 1000000.00,
+        pplPercent: 100.00,
+        marketValue: 1000000000.00,
+        maxBuy: 1000000,
+        maxSell: 1000000,
+        accountName: 'Test Account',
+        accountId: '1',
+        isPractice: false,
+      }
+    ]
+
+    render(<PositionsTable positions={largePositions} showAccountColumn={true} />)
+    
+    expect(screen.getByText('LARGE')).toBeInTheDocument()
+    expect(screen.getByText('$1000000.00')).toBeInTheDocument()
+  })
+
+  it('handles positions with very small values', () => {
+    const smallPositions = [
+      {
+        ticker: 'SMALL',
+        quantity: 0.001,
+        averagePrice: 0.01,
+        currentPrice: 0.02,
+        ppl: 0.01,
+        pplPercent: 100.00,
+        marketValue: 0.02,
+        maxBuy: 0.001,
+        maxSell: 0.001,
+        accountName: 'Test Account',
+        accountId: '1',
+        isPractice: false,
+      }
+    ]
+
+    render(<PositionsTable positions={smallPositions} showAccountColumn={true} />)
+
+    expect(screen.getByText('SMALL')).toBeInTheDocument()
+    expect(screen.getAllByText('$0.02')).toHaveLength(2) // Multiple cells with $0.02
+  })
+
+  it('handles positions with null/undefined values', () => {
+    const nullPositions = [
+      {
+        ticker: 'NULL',
+        quantity: null,
+        averagePrice: null,
+        currentPrice: null,
+        ppl: null,
+        pplPercent: null,
+        marketValue: null,
+        maxBuy: null,
+        maxSell: null,
+        accountName: 'Test Account',
+        accountId: '1',
+        isPractice: false,
+      }
+    ]
+
+    render(<PositionsTable positions={nullPositions as any} showAccountColumn={true} />)
+    
+    expect(screen.getByText('NULL')).toBeInTheDocument()
+  })
+
+  it('handles search with special characters', () => {
+    render(<PositionsTable positions={mockPositions} showAccountColumn={true} />)
+
+    const searchInput = screen.getByPlaceholderText('Search by symbol or account...')
+    fireEvent.change(searchInput, { target: { value: 'AAPL@#$%' } })
+
+    // Should filter out results when special characters don't match
+    expect(screen.getByText('0 of 3 positions')).toBeInTheDocument()
+  })
+
+  it('handles case insensitive search', () => {
+    render(<PositionsTable positions={mockPositions} showAccountColumn={true} />)
+    
+    const searchInput = screen.getByPlaceholderText('Search by symbol or account...')
+    fireEvent.change(searchInput, { target: { value: 'aapl' } })
+
+    // Should show AAPL (case insensitive)
+    expect(screen.getByText('AAPL')).toBeInTheDocument()
+  })
 })

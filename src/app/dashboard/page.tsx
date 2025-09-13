@@ -166,7 +166,7 @@ export default function Dashboard() {
       setConnectionStatus({ connected: false })
     }
     setLoading(false)
-  }, [selectedAccountId])
+  }, [selectedAccountId, fetchWithRetry])
 
   const loadAggregatedAccountData = useCallback(async () => {
     // Load all accounts first
@@ -294,7 +294,7 @@ export default function Dashboard() {
     })
     
     setLoading(false)
-  }, [])
+  }, [fetchWithRetry])
 
   // Load dashboard data when authenticated and component is mounted
   useEffect(() => {

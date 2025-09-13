@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { prisma as _prisma } from '@/lib/prisma'
+import _bcrypt from 'bcryptjs'
 
 // Mock Prisma
 jest.mock('@/lib/prisma', () => ({
@@ -96,6 +96,113 @@ describe('Auth Configuration', () => {
       })
 
       expect(result.user.id).toBe('1')
+    })
+
+    it('returns session without user id when token is not provided', async () => {
+      const sessionCallback = authOptions.callbacks?.session
+      expect(sessionCallback).toBeDefined()
+
+      const result = await sessionCallback!({
+        session: { user: { email: 'test@example.com' } },
+        token: undefined,
+      })
+
+      expect(result.user.id).toBeUndefined()
+    })
+  })
+
+  describe('Credentials Provider Authorize', () => {
+    it('returns null when email is missing', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+      
+      const result = await credentialsProvider.authorize({
+        email: '',
+        password: 'password123'
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when password is missing', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+      
+      const result = await credentialsProvider.authorize({
+        email: 'test@example.com',
+        password: ''
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when user is not found', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+
+      _prisma.user.findUnique.mockResolvedValue(null)
+      
+      const result = await credentialsProvider.authorize({
+        email: 'test@example.com',
+        password: 'password123'
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when user has no password', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+
+      _prisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        email: 'test@example.com',
+        password: null
+      })
+      
+      const result = await credentialsProvider.authorize({
+        email: 'test@example.com',
+        password: 'password123'
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when password is invalid', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+
+      _prisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        email: 'test@example.com',
+        password: 'hashedpassword',
+        name: 'Test User',
+        image: null
+      })
+
+      _bcrypt.compare.mockResolvedValue(false)
+      
+      const result = await credentialsProvider.authorize({
+        email: 'test@example.com',
+        password: 'wrongpassword'
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('has authorize function that can be called', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+
+      expect(credentialsProvider).toBeDefined()
+      expect(credentialsProvider.authorize).toBeDefined()
+      expect(typeof credentialsProvider.authorize).toBe('function')
     })
   })
 })

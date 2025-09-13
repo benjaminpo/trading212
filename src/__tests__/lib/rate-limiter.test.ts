@@ -186,5 +186,49 @@ describe('RateLimiter', () => {
       jest.advanceTimersByTime(windowMs + 1)
       expect(rateLimiter.getTimeUntilReset(key)).toBe(0)
     })
+
+    it('should handle multiple requests in the same timestamp', () => {
+      const key = 'test-user-1'
+      
+      // Mock Date.now to return the same timestamp
+      const mockNow = 1000000
+      jest.spyOn(Date, 'now').mockReturnValue(mockNow)
+      
+      expect(rateLimiter.canMakeRequest(key)).toBe(true)
+      expect(rateLimiter.canMakeRequest(key)).toBe(true)
+      expect(rateLimiter.canMakeRequest(key)).toBe(true)
+      expect(rateLimiter.canMakeRequest(key)).toBe(false)
+      
+      jest.restoreAllMocks()
+    })
+
+    it('should handle negative time until reset', () => {
+      const key = 'test-user-1'
+      
+      // Make a request
+      rateLimiter.canMakeRequest(key)
+      
+      // Advance time beyond the window
+      jest.advanceTimersByTime(windowMs + 100)
+      
+      // Should return 0 (not negative)
+      expect(rateLimiter.getTimeUntilReset(key)).toBe(0)
+    })
+  })
+
+  describe('constructor', () => {
+    it('should use default values when no parameters provided', () => {
+      const defaultLimiter = new RateLimiter()
+      expect(defaultLimiter.canMakeRequest('test')).toBe(true)
+    })
+
+    it('should use custom window and max requests', () => {
+      const customLimiter = new RateLimiter(5000, 2) // 5 second window, 2 requests
+      const key = 'test-user'
+      
+      expect(customLimiter.canMakeRequest(key)).toBe(true)
+      expect(customLimiter.canMakeRequest(key)).toBe(true)
+      expect(customLimiter.canMakeRequest(key)).toBe(false)
+    })
   })
 })

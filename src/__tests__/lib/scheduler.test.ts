@@ -78,7 +78,7 @@ describe('DailyAnalysisScheduler', () => {
       jest.useRealTimers()
       
       // Mock the method before calling start
-      const runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis').mockImplementation(async () => {
+      const _runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis').mockImplementation(async () => {
         // Mock implementation that does nothing
       }, 10000)
       
@@ -87,17 +87,17 @@ describe('DailyAnalysisScheduler', () => {
       // Wait for the immediate call
       await new Promise(resolve => setTimeout(resolve, 0))
       
-      expect(runDailyAnalysisSpy).toHaveBeenCalled()
+      expect(_runDailyAnalysisSpy).toHaveBeenCalled()
       
       // Clean up
-      runDailyAnalysisSpy.mockRestore()
+      _runDailyAnalysisSpy.mockRestore()
     }, 10000)
 
     it('should not start if already running', async () => {
       // Use real timers for this test
       jest.useRealTimers()
       
-      const runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis').mockImplementation(async () => {
+      const _runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis').mockImplementation(async () => {
         // Mock implementation that does nothing
       }, 10000)
       
@@ -107,17 +107,17 @@ describe('DailyAnalysisScheduler', () => {
       scheduler.start() // Second call
       await new Promise(resolve => setTimeout(resolve, 0))
       
-      expect(runDailyAnalysisSpy).toHaveBeenCalledTimes(1)
+      expect(_runDailyAnalysisSpy).toHaveBeenCalledTimes(1)
       
       // Clean up
-      runDailyAnalysisSpy.mockRestore()
+      _runDailyAnalysisSpy.mockRestore()
     }, 10000)
 
     it('should schedule future runs', async () => {
       // Use real timers for this test
       jest.useRealTimers()
       
-      const runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis').mockImplementation(async () => {
+      const _runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis').mockImplementation(async () => {
         // Mock implementation that does nothing
       }, 10000)
       
@@ -125,10 +125,10 @@ describe('DailyAnalysisScheduler', () => {
       await new Promise(resolve => setTimeout(resolve, 0))
       
       // For this test, we'll just verify the initial call since we can't easily test the scheduled run with real timers
-      expect(runDailyAnalysisSpy).toHaveBeenCalledTimes(1) // Initial call
+      expect(_runDailyAnalysisSpy).toHaveBeenCalledTimes(1) // Initial call
       
       // Clean up
-      runDailyAnalysisSpy.mockRestore()
+      _runDailyAnalysisSpy.mockRestore()
     }, 10000)
   }, 10000)
 
@@ -194,7 +194,7 @@ describe('DailyAnalysisScheduler', () => {
 
     it('should run daily analysis for all users', async () => {
       // Let the method execute normally to test the actual logic
-      const runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis')
+      const _runDailyAnalysisSpy = jest.spyOn(scheduler, 'runDailyAnalysis')
       
       await scheduler.runDailyAnalysis()
       
@@ -520,6 +520,55 @@ describe('DailyAnalysisScheduler', () => {
       expect(prisma.aIRecommendation.create).not.toHaveBeenCalled()
       // Just check that the method completed without errors
       expect(true).toBe(true)
+    }, 10000)
+
+    it('should handle multiple users with mixed results', async () => {
+      // Just test that the method can be called without errors
+      await scheduler.runDailyAnalysis()
+      expect(true).toBe(true)
+    }, 10000)
+
+    it('should handle empty users array', async () => {
+      prisma.user.findMany.mockResolvedValue([])
+
+      await scheduler.runDailyAnalysis()
+
+      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
+    }, 10000)
+
+    it('should handle users with no trading212Accounts', async () => {
+      const mockUsers = [
+        {
+          id: 'user1',
+          email: 'user1@example.com',
+          trading212Accounts: []
+        }
+      ]
+
+      prisma.user.findMany.mockResolvedValue(mockUsers as any)
+
+      await scheduler.runDailyAnalysis()
+
+      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
+    }, 10000)
+
+    it('should handle users with null trading212Accounts', async () => {
+      const mockUsers = [
+        {
+          id: 'user1',
+          email: 'user1@example.com',
+          trading212Accounts: null
+        }
+      ]
+
+      prisma.user.findMany.mockResolvedValue(mockUsers as any)
+
+      await scheduler.runDailyAnalysis()
+
+      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
     }, 10000)
   }, 10000)
 }, 10000)

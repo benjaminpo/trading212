@@ -70,5 +70,52 @@ describe('Utils', () => {
       const date = new Date('2024-02-29')
       expect(formatDate(date)).toBe('Feb 29, 2024')
     })
+
+    it('should handle edge case dates', () => {
+      const date = new Date('2023-01-01')
+      expect(formatDate(date)).toBe('Jan 1, 2023')
+    })
+
+    it('should handle end of year dates', () => {
+      const date = new Date('2023-12-31')
+      expect(formatDate(date)).toBe('Dec 31, 2023')
+    })
+  })
+
+  describe('formatPercent edge cases', () => {
+    it('should handle very small positive percentages', () => {
+      expect(formatPercent(0.01)).toBe('+0.01%')
+    })
+
+    it('should handle very small negative percentages', () => {
+      expect(formatPercent(-0.01)).toBe('-0.01%')
+    })
+
+    it('should handle very large percentages', () => {
+      expect(formatPercent(999.99)).toBe('+999.99%')
+    })
+
+    it('should handle very large negative percentages', () => {
+      expect(formatPercent(-999.99)).toBe('-999.99%')
+    })
+
+    it('should round to 2 decimal places', () => {
+      expect(formatPercent(12.345)).toBe('+12.35%')
+      expect(formatPercent(12.344)).toBe('+12.34%')
+    })
+  })
+
+  describe('formatCurrency edge cases', () => {
+    it('should handle very small amounts', () => {
+      expect(formatCurrency(0.01)).toBe('$0.01')
+    })
+
+    it('should handle very large amounts', () => {
+      expect(formatCurrency(999999999.99)).toBe('$999,999,999.99')
+    })
+
+    it('should handle amounts with many decimal places', () => {
+      expect(formatCurrency(1234.56789)).toBe('$1,234.57')
+    })
   })
 })

@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen as _screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 // Mock next-auth and next/navigation used by pages

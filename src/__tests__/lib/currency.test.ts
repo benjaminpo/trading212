@@ -95,5 +95,44 @@ describe('Currency utilities', () => {
       expect(defaultConfig.symbol).toBe('$')
       expect(defaultConfig.position).toBe('before')
     })
+
+    it('handles empty string currency', () => {
+      const emptyConfig = getCurrencyConfig('')
+      expect(emptyConfig.symbol).toBe('$')
+      expect(emptyConfig.position).toBe('before')
+    })
+
+  })
+
+  describe('formatCurrency edge cases', () => {
+    it('handles zero values for all currencies', () => {
+      expect(formatCurrency(0, 'USD')).toBe('$0.00')
+      expect(formatCurrency(0, 'EUR')).toBe('€0,00')
+      expect(formatCurrency(0, 'GBP')).toBe('£0.00')
+    })
+
+    it('handles very small decimal values', () => {
+      expect(formatCurrency(0.001, 'USD')).toBe('$0.00')
+      expect(formatCurrency(0.009, 'USD')).toBe('$0.01')
+    })
+
+    it('handles negative zero', () => {
+      expect(formatCurrency(-0, 'USD')).toBe('$-0.00')
+    })
+
+    it('handles infinity values', () => {
+      expect(formatCurrency(Infinity, 'USD')).toBe('$∞')
+      expect(formatCurrency(-Infinity, 'USD')).toBe('$-∞')
+    })
+
+    it('handles NaN values', () => {
+      expect(formatCurrency(NaN, 'USD')).toBe('$NaN')
+    })
+  })
+
+  describe('getCurrencySymbol edge cases', () => {
+    it('handles empty string', () => {
+      expect(getCurrencySymbol('')).toBe('$')
+    })
   })
 })

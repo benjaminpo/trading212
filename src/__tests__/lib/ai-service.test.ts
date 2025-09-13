@@ -1,4 +1,4 @@
-import { aiAnalysisService, AIRecommendationResult, PositionData, MarketData } from '@/lib/ai-service'
+import { aiAnalysisService, AIRecommendationResult as _AIRecommendationResult, PositionData, MarketData } from '@/lib/ai-service'
 
 // Mock OpenAI
 jest.mock('openai', () => {
@@ -401,6 +401,74 @@ describe('AIAnalysisService', () => {
       
       expect(result).toBeDefined()
       expect(result.recommendationType).toBe('HOLD')
+    })
+
+    it('should handle very large position values', async () => {
+      const largePosition: PositionData = {
+        symbol: 'AAPL',
+        quantity: 1000000,
+        averagePrice: 150,
+        currentPrice: 160,
+        pnl: 10000000,
+        pnlPercent: 6.67,
+        marketValue: 160000000
+      }
+
+      const result = await aiAnalysisService.analyzePosition(largePosition, mockMarketData, 'MODERATE')
+
+      expect(result).toBeDefined()
+      expect(result.recommendationType).toBeDefined()
+    })
+
+    it('should handle very small position values', async () => {
+      const smallPosition: PositionData = {
+        symbol: 'AAPL',
+        quantity: 0.001,
+        averagePrice: 0.01,
+        currentPrice: 0.02,
+        pnl: 0.01,
+        pnlPercent: 100,
+        marketValue: 0.02
+      }
+
+      const result = await aiAnalysisService.analyzePosition(smallPosition, mockMarketData, 'MODERATE')
+
+      expect(result).toBeDefined()
+      expect(result.recommendationType).toBeDefined()
+    })
+
+    it('should handle positions with zero quantity', async () => {
+      const zeroQuantityPosition: PositionData = {
+        symbol: 'AAPL',
+        quantity: 0,
+        averagePrice: 150,
+        currentPrice: 160,
+        pnl: 0,
+        pnlPercent: 0,
+        marketValue: 0
+      }
+
+      const result = await aiAnalysisService.analyzePosition(zeroQuantityPosition, mockMarketData, 'MODERATE')
+
+      expect(result).toBeDefined()
+      expect(result.recommendationType).toBeDefined()
+    })
+
+    it('should handle positions with zero prices', async () => {
+      const zeroPricePosition: PositionData = {
+        symbol: 'AAPL',
+        quantity: 100,
+        averagePrice: 0,
+        currentPrice: 0,
+        pnl: 0,
+        pnlPercent: 0,
+        marketValue: 0
+      }
+
+      const result = await aiAnalysisService.analyzePosition(zeroPricePosition, mockMarketData, 'MODERATE')
+
+      expect(result).toBeDefined()
+      expect(result.recommendationType).toBeDefined()
     })
   })
 })

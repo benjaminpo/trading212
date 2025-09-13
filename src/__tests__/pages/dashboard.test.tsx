@@ -97,7 +97,7 @@ describe('Dashboard page behaviors', () => {
   })
 
   it('reloads data on window focus', async () => {
-    let callCounts: Record<string, number> = { accounts: 0, account: 0, ai: 0 }
+    const callCounts: Record<string, number> = { accounts: 0, account: 0, ai: 0 }
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (url.includes('/api/trading212/accounts')) {
