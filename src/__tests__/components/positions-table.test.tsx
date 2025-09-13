@@ -242,7 +242,7 @@ describe('PositionsTable', () => {
       }
     ]
 
-    render(<PositionsTable positions={zeroPositions} showAccountColumn={true} />)
+    render(<PositionsTable positions={zeroPositions} showAccountColumn={true} currency="USD" />)
 
     expect(screen.getByText('ZERO')).toBeInTheDocument()
     expect(screen.getAllByText('$0.00')).toHaveLength(3) // Multiple cells with $0.00
@@ -266,7 +266,7 @@ describe('PositionsTable', () => {
       }
     ]
 
-    render(<PositionsTable positions={largePositions} showAccountColumn={true} />)
+    render(<PositionsTable positions={largePositions} showAccountColumn={true} currency="USD" />)
     
     expect(screen.getByText('LARGE')).toBeInTheDocument()
     expect(screen.getByText('$1000000.00')).toBeInTheDocument()
@@ -290,7 +290,7 @@ describe('PositionsTable', () => {
       }
     ]
 
-    render(<PositionsTable positions={smallPositions} showAccountColumn={true} />)
+    render(<PositionsTable positions={smallPositions} showAccountColumn={true} currency="USD" />)
 
     expect(screen.getByText('SMALL')).toBeInTheDocument()
     expect(screen.getAllByText('$0.02')).toHaveLength(2) // Multiple cells with $0.02
@@ -314,13 +314,13 @@ describe('PositionsTable', () => {
       }
     ]
 
-    render(<PositionsTable positions={nullPositions as any} showAccountColumn={true} />)
+    render(<PositionsTable positions={nullPositions as any} showAccountColumn={true} currency="USD" />)
     
     expect(screen.getByText('NULL')).toBeInTheDocument()
   })
 
   it('handles search with special characters', () => {
-    render(<PositionsTable positions={mockPositions} showAccountColumn={true} />)
+    render(<PositionsTable positions={mockPositions} showAccountColumn={true} currency="USD" />)
 
     const searchInput = screen.getByPlaceholderText('Search by symbol or account...')
     fireEvent.change(searchInput, { target: { value: 'AAPL@#$%' } })
@@ -330,7 +330,7 @@ describe('PositionsTable', () => {
   })
 
   it('handles case insensitive search', () => {
-    render(<PositionsTable positions={mockPositions} showAccountColumn={true} />)
+    render(<PositionsTable positions={mockPositions} showAccountColumn={true} currency="USD" />)
     
     const searchInput = screen.getByPlaceholderText('Search by symbol or account...')
     fireEvent.change(searchInput, { target: { value: 'aapl' } })

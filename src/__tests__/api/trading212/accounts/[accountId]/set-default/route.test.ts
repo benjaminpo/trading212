@@ -72,7 +72,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -88,7 +88,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '999' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '999' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -103,7 +103,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -134,7 +134,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -166,7 +166,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -181,7 +181,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(401)
       const data = await response.json()
@@ -197,7 +197,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -232,7 +232,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -267,7 +267,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -297,7 +297,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -312,7 +312,7 @@ describe('/api/trading212/accounts/[accountId]/set-default', () => {
         method: 'POST',
       })
 
-      const response = await POST(request, { params: { accountId: '1' } })
+      const response = await POST(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()

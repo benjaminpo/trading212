@@ -25,7 +25,7 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/lib/trading212')
 
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
-const mockedPrisma = prisma as jest.Mocked<typeof prisma>
+const mockedPrisma = prisma as any
 const mockedTrading212API = Trading212API as jest.MockedClass<typeof Trading212API>
 
 describe('/api/trading212/accounts', () => {
@@ -87,7 +87,7 @@ describe('/api/trading212/accounts', () => {
       mockedPrisma.trading212Account.findMany.mockResolvedValue(mockAccounts as any)
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -100,7 +100,7 @@ describe('/api/trading212/accounts', () => {
       mockedGetServerSession.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -115,7 +115,7 @@ describe('/api/trading212/accounts', () => {
       mockedPrisma.user.findUnique.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -130,7 +130,7 @@ describe('/api/trading212/accounts', () => {
       mockedPrisma.user.findUnique.mockRejectedValue(new Error('Database error'))
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(500)

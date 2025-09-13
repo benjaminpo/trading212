@@ -20,7 +20,7 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
-const mockedPrisma = prisma as jest.Mocked<typeof prisma>
+const mockedPrisma = prisma as any
 
 describe('/api/notifications', () => {
   const mockSession = {

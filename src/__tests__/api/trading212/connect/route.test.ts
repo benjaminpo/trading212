@@ -18,7 +18,7 @@ describe('/api/trading212/connect', () => {
         body: JSON.stringify({ apiKey: 'test-key' })
       })
 
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(410)

@@ -58,7 +58,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
       prisma.trading212Account.findFirst.mockResolvedValue(mockAccount)
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1')
-      const response = await GET(request, { params: { accountId: '1' } })
+      const response = await GET(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -101,7 +101,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
       prisma.trading212Account.findFirst.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts/999')
-      const response = await GET(request, { params: { accountId: '999' } })
+      const response = await GET(request, { params: Promise.resolve({ accountId: '999' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -113,7 +113,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
       prisma.user.findUnique.mockRejectedValue(new Error('Database error'))
 
       const request = new NextRequest('http://localhost:3000/api/trading212/accounts/1')
-      const response = await GET(request, { params: { accountId: '1' } })
+      const response = await GET(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -167,7 +167,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -193,7 +193,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -217,7 +217,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -239,7 +239,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -261,7 +261,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -285,7 +285,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -322,7 +322,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { accountId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -343,7 +343,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { accountId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -363,7 +363,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { accountId: 'nonexistent' } })
+      const response = await DELETE(request, { params: Promise.resolve({ accountId: 'nonexistent' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -383,7 +383,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { accountId: 'other-user-account' } })
+      const response = await DELETE(request, { params: Promise.resolve({ accountId: 'other-user-account' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -409,7 +409,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { accountId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -435,7 +435,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -462,7 +462,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -488,7 +488,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -514,7 +514,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -540,7 +540,7 @@ describe('/api/trading212/accounts/[accountId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { accountId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ accountId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()

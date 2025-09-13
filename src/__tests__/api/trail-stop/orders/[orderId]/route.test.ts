@@ -49,7 +49,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
       prisma.trailStopLossOrder.findFirst.mockResolvedValue(mockOrder)
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/orders/1')
-      const response = await GET(request, { params: { orderId: '1' } })
+      const response = await GET(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -65,7 +65,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
       prisma.trailStopLossOrder.findFirst.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/orders/999')
-      const response = await GET(request, { params: { orderId: '999' } })
+      const response = await GET(request, { params: Promise.resolve({ orderId: '999' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -77,7 +77,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
       prisma.trailStopLossOrder.findFirst.mockRejectedValue(new Error('Database error'))
 
       const request = new NextRequest('http://localhost:3000/api/trail-stop/orders/1')
-      const response = await GET(request, { params: { orderId: '1' } })
+      const response = await GET(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -125,7 +125,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { orderId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -143,7 +143,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { orderId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -161,7 +161,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { orderId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -193,7 +193,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { orderId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -209,7 +209,7 @@ describe('/api/trail-stop/orders/[orderId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { orderId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ orderId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()

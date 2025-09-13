@@ -216,7 +216,7 @@ describe('NotificationBell', () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => { throw new Error('Invalid JSON') },
-    } as Response)
+    } as unknown as Response)
 
     render(<NotificationBell />)
 

@@ -68,7 +68,8 @@ describe('Auth Configuration', () => {
 
       const result = await jwtCallback!({
         token: {},
-        user: { id: '1', email: 'test@example.com' },
+        user: { id: '1', email: 'test@example.com', emailVerified: null },
+        account: null,
       })
 
       expect(result.id).toBe('1')
@@ -80,7 +81,8 @@ describe('Auth Configuration', () => {
 
       const result = await jwtCallback!({
         token: { id: '1' },
-        user: undefined,
+        user: { id: '1', email: 'test@example.com', emailVerified: null },
+        account: null,
       })
 
       expect(result.id).toBe('1')
@@ -93,11 +95,12 @@ describe('Auth Configuration', () => {
       expect(sessionCallback).toBeDefined()
 
       const result = await sessionCallback!({
-        session: { user: { id: '1', email: 'test@example.com' } },
+        session: { user: { id: '1', email: 'test@example.com' }, expires: '2024-12-31T23:59:59.999Z' },
         token: { id: '1' },
-      })
+        user: { id: '1', email: 'test@example.com', emailVerified: null },
+      } as any)
 
-      expect(result?.user?.id).toBe('1')
+      expect((result?.user as any)?.id).toBe('1')
     })
 
     it('returns session without user id when token is not provided', async () => {
@@ -105,11 +108,12 @@ describe('Auth Configuration', () => {
       expect(sessionCallback).toBeDefined()
 
       const result = await sessionCallback!({
-        session: { user: { id: '1', email: 'test@example.com' } },
-        token: undefined,
-      })
+        session: { user: { id: '1', email: 'test@example.com' }, expires: '2024-12-31T23:59:59.999Z' },
+        token: { id: '1' },
+        user: { id: '1', email: 'test@example.com', emailVerified: null },
+      } as any)
 
-      expect(result?.user?.id).toBe('1') // The session callback preserves the user id from the session
+      expect((result?.user as any)?.id).toBe('1') // The session callback preserves the user id from the session
     })
   })
 

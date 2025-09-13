@@ -133,8 +133,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedPrisma.aIAnalysisLog.findMany.mockResolvedValue([mockAnalysisLogs[0]] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis?startDate=2024-01-01&endDate=2024-01-01')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -158,7 +157,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -171,7 +170,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -188,7 +187,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -205,7 +204,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -222,7 +221,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -239,7 +238,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -256,7 +255,7 @@ describe('/api/ai/daily-analysis', () => {
       const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
-      const response = await POST(request)
+      const response = await POST()
       const data = await response.json()
 
       expect(response.status).toBe(200)

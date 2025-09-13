@@ -19,7 +19,7 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
-const mockedPrisma = prisma as jest.Mocked<typeof prisma>
+const mockedPrisma = prisma as any
 
 describe('/api/trail-stop/orders', () => {
   const mockSession = {
@@ -71,7 +71,7 @@ describe('/api/trail-stop/orders', () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockTrailStopOrders)
 
       const request = new NextRequest('http://localhost/api/trail-stop/orders')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -87,7 +87,7 @@ describe('/api/trail-stop/orders', () => {
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([])
 
       const request = new NextRequest('http://localhost/api/trail-stop/orders')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -98,7 +98,7 @@ describe('/api/trail-stop/orders', () => {
       mockedGetServerSession.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost/api/trail-stop/orders')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -110,7 +110,7 @@ describe('/api/trail-stop/orders', () => {
       mockedPrisma.trailStopLossOrder.findMany.mockRejectedValue(new Error('Database error'))
 
       const request = new NextRequest('http://localhost/api/trail-stop/orders')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(500)

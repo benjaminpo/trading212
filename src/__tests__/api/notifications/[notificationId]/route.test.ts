@@ -45,7 +45,7 @@ describe('/api/notifications/[notificationId]', () => {
       prisma.notification.findUnique.mockResolvedValue(mockNotification)
 
       const request = new NextRequest('http://localhost:3000/api/notifications/1')
-      const response = await GET(request, { params: { notificationId: '1' } })
+      const response = await GET(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -60,7 +60,7 @@ describe('/api/notifications/[notificationId]', () => {
       prisma.notification.findUnique.mockResolvedValue(null)
 
       const request = new NextRequest('http://localhost:3000/api/notifications/999')
-      const response = await GET(request, { params: { notificationId: '999' } })
+      const response = await GET(request, { params: Promise.resolve({ notificationId: '999' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -72,7 +72,7 @@ describe('/api/notifications/[notificationId]', () => {
       prisma.notification.findUnique.mockRejectedValue(new Error('Database error'))
 
       const request = new NextRequest('http://localhost:3000/api/notifications/1')
-      const response = await GET(request, { params: { notificationId: '1' } })
+      const response = await GET(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -112,7 +112,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -132,7 +132,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -150,7 +150,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -178,7 +178,7 @@ describe('/api/notifications/[notificationId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { notificationId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -194,7 +194,7 @@ describe('/api/notifications/[notificationId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { notificationId: '1' } })
+      const response = await DELETE(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -214,7 +214,7 @@ describe('/api/notifications/[notificationId]', () => {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params: { notificationId: 'nonexistent' } })
+      const response = await DELETE(request, { params: Promise.resolve({ notificationId: 'nonexistent' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -252,7 +252,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -278,7 +278,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -300,7 +300,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: 'nonexistent' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: 'nonexistent' }) })
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -323,7 +323,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -345,7 +345,7 @@ describe('/api/notifications/[notificationId]', () => {
         headers: { 'Content-Type': 'application/json' },
       })
 
-      const response = await PUT(request, { params: { notificationId: '1' } })
+      const response = await PUT(request, { params: Promise.resolve({ notificationId: '1' }) })
 
       expect(response.status).toBe(500)
       const data = await response.json()

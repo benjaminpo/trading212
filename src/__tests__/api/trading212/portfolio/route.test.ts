@@ -22,7 +22,7 @@ jest.mock('@/lib/trading212')
 jest.mock('@/lib/rate-limiter')
 
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
-const mockedPrisma = prisma as jest.Mocked<typeof prisma>
+const mockedPrisma = prisma as any
 const mockedTrading212API = Trading212API as jest.MockedClass<typeof Trading212API>
 const mockedRateLimiter = trading212RateLimiter as jest.Mocked<typeof trading212RateLimiter>
 

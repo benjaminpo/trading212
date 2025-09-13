@@ -155,7 +155,7 @@ describe('AI Recommendations Page', () => {
       status: 'authenticated',
     })
 
-    const mockRecommendations = []
+    const mockRecommendations: any[] = []
 
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -179,7 +179,7 @@ describe('AI Recommendations Page', () => {
       status: 'authenticated',
     })
 
-    const mockRecommendations = []
+    const mockRecommendations: any[] = []
 
     ;(global.fetch as jest.Mock)
       .mockResolvedValueOnce({

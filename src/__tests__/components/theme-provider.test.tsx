@@ -25,7 +25,7 @@ describe('ThemeProvider', () => {
 
   it('should pass props to next-themes ThemeProvider', () => {
     const props = {
-      attribute: 'class',
+      attribute: 'class' as const,
       defaultTheme: 'system',
       enableSystem: true,
       disableTransitionOnChange: false
@@ -65,7 +65,7 @@ describe('ThemeProvider', () => {
 
   it('should pass through all theme-related props', () => {
     const themeProps = {
-      attribute: 'data-theme',
+      attribute: 'data-theme' as const,
       defaultTheme: 'dark',
       enableSystem: false,
       disableTransitionOnChange: true,
@@ -87,7 +87,7 @@ describe('ThemeProvider', () => {
 
   it('should handle custom theme configuration', () => {
     const customProps = {
-      attribute: 'class',
+      attribute: 'class' as const,
       defaultTheme: 'light',
       enableSystem: true,
       themes: ['light', 'dark', 'custom'],

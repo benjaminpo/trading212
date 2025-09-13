@@ -60,7 +60,7 @@ describe('SignUp Page', () => {
 
     // Find the password toggle buttons (they should be the last two buttons)
     const passwordToggleButtons = toggleButtons.filter(button => 
-      button.querySelector('svg') && button.type === 'button'
+      button.querySelector('svg') && (button as HTMLButtonElement).type === 'button'
     )
     
     // Click to show password
