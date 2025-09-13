@@ -1,7 +1,9 @@
 import { DailyAnalysisScheduler } from '@/lib/scheduler'
 import { prisma } from '@/lib/prisma'
-import { Trading212API } from '@/lib/trading212'
+import { Trading212API } from '../../lib/trading212'
 import { aiAnalysisService } from '@/lib/ai-service'
+
+const mockedPrisma = prisma as any
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -42,6 +44,7 @@ jest.mock('@/lib/ai-service', () => ({
     analyzeBulkPositions: jest.fn()
   }
 }))
+
 
 describe('DailyAnalysisScheduler', () => {
   let scheduler: DailyAnalysisScheduler
@@ -181,15 +184,15 @@ describe('DailyAnalysisScheduler', () => {
     ]
 
     beforeEach(() => {
-      ;(prisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers)
+      ;(mockedPrisma.user.findMany as jest.Mock).mockResolvedValue(mockUsers)
       mockTrading212API.getPositions.mockResolvedValue(mockPositions)
       mockTrading212API.getAccount.mockResolvedValue({}, 10000)
       ;(aiAnalysisService.analyzeBulkPositions as jest.Mock).mockResolvedValue(mockAIRecommendations)
-      ;(prisma.position.upsert as jest.Mock).mockResolvedValue({}, 10000)
-      ;(prisma.position.findFirst as jest.Mock).mockResolvedValue({ id: 'position1' }, 10000)
-      ;(prisma.aIRecommendation.updateMany as jest.Mock).mockResolvedValue({}, 10000)
-      ;(prisma.aIRecommendation.create as jest.Mock).mockResolvedValue({}, 10000)
-      ;(prisma.aIAnalysisLog.create as jest.Mock).mockResolvedValue({}, 10000)
+      ;(mockedPrisma.position.upsert as jest.Mock).mockResolvedValue({}, 10000)
+      ;(mockedPrisma.position.findFirst as jest.Mock).mockResolvedValue({ id: 'position1' }, 10000)
+      ;(mockedPrisma.aIRecommendation.updateMany as jest.Mock).mockResolvedValue({}, 10000)
+      ;(mockedPrisma.aIRecommendation.create as jest.Mock).mockResolvedValue({}, 10000)
+      ;(mockedPrisma.aIAnalysisLog.create as jest.Mock).mockResolvedValue({}, 10000)
     }, 10000)
 
     it('should run daily analysis for all users', async () => {
@@ -199,11 +202,11 @@ describe('DailyAnalysisScheduler', () => {
       await scheduler.runDailyAnalysis()
       
       // The method might be called with different parameters, so just check it was called
-      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockedPrisma.user.findMany).toHaveBeenCalled()
     }, 10000)
 
     it('should handle users with no active accounts', async () => {
-      ;(prisma.user.findMany as jest.Mock).mockResolvedValue([])
+      ;(mockedPrisma.user.findMany as jest.Mock).mockResolvedValue([])
       
       // Let the method execute normally to test the actual logic
       jest.spyOn(scheduler, 'runDailyAnalysis')
@@ -213,7 +216,7 @@ describe('DailyAnalysisScheduler', () => {
       
       await scheduler.runDailyAnalysis()
       
-      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockedPrisma.user.findMany).toHaveBeenCalled()
       expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
     }, 10000)
 
@@ -242,7 +245,7 @@ describe('DailyAnalysisScheduler', () => {
       await scheduler.runDailyAnalysis()
       
       // The method might be called multiple times, so just check it was called
-      expect(prisma.aIAnalysisLog.create).toHaveBeenCalled()
+      expect(mockedPrisma.aIAnalysisLog.create).toHaveBeenCalled()
     }, 10000)
 
     it('should handle users with no positions', async () => {
@@ -368,10 +371,10 @@ describe('DailyAnalysisScheduler', () => {
       await scheduler.runDailyAnalysis()
       
       // The method might be called multiple times, so just check it was called
-      expect(prisma.aIRecommendation.updateMany).toHaveBeenCalled()
+      expect(mockedPrisma.aIRecommendation.updateMany).toHaveBeenCalled()
       
       // The method might be called with different parameters, so just check it was called
-      expect(prisma.aIRecommendation.create).toHaveBeenCalled()
+      expect(mockedPrisma.aIRecommendation.create).toHaveBeenCalled()
     }, 10000)
 
     it('should log successful analysis', async () => {
@@ -381,7 +384,7 @@ describe('DailyAnalysisScheduler', () => {
       await scheduler.runDailyAnalysis()
       
       // The method might be called multiple times, so just check it was called
-      expect(prisma.aIAnalysisLog.create).toHaveBeenCalled()
+      expect(mockedPrisma.aIAnalysisLog.create).toHaveBeenCalled()
     }, 10000)
 
     it('should handle AI analysis errors', async () => {
@@ -393,7 +396,7 @@ describe('DailyAnalysisScheduler', () => {
       await scheduler.runDailyAnalysis()
       
       // The method might be called multiple times, so just check it was called
-      expect(prisma.aIAnalysisLog.create).toHaveBeenCalled()
+      expect(mockedPrisma.aIAnalysisLog.create).toHaveBeenCalled()
     }, 10000)
   }, 10000)
 
@@ -410,7 +413,7 @@ describe('DailyAnalysisScheduler', () => {
     }
 
     beforeEach(() => {
-      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser)
+      ;(mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser)
       mockTrading212API.getPositions.mockResolvedValue([])
     }, 10000)
 
@@ -420,19 +423,19 @@ describe('DailyAnalysisScheduler', () => {
       await scheduler.analyzeUser('user1')
       
       // The method might be called with different parameters, so just check it was called
-      expect(prisma.user.findUnique).toHaveBeenCalled()
+      expect(mockedPrisma.user.findUnique).toHaveBeenCalled()
       
       expect(analyzeUserPositionsSpy).toHaveBeenCalledWith('user1', 'test-api-key', true)
     }, 10000)
 
     it('should throw error if user has no active accounts', async () => {
-      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue({ trading212Accounts: [] }, 10000)
+      ;(mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue({ trading212Accounts: [] }, 10000)
       
       await expect(scheduler.analyzeUser('user1')).rejects.toThrow('User does not have active Trading212 accounts')
     }, 10000)
 
     it('should throw error if user not found', async () => {
-      ;(prisma.user.findUnique as jest.Mock).mockResolvedValue(null)
+      ;(mockedPrisma.user.findUnique as jest.Mock).mockResolvedValue(null)
       
       await expect(scheduler.analyzeUser('user1')).rejects.toThrow('User does not have active Trading212 accounts')
     }, 10000)
@@ -469,11 +472,11 @@ describe('DailyAnalysisScheduler', () => {
       mockTrading212API.getPositions.mockResolvedValue(mockPositions)
       mockTrading212API.getAccount.mockResolvedValue({})
       ;(aiAnalysisService.analyzeBulkPositions as jest.Mock).mockResolvedValue(mockAIRecommendations)
-      ;(prisma.position.upsert as jest.Mock).mockResolvedValue({})
-      ;(prisma.position.findFirst as jest.Mock).mockResolvedValue({ id: 'position1' })
-      ;(prisma.aIRecommendation.updateMany as jest.Mock).mockResolvedValue({})
-      ;(prisma.aIRecommendation.create as jest.Mock).mockResolvedValue({})
-      ;(prisma.aIAnalysisLog.create as jest.Mock).mockResolvedValue({})
+      ;(mockedPrisma.position.upsert as jest.Mock).mockResolvedValue({})
+      ;(mockedPrisma.position.findFirst as jest.Mock).mockResolvedValue({ id: 'position1' })
+      ;(mockedPrisma.aIRecommendation.updateMany as jest.Mock).mockResolvedValue({})
+      ;(mockedPrisma.aIRecommendation.create as jest.Mock).mockResolvedValue({})
+      ;(mockedPrisma.aIAnalysisLog.create as jest.Mock).mockResolvedValue({})
     }, 10000)
 
     it('should analyze user positions successfully', async () => {
@@ -509,7 +512,7 @@ describe('DailyAnalysisScheduler', () => {
     }, 10000)
 
     it('should handle missing position in database', async () => {
-      ;(prisma.position.findFirst as jest.Mock).mockResolvedValue(null)
+      ;(mockedPrisma.position.findFirst as jest.Mock).mockResolvedValue(null)
       
       // Ensure the method is not mocked
       // Let the method execute normally to test the actual logic
@@ -517,7 +520,7 @@ describe('DailyAnalysisScheduler', () => {
       
       await (scheduler as any).analyzeUserPositions('user1', 'test-api-key', true)
       
-      expect(prisma.aIRecommendation.create).not.toHaveBeenCalled()
+      expect(mockedPrisma.aIRecommendation.create).not.toHaveBeenCalled()
       // Just check that the method completed without errors
       expect(true).toBe(true)
     }, 10000)
@@ -529,11 +532,11 @@ describe('DailyAnalysisScheduler', () => {
     }, 10000)
 
     it('should handle empty users array', async () => {
-      prisma.user.findMany.mockResolvedValue([])
+      mockedPrisma.user.findMany.mockResolvedValue([])
 
       await scheduler.runDailyAnalysis()
 
-      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockedPrisma.user.findMany).toHaveBeenCalled()
       expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
     }, 10000)
 
@@ -546,11 +549,11 @@ describe('DailyAnalysisScheduler', () => {
         }
       ]
 
-      prisma.user.findMany.mockResolvedValue(mockUsers as any)
+      mockedPrisma.user.findMany.mockResolvedValue(mockUsers as any)
 
       await scheduler.runDailyAnalysis()
 
-      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockedPrisma.user.findMany).toHaveBeenCalled()
       expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
     }, 10000)
 
@@ -563,11 +566,11 @@ describe('DailyAnalysisScheduler', () => {
         }
       ]
 
-      prisma.user.findMany.mockResolvedValue(mockUsers as any)
+      mockedPrisma.user.findMany.mockResolvedValue(mockUsers as any)
 
       await scheduler.runDailyAnalysis()
 
-      expect(prisma.user.findMany).toHaveBeenCalled()
+      expect(mockedPrisma.user.findMany).toHaveBeenCalled()
       expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
     }, 10000)
   }, 10000)

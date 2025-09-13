@@ -26,17 +26,13 @@ jest.mock('@/lib/ai-service', () => ({
 }))
 
 jest.mock('@/lib/scheduler', () => ({
-  DailyAnalysisScheduler: jest.fn().mockImplementation(() => ({
-    analyzeUser: jest.fn()
-  })),
   dailyScheduler: {
     analyzeUser: jest.fn()
   }
 }))
 
 const mockedGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
-const mockedPrisma = prisma as jest.Mocked<typeof prisma>
-const _mockedScheduler = DailyAnalysisScheduler as jest.MockedClass<typeof DailyAnalysisScheduler>
+const mockedPrisma = prisma as any
 const mockedDailyScheduler = dailyScheduler as jest.Mocked<typeof dailyScheduler>
 
 describe('/api/ai/daily-analysis', () => {
@@ -82,8 +78,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedPrisma.aIAnalysisLog.findMany.mockResolvedValue(mockAnalysisLogs as any)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -96,8 +91,7 @@ describe('/api/ai/daily-analysis', () => {
     it('should return 401 for unauthenticated user', async () => {
       mockedGetServerSession.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -111,8 +105,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedPrisma.aIAnalysisLog.findMany.mockRejectedValue(new Error('Database error'))
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -126,8 +119,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedPrisma.aIAnalysisLog.findMany.mockResolvedValue([])
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis')
-      const response = await GET(request)
+      const response = await GET()
       const data = await response.json()
 
       expect(response.status).toBe(200)

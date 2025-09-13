@@ -20,8 +20,7 @@ describe('/api/health', () => {
   it('returns healthy status when database is connected', async () => {
     checkDatabaseConnection.mockResolvedValue(true)
 
-    const request = new NextRequest('http://localhost:3000/api/health')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -34,8 +33,7 @@ describe('/api/health', () => {
   it('returns unhealthy status when database is not connected', async () => {
     checkDatabaseConnection.mockResolvedValue(false)
 
-    const request = new NextRequest('http://localhost:3000/api/health')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(503)
@@ -48,8 +46,7 @@ describe('/api/health', () => {
   it('returns unhealthy status when database query fails', async () => {
     checkDatabaseConnection.mockRejectedValue(new Error('Query timeout'))
 
-    const request = new NextRequest('http://localhost:3000/api/health')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(503)
@@ -61,8 +58,7 @@ describe('/api/health', () => {
   it('includes timestamp in response', async () => {
     checkDatabaseConnection.mockResolvedValue(true)
 
-    const request = new NextRequest('http://localhost:3000/api/health')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(data.timestamp).toBeDefined()
@@ -72,8 +68,7 @@ describe('/api/health', () => {
   it('handles unexpected database errors', async () => {
     checkDatabaseConnection.mockRejectedValue(new Error('Unexpected error'))
 
-    const request = new NextRequest('http://localhost:3000/api/health')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(503)

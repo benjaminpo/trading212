@@ -15,7 +15,7 @@ jest.mock('@/lib/prisma', () => ({
 }))
 
 const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>
-const mockedPrisma = prisma as jest.Mocked<typeof prisma>
+const mockedPrisma = prisma as any
 
 describe('/api/auth/register', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('/api/auth/register', () => {
 
     it('should create a new user successfully', async () => {
       mockedPrisma.user.findUnique.mockResolvedValue(null)
-      mockedBcrypt.hash.mockResolvedValue('hashed_password_123')
+      ;(mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashed_password_123')
       
       const createdUser = {
         id: 'user-123',
@@ -173,7 +173,7 @@ describe('/api/auth/register', () => {
 
     it('should handle bcrypt errors', async () => {
       mockedPrisma.user.findUnique.mockResolvedValue(null)
-      mockedBcrypt.hash.mockRejectedValue(new Error('Hashing failed'))
+      ;(mockedBcrypt.hash as jest.Mock).mockRejectedValue(new Error('Hashing failed'))
 
       const request = new NextRequest('http://localhost/api/auth/register', {
         method: 'POST',
