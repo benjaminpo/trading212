@@ -991,4 +991,129 @@ describe('Analytics Page', () => {
     // Just check that the component renders without errors
     expect(true).toBe(true)
   })
+
+  it('handles no session gracefully', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'authenticated',
+    })
+
+    // Mock fetch to prevent loading state
+    ;(global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}))
+
+    const AnalyticsPage = (await import('@/app/analytics/page')).default
+    render(React.createElement(AnalyticsPage))
+
+    // Component should render without crashing, even with no session
+    // It will show loading state initially
+    await waitFor(() => {
+      expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
+    })
+  })
+
+  it('handles positions with negative P/L for losers calculation', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    const mockAnalyticsData = {
+      connected: true,
+      positions: [
+        {
+          ticker: 'LOSER1',
+          quantity: 100,
+          averagePrice: 150,
+          currentPrice: 140,
+          ppl: -1000, // Negative P/L
+          pplPercent: -6.67,
+          marketValue: 14000,
+          maxBuy: 200,
+          maxSell: 100,
+          accountName: 'Test Account',
+          accountId: '1',
+          isPractice: true,
+        },
+        {
+          ticker: 'LOSER2',
+          quantity: 50,
+          averagePrice: 200,
+          currentPrice: 180,
+          ppl: -1000, // Negative P/L
+          pplPercent: -10,
+          marketValue: 9000,
+          maxBuy: 250,
+          maxSell: 100,
+          accountName: 'Test Account',
+          accountId: '1',
+          isPractice: true,
+        },
+      ],
+      totalValue: 23000,
+      totalPnL: -2000,
+      totalPnLPercent: -8.7,
+      totalPositions: 2,
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => mockAnalyticsData,
+    })
+
+    const AnalyticsPage = (await import('@/app/analytics/page')).default
+    render(React.createElement(AnalyticsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
+    })
+
+    // Check that the component renders without errors
+    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
+  })
+
+  it('handles worst performers when no worst performers exist', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    const mockAnalyticsData = {
+      connected: true,
+      positions: [
+        {
+          ticker: 'WINNER',
+          quantity: 100,
+          averagePrice: 150,
+          currentPrice: 160,
+          ppl: 1000, // Only positive P/L positions
+          pplPercent: 6.67,
+          marketValue: 16000,
+          maxBuy: 200,
+          maxSell: 100,
+          accountName: 'Test Account',
+          accountId: '1',
+          isPractice: true,
+        },
+      ],
+      totalValue: 16000,
+      totalPnL: 1000,
+      totalPnLPercent: 6.67,
+      totalPositions: 1,
+    }
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => mockAnalyticsData,
+    })
+
+    const AnalyticsPage = (await import('@/app/analytics/page')).default
+    render(React.createElement(AnalyticsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
+    })
+
+    // Check that the component renders without errors
+    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
+  })
 })
