@@ -4,12 +4,13 @@ export const dynamic = 'force-dynamic'
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Brain, TrendingUp, TrendingDown, AlertTriangle, RefreshCw, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { ArrowLeft, Brain, TrendingUp, TrendingDown, AlertTriangle, RefreshCw, ThumbsUp, ThumbsDown, Info, Clock, User } from 'lucide-react'
 import Link from 'next/link'
 import ClientWrapper from '@/components/client-wrapper'
+import AccountSelector from '@/components/account-selector'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 interface AIRecommendation {
@@ -30,6 +31,12 @@ interface AIRecommendation {
     currentPrice: number
     pnl: number
     pnlPercent: number
+    averagePrice: number
+  }
+  accountInfo?: {
+    name: string
+    isPractice: boolean
+    isDefault: boolean
   }
 }
 
@@ -40,24 +47,21 @@ export default function AIRecommendationsPage() {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [accountInfo, setAccountInfo] = useState<{name: string, isPractice: boolean, isAggregated?: boolean} | null>(null)
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
+
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (!mounted || status === 'loading') return
-    if (!session) {
-      router.push('/auth/signin')
-      return
-    }
-    
-    fetchRecommendations()
-  }, [mounted, session, status, router])
-
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     try {
-      const response = await fetch('/api/ai/analyze-positions')
+      const url = selectedAccountId 
+        ? `/api/ai/analyze-positions?accountId=${selectedAccountId}`
+        : '/api/ai/analyze-positions'
+      
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         console.log('🔍 AI Recommendations data:', data.recommendations?.map((rec: any) => ({
@@ -68,12 +72,36 @@ export default function AIRecommendationsPage() {
           pnl: rec.position?.pnl
         })))
         setRecommendations(data.recommendations || [])
+        
+        // Set account info if available in response
+        if (data.accountInfo) {
+          setAccountInfo({
+            name: data.accountInfo.name,
+            isPractice: data.accountInfo.isPractice,
+            isAggregated: data.accountInfo.isAggregated
+          })
+        }
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error)
     } finally {
       setLoading(false)
     }
+  }, [selectedAccountId])
+
+  useEffect(() => {
+    if (!mounted || status === 'loading') return
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+    
+    fetchRecommendations()
+  }, [mounted, session, status, router, fetchRecommendations])
+
+  const handleAccountChange = (accountId: string | null) => {
+    setSelectedAccountId(accountId)
+    setLoading(true)
   }
 
   const runAnalysis = async () => {
@@ -84,13 +112,25 @@ export default function AIRecommendationsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ analysisType: 'ON_DEMAND' }),
+        body: JSON.stringify({ 
+          analysisType: 'ON_DEMAND',
+          accountId: selectedAccountId 
+        }),
       })
 
       const data = await response.json()
       
       if (response.ok) {
         setRecommendations(data.recommendations || [])
+        
+        // Set account info if available in response
+        if (data.accountInfo) {
+          setAccountInfo({
+            name: data.accountInfo.name,
+            isPractice: data.accountInfo.isPractice
+          })
+        }
+        
         alert(`Analysis completed! Generated ${data.recommendations?.length || 0} recommendations in ${data.executionTime}ms`)
       } else {
         alert(data.error || 'Failed to run analysis')
@@ -174,6 +214,10 @@ export default function AIRecommendationsPage() {
               </div>
             </div>
             <div className="flex space-x-4">
+              <AccountSelector 
+                selectedAccountId={selectedAccountId || undefined}
+                onAccountChange={handleAccountChange}
+              />
               <ThemeToggle />
               <Button 
                 onClick={runAnalysis} 
@@ -190,6 +234,46 @@ export default function AIRecommendationsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* AI Disclaimer */}
+        <Card className="mb-6 bg-yellow-50/80 dark:bg-yellow-900/20 border-yellow-200/60 dark:border-yellow-800/60 backdrop-blur-sm shadow-lg dark:shadow-yellow-900/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-3">
+              <Info className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">AI Recommendations Disclaimer</h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 leading-relaxed">
+                  These AI-powered recommendations are for informational purposes only and should not be considered as financial advice. 
+                  The AI analysis is based on historical data, current market conditions, and position performance, but cannot predict future market movements with certainty. 
+                  Always conduct your own research, consider your risk tolerance, and consult with a qualified financial advisor before making investment decisions. 
+                  Past performance does not guarantee future results. You are solely responsible for your trading decisions.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Information */}
+        {accountInfo && (
+          <Card className="mb-6 bg-blue-50/80 dark:bg-blue-900/20 border-blue-200/60 dark:border-blue-800/60 backdrop-blur-sm shadow-lg dark:shadow-blue-900/10">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-3">
+                <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-200">
+                    {accountInfo.isAggregated ? 'Viewing' : 'Account'}: {accountInfo.name}
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    {accountInfo.isAggregated 
+                      ? 'Aggregated view across all accounts' 
+                      : (accountInfo.isPractice ? 'Practice Account' : 'Live Trading Account')
+                    }
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {recommendations.length === 0 ? (
           <Card className="text-center py-12 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-gray-200/50 dark:border-slate-700/50 shadow-xl dark:shadow-slate-900/20">
             <CardContent>
@@ -273,10 +357,14 @@ export default function AIRecommendationsPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Position Info */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-slate-700/50">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-slate-700/50">
                       <div>
                         <div className="text-sm text-gray-600 dark:text-slate-400">Quantity</div>
                         <div className="font-semibold text-gray-900 dark:text-slate-100">{rec.position.quantity}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-slate-400">Avg Price</div>
+                        <div className="font-semibold text-gray-900 dark:text-slate-100">${rec.position.averagePrice?.toFixed(2) || 'N/A'}</div>
                       </div>
                       <div>
                         <div className="text-sm text-gray-600 dark:text-slate-400">Current Price</div>
@@ -289,14 +377,45 @@ export default function AIRecommendationsPage() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600 dark:text-slate-400">P/L %</div>
-                        <div className={`font-semibold ${rec.position.pnlPercent >= 0 ? 'profit' : 'loss'}`}>
+                        <div className="text-sm text-gray-600 dark:text-slate-400 flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Hold Time
+                        </div>
+                        <div className="font-semibold text-gray-500 dark:text-slate-400 text-xs">
+                          Not Available
+                        </div>
+                        <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
+                          Purchase date not provided by Trading212 API
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* P/L Percentage - Full width for better visibility */}
+                    <div className="p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-slate-700/50">
+                      <div className="text-center">
+                        <div className="text-sm text-gray-600 dark:text-slate-400 mb-1">Total P/L Percentage</div>
+                        <div className={`text-2xl font-bold ${rec.position.pnlPercent >= 0 ? 'profit' : 'loss'}`}>
                           {rec.position.pnlPercent >= 0 ? '+' : ''}{rec.position.pnlPercent.toFixed(2)}%
                         </div>
                       </div>
                     </div>
 
                     {/* AI Analysis */}
+                    {/* Account Info (for aggregated view) */}
+                    {rec.accountInfo && accountInfo?.isAggregated && (
+                      <div className="p-3 bg-gray-50/80 dark:bg-gray-800/80 rounded-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            <span className="font-medium">{rec.accountInfo.name}</span>
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                              ({rec.accountInfo.isPractice ? 'Practice' : 'Live'})
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <h4 className="font-semibold mb-2 text-gray-900 dark:text-slate-100">AI Analysis</h4>
                       <p className="text-gray-700 dark:text-slate-300 mb-3">{rec.reasoning}</p>

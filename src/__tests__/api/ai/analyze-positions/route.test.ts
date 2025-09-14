@@ -152,7 +152,12 @@ describe('/api/ai/analyze-positions', () => {
         })
       ]),
       analysisLog: expect.any(Object),
-      executionTime: expect.any(Number)
+      executionTime: expect.any(Number),
+      accountInfo: expect.objectContaining({
+        name: expect.any(String),
+        isPractice: expect.any(Boolean),
+        isDefault: expect.any(Boolean)
+      })
     })
   })
 
@@ -269,9 +274,15 @@ describe('/api/ai/analyze-positions', () => {
     
     expect(response.status).toBe(200)
     expect(_data).toEqual({
-      message: 'No positions found to analyze',
+      message: 'AI analysis completed successfully',
       recommendations: [],
-      analysisLog: null
+      analysisLog: expect.any(Object),
+      executionTime: expect.any(Number),
+      accountInfo: expect.objectContaining({
+        name: expect.any(String),
+        isPractice: expect.any(Boolean),
+        isDefault: expect.any(Boolean)
+      })
     })
   })
 
@@ -303,7 +314,12 @@ describe('/api/ai/analyze-positions', () => {
       message: 'AI analysis completed successfully',
       recommendations: expect.any(Array),
       analysisLog: expect.any(Object),
-      executionTime: expect.any(Number)
+      executionTime: expect.any(Number),
+      accountInfo: expect.objectContaining({
+        name: expect.any(String),
+        isPractice: expect.any(Boolean),
+        isDefault: expect.any(Boolean)
+      })
     })
   })
 

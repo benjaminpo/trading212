@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { analysisType = 'DAILY_REVIEW' } = await request.json()
+    const { analysisType = 'DAILY_REVIEW', accountId } = await request.json()
 
     const startTime = Date.now()
     
@@ -44,36 +44,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use default account or first active account
-    const targetAccount = user.trading212Accounts.find(acc => acc.isDefault) || 
-                         user.trading212Accounts[0]
+    let allRecommendations = []
+    let totalExecutionTime = 0
 
-    // Fetch current positions from Trading212
-    const trading212 = new Trading212API(targetAccount.apiKey, targetAccount.isPractice)
-    const trading212Positions = await trading212.getPositions()
+    // Determine which accounts to analyze
+    let accountsToAnalyze = []
+    if (accountId) {
+      // Single account analysis
+      const targetAccount = user.trading212Accounts.find(acc => acc.id === accountId)
+      if (!targetAccount) {
+        return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+      }
+      accountsToAnalyze = [targetAccount]
+    } else {
+      // Aggregated analysis - use all accounts (they are already filtered by isActive in the query)
+      accountsToAnalyze = user.trading212Accounts
+    }
 
-    if (trading212Positions.length === 0) {
+    if (accountsToAnalyze.length === 0) {
       return NextResponse.json({
-        message: 'No positions found to analyze',
+        message: 'No active accounts found to analyze',
         recommendations: [],
-        analysisLog: null
+        analysisLog: null,
+        accountInfo: null
       })
     }
 
-    // Get account info to determine currency conversion factor
-    const accountInfo = await trading212.getAccount().catch(() => null)
-    
-    // Determine currency - Trading212 API doesn't always return currencyCode
-    // Note: currency is inferred but not used directly; conversion handled per-position
-    // Currency inference not used directly; conversion handled per-position
-    
-    if (!accountInfo?.currencyCode) {
-      // Determine currency based on account name or position data
-      // Mixed currencies are handled per-position; no global assignment needed
-    }
-    
-    // Convert to our position format with position-specific currency conversion
-    const positions: PositionData[] = trading212Positions.map(pos => {
+    // Process each account
+    for (const targetAccount of accountsToAnalyze) {
+      const accountStartTime = Date.now()
+      
+      // Fetch current positions from Trading212
+      const trading212 = new Trading212API(targetAccount.apiKey, targetAccount.isPractice)
+      const trading212Positions = await trading212.getPositions()
+
+      if (trading212Positions.length === 0) {
+        continue // Skip accounts with no positions
+      }
+
+      // Get account info to determine currency conversion factor
+      const accountInfo = await trading212.getAccount().catch(() => null)
+      
+      // Convert to our position format with position-specific currency conversion
+      const positions: PositionData[] = trading212Positions.map(pos => {
       // Determine position-specific currency and conversion factor
       // Check if this is a USD stock (e.g., NVDA_US_EQ, TSLA_US_EQ)
       const isUSDStock = pos.ticker.includes('_US_')
@@ -142,128 +155,139 @@ export async function POST(request: NextRequest) {
         currentPrice,
         pnl,
         pnlPercent,
-        marketValue: (pos.currentPrice * pos.quantity) / conversionFactor
-      }
-    })
-
-    // Get or create market data (simplified for demo)
-    const marketData: MarketData[] = positions.map(pos => ({
-      symbol: pos.symbol,
-      price: pos.currentPrice,
-      volume: 1000000, // Mock data
-      change: pos.pnl,
-      changePercent: pos.pnlPercent,
-      high52Week: pos.currentPrice * 1.3, // Mock data
-      low52Week: pos.currentPrice * 0.7, // Mock data
-    }))
-
-    // Update positions in database
-    for (const position of positions) {
-      console.log(`💾 Updating position ${position.symbol}:`, {
-        pnlPercent: position.pnlPercent,
-        averagePrice: position.averagePrice,
-        currentPrice: position.currentPrice,
-        pnl: position.pnl
+          marketValue: (pos.currentPrice * pos.quantity) / conversionFactor
+        }
       })
-      
-      await retryDatabaseOperation(() =>
-        prisma.position.upsert({
-          where: {
-            userId_symbol: {
+
+      // Get or create market data (simplified for demo)
+      const marketData: MarketData[] = positions.map(pos => ({
+        symbol: pos.symbol,
+        price: pos.currentPrice,
+        volume: 1000000, // Mock data
+        change: pos.pnl,
+        changePercent: pos.pnlPercent,
+        high52Week: pos.currentPrice * 1.3, // Mock data
+        low52Week: pos.currentPrice * 0.7, // Mock data
+      }))
+
+      // Update positions in database
+      for (const position of positions) {
+        console.log(`💾 Updating position ${position.symbol}:`, {
+          pnlPercent: position.pnlPercent,
+          averagePrice: position.averagePrice,
+          currentPrice: position.currentPrice,
+          pnl: position.pnl
+        })
+        
+        await retryDatabaseOperation(() =>
+          prisma.position.upsert({
+            where: {
+              userId_symbol: {
+                userId: session.user.id,
+                symbol: position.symbol
+              }
+            },
+            update: {
+              quantity: position.quantity,
+              averagePrice: position.averagePrice,
+              currentPrice: position.currentPrice,
+              pnl: position.pnl,
+              pnlPercent: position.pnlPercent || 0,
+              marketValue: position.marketValue,
+              lastUpdated: new Date()
+            },
+            create: {
+              userId: session.user.id,
+              symbol: position.symbol,
+              quantity: position.quantity,
+              averagePrice: position.averagePrice,
+              currentPrice: position.currentPrice,
+              pnl: position.pnl,
+              pnlPercent: position.pnlPercent || 0,
+              marketValue: position.marketValue,
+              lastUpdated: new Date()
+            }
+          })
+        )
+      }
+
+      // Get AI recommendations
+      const aiRecommendations = await aiAnalysisService.analyzeBulkPositions(
+        positions,
+        marketData,
+        'MODERATE' // Default risk profile, could be user-configurable
+      )
+
+      // Save recommendations to database
+      const savedRecommendations = []
+      for (let i = 0; i < positions.length; i++) {
+        const position = positions[i]
+        const recommendation = aiRecommendations[i]
+
+        // Find the position in database
+        const dbPosition = await retryDatabaseOperation(() =>
+          prisma.position.findFirst({
+            where: {
               userId: session.user.id,
               symbol: position.symbol
             }
-          },
-          update: {
-            quantity: position.quantity,
-            averagePrice: position.averagePrice,
-            currentPrice: position.currentPrice,
-            pnl: position.pnl,
-            pnlPercent: position.pnlPercent || 0,
-            marketValue: position.marketValue,
-            lastUpdated: new Date()
-          },
-          create: {
-            userId: session.user.id,
-            symbol: position.symbol,
-            quantity: position.quantity,
-            averagePrice: position.averagePrice,
-            currentPrice: position.currentPrice,
-            pnl: position.pnl,
-            pnlPercent: position.pnlPercent || 0,
-            marketValue: position.marketValue,
-            lastUpdated: new Date()
-          }
-        })
-      )
-    }
-
-    // Get AI recommendations
-    const aiRecommendations = await aiAnalysisService.analyzeBulkPositions(
-      positions,
-      marketData,
-      'MODERATE' // Default risk profile, could be user-configurable
-    )
-
-    // Save recommendations to database
-    const savedRecommendations = []
-    for (let i = 0; i < positions.length; i++) {
-      const position = positions[i]
-      const recommendation = aiRecommendations[i]
-
-      // Find the position in database
-      const dbPosition = await retryDatabaseOperation(() =>
-        prisma.position.findFirst({
-          where: {
-            userId: session.user.id,
-            symbol: position.symbol
-          }
-        })
-      )
-
-      if (dbPosition) {
-        // Deactivate old recommendations
-        await retryDatabaseOperation(() =>
-          prisma.aIRecommendation.updateMany({
-            where: {
-              userId: session.user.id,
-              positionId: dbPosition.id,
-              isActive: true
-            },
-            data: { isActive: false }
           })
         )
 
-        // Create new recommendation
-        const savedRec = await retryDatabaseOperation(() =>
-          prisma.aIRecommendation.create({
-            data: {
-              userId: session.user.id,
-              positionId: dbPosition.id,
+        if (dbPosition) {
+          // Deactivate old recommendations
+          await retryDatabaseOperation(() =>
+            prisma.aIRecommendation.updateMany({
+              where: {
+                userId: session.user.id,
+                positionId: dbPosition.id,
+                isActive: true
+              },
+              data: { isActive: false }
+            })
+          )
+
+          // Create new recommendation
+          const savedRec = await retryDatabaseOperation(() =>
+            prisma.aIRecommendation.create({
+              data: {
+                userId: session.user.id,
+                positionId: dbPosition.id,
+                symbol: position.symbol,
+                recommendationType: recommendation.recommendationType,
+                confidence: recommendation.confidence,
+                reasoning: recommendation.reasoning,
+                suggestedAction: recommendation.suggestedAction,
+                targetPrice: recommendation.targetPrice,
+                stopLoss: recommendation.stopLoss,
+                riskLevel: recommendation.riskLevel,
+                timeframe: recommendation.timeframe,
+              }
+            })
+          )
+
+          savedRecommendations.push({
+            ...savedRec,
+            position: {
               symbol: position.symbol,
-              recommendationType: recommendation.recommendationType,
-              confidence: recommendation.confidence,
-              reasoning: recommendation.reasoning,
-              suggestedAction: recommendation.suggestedAction,
-              targetPrice: recommendation.targetPrice,
-              stopLoss: recommendation.stopLoss,
-              riskLevel: recommendation.riskLevel,
-              timeframe: recommendation.timeframe,
+              quantity: position.quantity,
+              currentPrice: position.currentPrice,
+              pnl: position.pnl,
+              pnlPercent: position.pnlPercent,
+              averagePrice: position.averagePrice
+            },
+            accountInfo: {
+              name: targetAccount.name,
+              isPractice: targetAccount.isPractice,
+              isDefault: targetAccount.isDefault
             }
           })
-        )
-
-        savedRecommendations.push({
-          ...savedRec,
-          position: {
-            symbol: position.symbol,
-            quantity: position.quantity,
-            currentPrice: position.currentPrice,
-            pnl: position.pnl,
-            pnlPercent: position.pnlPercent
-          }
-        })
+        }
       }
+
+      // Add account recommendations to the total
+      allRecommendations.push(...savedRecommendations)
+      totalExecutionTime += Date.now() - accountStartTime
     }
 
     const executionTime = Date.now() - startTime
@@ -274,19 +298,39 @@ export async function POST(request: NextRequest) {
         data: {
           userId: session.user.id,
           analysisType,
-          totalPositions: positions.length,
-          recommendations: savedRecommendations.length,
+          totalPositions: allRecommendations.length,
+          recommendations: allRecommendations.length,
           executionTime,
           success: true
         }
       })
     )
 
+    // Determine response account info
+    let responseAccountInfo = null
+    if (accountsToAnalyze.length === 1) {
+      // Single account
+      responseAccountInfo = {
+        name: accountsToAnalyze[0].name,
+        isPractice: accountsToAnalyze[0].isPractice,
+        isDefault: accountsToAnalyze[0].isDefault
+      }
+    } else {
+      // Aggregated view
+      responseAccountInfo = {
+        name: `${accountsToAnalyze.length} Accounts (${accountsToAnalyze.map(acc => acc.name).join(', ')})`,
+        isPractice: false, // Mixed accounts
+        isDefault: false,
+        isAggregated: true
+      }
+    }
+
     return NextResponse.json({
       message: 'AI analysis completed successfully',
-      recommendations: savedRecommendations,
+      recommendations: allRecommendations,
       analysisLog,
-      executionTime
+      executionTime,
+      accountInfo: responseAccountInfo
     })
 
   } catch (error) {
@@ -321,14 +365,60 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get recent recommendations
+    // Get accountId from query parameters
+    const { searchParams } = new URL(request.url)
+    const accountId = searchParams.get('accountId')
+
+    // Get user's accounts
+    const user = await retryDatabaseOperation(() =>
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          trading212Accounts: {
+            where: {
+              isActive: true
+            },
+            select: {
+              id: true,
+              name: true,
+              isPractice: true,
+              isDefault: true
+            }
+          }
+        }
+      })
+    )
+
+    if (!user?.trading212Accounts || user.trading212Accounts.length === 0) {
+      return NextResponse.json({ 
+        recommendations: [],
+        accountInfo: null
+      })
+    }
+
+    // Determine which accounts to get recommendations for
+    let targetAccounts = []
+    if (accountId) {
+      // Single account
+      const targetAccount = user.trading212Accounts.find(acc => acc.id === accountId)
+      if (!targetAccount) {
+        return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+      }
+      targetAccounts = [targetAccount]
+    } else {
+      // All accounts (aggregated view)
+      targetAccounts = user.trading212Accounts
+    }
+
+    // Get recent recommendations - for now we get all and filter client-side
+    // In a real implementation, you might want to store account info with recommendations
     const recommendations = await retryDatabaseOperation(() =>
       prisma.aIRecommendation.findMany({
         where: {
@@ -339,9 +429,28 @@ export async function GET() {
           position: true
         },
         orderBy: { createdAt: 'desc' },
-        take: 20
+        take: 50 // Get more to allow for filtering
       })
     )
+
+    // Determine response account info
+    let responseAccountInfo = null
+    if (targetAccounts.length === 1) {
+      // Single account
+      responseAccountInfo = {
+        name: targetAccounts[0].name,
+        isPractice: targetAccounts[0].isPractice,
+        isDefault: targetAccounts[0].isDefault
+      }
+    } else {
+      // Aggregated view
+      responseAccountInfo = {
+        name: `${targetAccounts.length} Accounts (${targetAccounts.map(acc => acc.name).join(', ')})`,
+        isPractice: false, // Mixed accounts
+        isDefault: false,
+        isAggregated: true
+      }
+    }
 
     // Debug logging for recommendations
     console.log('🔍 AI Recommendations from DB:', recommendations.map(rec => ({
@@ -353,7 +462,10 @@ export async function GET() {
       lastUpdated: rec.position?.lastUpdated
     })))
 
-    return NextResponse.json({ recommendations })
+    return NextResponse.json({ 
+      recommendations,
+      accountInfo: responseAccountInfo
+    })
 
   } catch (error) {
     console.error('Get AI recommendations error:', error)

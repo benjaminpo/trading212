@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, Star, AlertCircle, CheckCircle } from 'lucide-react'
 
@@ -27,6 +28,13 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
   const [accounts, setAccounts] = useState<Trading212Account[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     loadAccounts()
@@ -60,6 +68,18 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
     setIsOpen(false)
   }
 
+  const handleButtonClick = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      })
+    }
+    setIsOpen(!isOpen)
+  }
+
   if (loading) {
     return (
       <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg h-10 w-48 ${className}`} />
@@ -77,8 +97,9 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
   return (
     <div className={`relative ${className}`}>
       <Button
+        ref={buttonRef}
         variant="outline"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleButtonClick}
         className="w-full justify-between bg-white/90 dark:bg-slate-800/90 border-slate-200/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-700/90 backdrop-blur-sm"
       >
         <div className="flex items-center space-x-2">
@@ -108,77 +129,88 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
         <ChevronDown className="h-4 w-4 opacity-50" />
       </Button>
 
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-600/60 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto">
-          {/* All Accounts Option */}
-          <button
-            onClick={handleViewAll}
-            className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center space-x-2 ${
-              !selectedAccountId ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300' : ''
-            }`}
+      {/* Portal-based dropdown */}
+      {mounted && isOpen && createPortal(
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-[9998]" 
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Dropdown */}
+          <div 
+            className="fixed bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-600/60 rounded-lg shadow-xl z-[9999] max-h-64 overflow-y-auto"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              width: dropdownPosition.width,
+              minWidth: '200px'
+            }}
           >
-            <span className="font-medium">All Accounts</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">(Aggregated View)</span>
-          </button>
+            {/* All Accounts Option */}
+            <button
+              onClick={handleViewAll}
+              className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center space-x-2 ${
+                !selectedAccountId ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300' : ''
+              }`}
+            >
+              <span className="font-medium">All Accounts</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">(Aggregated View)</span>
+            </button>
 
-          <div className="border-t border-slate-200 dark:border-slate-700" />
+            <div className="border-t border-slate-200 dark:border-slate-700" />
 
-          {/* Individual Accounts */}
-          {accounts
-            .filter(acc => acc.isActive)
-            .sort((a, b) => {
-              if (a.isDefault && !b.isDefault) return -1
-              if (!a.isDefault && b.isDefault) return 1
-              return a.name.localeCompare(b.name)
-            })
-            .map((account) => (
-              <button
-                key={account.id}
-                onClick={() => handleAccountSelect(account.id)}
-                className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between ${
-                  selectedAccountId === account.id ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300' : ''
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  {account.isDefault && (
-                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                  )}
-                  <span className="font-medium">{account.name}</span>
-                  {account.isPractice && (
-                    <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded">
-                      Practice
-                    </span>
-                  )}
-                  {account.currency && account.cash !== null && account.cash !== undefined && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      ${account.cash.toFixed(0)} {account.currency}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center">
-                  {account.lastError ? (
-                    <AlertCircle className="h-3 w-3 text-red-500" />
-                  ) : account.lastConnected ? (
-                    <CheckCircle className="h-3 w-3 text-green-500" />
-                  ) : null}
-                </div>
-              </button>
-            ))}
+            {/* Individual Accounts */}
+            {accounts
+              .filter(acc => acc.isActive)
+              .sort((a, b) => {
+                if (a.isDefault && !b.isDefault) return -1
+                if (!a.isDefault && b.isDefault) return 1
+                return a.name.localeCompare(b.name)
+              })
+              .map((account) => (
+                <button
+                  key={account.id}
+                  onClick={() => handleAccountSelect(account.id)}
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between ${
+                    selectedAccountId === account.id ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300' : ''
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    {account.isDefault && (
+                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                    )}
+                    <span className="font-medium">{account.name}</span>
+                    {account.isPractice && (
+                      <span className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded">
+                        Practice
+                      </span>
+                    )}
+                    {account.currency && account.cash !== null && account.cash !== undefined && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        ${account.cash.toFixed(0)} {account.currency}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center">
+                    {account.lastError ? (
+                      <AlertCircle className="h-3 w-3 text-red-500" />
+                    ) : account.lastConnected ? (
+                      <CheckCircle className="h-3 w-3 text-green-500" />
+                    ) : null}
+                  </div>
+                </button>
+              ))}
 
-          {accounts.filter(acc => acc.isActive).length === 0 && (
-            <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
-              No active accounts
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Backdrop to close dropdown */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setIsOpen(false)}
-        />
+            {accounts.filter(acc => acc.isActive).length === 0 && (
+              <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                No active accounts
+              </div>
+            )}
+          </div>
+        </>,
+        document.body
       )}
     </div>
   )
