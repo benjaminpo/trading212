@@ -1,42 +1,5 @@
-// Need to create a class that we can import for testing
-class RateLimiter {
-  private requests: Map<string, number[]> = new Map();
-  private readonly windowMs: number;
-  private readonly maxRequests: number;
-
-  constructor(windowMs: number = 60000, maxRequests: number = 10) {
-    this.windowMs = windowMs;
-    this.maxRequests = maxRequests;
-  }
-
-  canMakeRequest(key: string): boolean {
-    const now = Date.now();
-    const requests = this.requests.get(key) || [];
-    
-    // Remove old requests outside the window
-    const validRequests = requests.filter(timestamp => now - timestamp < this.windowMs);
-    
-    if (validRequests.length >= this.maxRequests) {
-      return false;
-    }
-    
-    // Add current request
-    validRequests.push(now);
-    this.requests.set(key, validRequests);
-    
-    return true;
-  }
-
-  getTimeUntilReset(key: string): number {
-    const requests = this.requests.get(key) || [];
-    if (requests.length === 0) return 0;
-    
-    const oldestRequest = Math.min(...requests);
-    const timeUntilReset = this.windowMs - (Date.now() - oldestRequest);
-    
-    return Math.max(0, timeUntilReset);
-  }
-}
+// Import the actual RateLimiter class from the lib
+import { RateLimiter, trading212RateLimiter } from '@/lib/rate-limiter'
 
 describe('RateLimiter', () => {
   let rateLimiter: RateLimiter
@@ -229,6 +192,25 @@ describe('RateLimiter', () => {
       expect(customLimiter.canMakeRequest(key)).toBe(true)
       expect(customLimiter.canMakeRequest(key)).toBe(true)
       expect(customLimiter.canMakeRequest(key)).toBe(false)
+    })
+  })
+
+  describe('trading212RateLimiter export', () => {
+    it('should be a working RateLimiter instance', () => {
+      expect(trading212RateLimiter).toBeInstanceOf(RateLimiter)
+      expect(trading212RateLimiter.canMakeRequest('test')).toBe(true)
+    })
+
+    it('should have reasonable default limits', () => {
+      const key = 'test-user'
+      
+      // Should allow multiple requests (testing the 15 request limit)
+      for (let i = 0; i < 15; i++) {
+        expect(trading212RateLimiter.canMakeRequest(key)).toBe(true)
+      }
+      
+      // 16th request should be rejected
+      expect(trading212RateLimiter.canMakeRequest(key)).toBe(false)
     })
   })
 })

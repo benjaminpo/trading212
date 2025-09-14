@@ -1,5 +1,5 @@
 // Simple in-memory rate limiter for Trading212 API calls
-class RateLimiter {
+export class RateLimiter {
   private requests: Map<string, number[]> = new Map();
   private readonly windowMs: number;
   private readonly maxRequests: number;

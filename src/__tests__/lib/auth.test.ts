@@ -62,7 +62,7 @@ describe('Auth Configuration', () => {
   })
 
   describe('JWT Callback', () => {
-    it('returns token with user id', async () => {
+    it('returns token with user id when user is provided', async () => {
       const jwtCallback = authOptions.callbacks?.jwt
       expect(jwtCallback).toBeDefined()
 
@@ -81,16 +81,29 @@ describe('Auth Configuration', () => {
 
       const result = await jwtCallback!({
         token: { id: '1' },
-        user: { id: '1', email: 'test@example.com', emailVerified: null },
+        user: null,
         account: null,
       })
 
-      expect(result.id).toBe('1')
+      expect(result.id).toBe('1') // Should preserve existing token id
+    })
+
+    it('returns token without user id when user is undefined', async () => {
+      const jwtCallback = authOptions.callbacks?.jwt
+      expect(jwtCallback).toBeDefined()
+
+      const result = await jwtCallback!({
+        token: { id: '1' },
+        user: undefined,
+        account: null,
+      })
+
+      expect(result.id).toBe('1') // Should preserve existing token id
     })
   })
 
   describe('Session Callback', () => {
-    it('returns session with user id', async () => {
+    it('returns session with user id when token is provided', async () => {
       const sessionCallback = authOptions.callbacks?.session
       expect(sessionCallback).toBeDefined()
 
@@ -109,11 +122,24 @@ describe('Auth Configuration', () => {
 
       const result = await sessionCallback!({
         session: { user: { id: '1', email: 'test@example.com' }, expires: '2024-12-31T23:59:59.999Z' },
-        token: { id: '1' },
+        token: null,
         user: { id: '1', email: 'test@example.com', emailVerified: null },
       } as any)
 
-      expect((result?.user as any)?.id).toBe('1') // The session callback preserves the user id from the session
+      expect((result?.user as any)?.id).toBe('1') // Should preserve session user id when token is null
+    })
+
+    it('returns session without user id when token is undefined', async () => {
+      const sessionCallback = authOptions.callbacks?.session
+      expect(sessionCallback).toBeDefined()
+
+      const result = await sessionCallback!({
+        session: { user: { id: '1', email: 'test@example.com' }, expires: '2024-12-31T23:59:59.999Z' },
+        token: undefined,
+        user: { id: '1', email: 'test@example.com', emailVerified: null },
+      } as any)
+
+      expect((result?.user as any)?.id).toBe('1') // Should preserve session user id when token is undefined
     })
   })
 
@@ -197,6 +223,40 @@ describe('Auth Configuration', () => {
         email: 'test@example.com',
         password: 'wrongpassword'
       })
+
+      expect(result).toBeNull()
+    })
+
+
+    it('returns null when credentials are missing both email and password', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+      
+      const result = await credentialsProvider.authorize({
+        email: '',
+        password: ''
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when credentials object is null', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+      
+      const result = await credentialsProvider.authorize(null)
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when credentials object is undefined', async () => {
+      const credentialsProvider = authOptions.providers.find(
+        provider => provider.id === 'credentials'
+      ) as any
+      
+      const result = await credentialsProvider.authorize(undefined)
 
       expect(result).toBeNull()
     })
