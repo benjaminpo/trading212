@@ -122,6 +122,7 @@ jobs:
         with:
           status: failure
           channel: '#alerts'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
           fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

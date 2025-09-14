@@ -82,7 +82,7 @@ VERCEL_PROJECT_ID        # Vercel project ID
 ### Optional Integration Secrets
 ```
 SNYK_TOKEN               # Snyk security scanning token
-SLACK_WEBHOOK            # Slack webhook for notifications
+SLACK_WEBHOOK_URL        # Slack webhook URL for notifications
 GITHUB_TOKEN             # GitHub token (usually auto-provided)
 ```
 

@@ -106,7 +106,6 @@ jobs:
         with:
           status: success
           channel: '#releases'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
           fields: repo,message,commit,author,action,eventName,ref,workflow
           custom_payload: |
             {
@@ -133,6 +132,8 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   update-version:
     name: Update Version
