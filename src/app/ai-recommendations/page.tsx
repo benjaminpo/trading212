@@ -61,8 +61,6 @@ export default function AIRecommendationsPage() {
         ? `/api/ai/analyze-positions?accountId=${selectedAccountId}`
         : '/api/ai/analyze-positions'
       
-      console.log('🔍 Frontend: Fetching recommendations with URL:', url)
-      console.log('🔍 Frontend: selectedAccountId:', selectedAccountId)
       
       const response = await fetch(url)
       if (response.ok) {
@@ -103,7 +101,6 @@ export default function AIRecommendationsPage() {
   }, [mounted, session, status, router, fetchRecommendations])
 
   const handleAccountChange = (accountId: string | null) => {
-    console.log('🔍 Frontend: Account changed to:', accountId)
     setSelectedAccountId(accountId)
     setLoading(true)
   }

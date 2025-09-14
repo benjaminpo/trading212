@@ -390,8 +390,6 @@ export async function GET(request: NextRequest) {
     // Get accountId from query parameters
     const { searchParams } = new URL(request.url)
     const accountId = searchParams.get('accountId')
-    
-    console.log('🔍 GET /api/ai/analyze-positions - accountId:', accountId)
 
     // Get user's accounts
     const user = await retryDatabaseOperation(() =>
@@ -451,29 +449,20 @@ export async function GET(request: NextRequest) {
 
     // Filter recommendations by account if specific account is selected
     if (accountId && recommendations.length > 0) {
-      console.log('🔍 Filtering recommendations for accountId:', accountId)
-      console.log('🔍 Total recommendations before filtering:', recommendations.length)
-      
       recommendations = recommendations.filter(rec => {
         try {
           // Parse the account info stored in userFeedback field
           if (rec.userFeedback) {
             const accountInfo = JSON.parse(rec.userFeedback)
-            const matches = accountInfo.accountId === accountId
-            console.log('🔍 Recommendation', rec.symbol, 'accountId:', accountInfo.accountId, 'matches:', matches)
-            return matches
+            return accountInfo.accountId === accountId
           }
           // If no account info stored (old recommendations), exclude them when filtering by account
-          console.log('🔍 Recommendation', rec.symbol, 'has no userFeedback, excluding from account-specific view')
           return false
         } catch {
           // If parsing fails, exclude the recommendation when filtering by account
-          console.log('🔍 Recommendation', rec.symbol, 'failed to parse userFeedback, excluding from account-specific view')
           return false
         }
       })
-      
-      console.log('🔍 Total recommendations after filtering:', recommendations.length)
     }
 
     // Determine response account info
