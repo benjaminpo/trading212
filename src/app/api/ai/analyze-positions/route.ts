@@ -463,13 +463,13 @@ export async function GET(request: NextRequest) {
             console.log('🔍 Recommendation', rec.symbol, 'accountId:', accountInfo.accountId, 'matches:', matches)
             return matches
           }
-          // If no account info stored (old recommendations), include them for backward compatibility
-          console.log('🔍 Recommendation', rec.symbol, 'has no userFeedback, including for backward compatibility')
-          return true
+          // If no account info stored (old recommendations), exclude them when filtering by account
+          console.log('🔍 Recommendation', rec.symbol, 'has no userFeedback, excluding from account-specific view')
+          return false
         } catch {
-          // If parsing fails, include the recommendation for backward compatibility
-          console.log('🔍 Recommendation', rec.symbol, 'failed to parse userFeedback, including for backward compatibility')
-          return true
+          // If parsing fails, exclude the recommendation when filtering by account
+          console.log('🔍 Recommendation', rec.symbol, 'failed to parse userFeedback, excluding from account-specific view')
+          return false
         }
       })
       
