@@ -65,7 +65,7 @@ export default function AIRecommendationsPage() {
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        console.log('🔍 AI Recommendations data:', data.recommendations?.map((rec: any) => ({
+        console.log('🔍 AI Recommendations data:', data.recommendations?.map((rec: AIRecommendation) => ({
           symbol: rec.symbol,
           pnlPercent: rec.position?.pnlPercent,
           averagePrice: rec.position?.averagePrice,

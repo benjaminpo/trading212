@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let allRecommendations = []
+    const allRecommendations = []
     let totalExecutionTime = 0
 
     // Determine which accounts to analyze
