@@ -18,7 +18,9 @@ jest.mock('@/lib/prisma', () => ({
     },
     aIRecommendation: {
       updateMany: jest.fn(),
-      create: jest.fn()
+      create: jest.fn(),
+      update: jest.fn(),
+      findMany: jest.fn()
     },
     aIAnalysisLog: {
       create: jest.fn()

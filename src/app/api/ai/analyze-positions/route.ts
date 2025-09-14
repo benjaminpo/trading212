@@ -266,6 +266,21 @@ export async function POST(request: NextRequest) {
             })
           )
 
+          // Store account info in the recommendation metadata
+          // We'll use the userFeedback field temporarily to store account info
+          await retryDatabaseOperation(() =>
+            prisma.aIRecommendation.update({
+              where: { id: savedRec.id },
+              data: {
+                userFeedback: JSON.stringify({
+                  accountId: targetAccount.id,
+                  accountName: targetAccount.name,
+                  isPractice: targetAccount.isPractice
+                })
+              }
+            })
+          )
+
           savedRecommendations.push({
             ...savedRec,
             position: {
@@ -417,9 +432,8 @@ export async function GET(request: NextRequest) {
       targetAccounts = user.trading212Accounts
     }
 
-    // Get recent recommendations - for now we get all and filter client-side
-    // In a real implementation, you might want to store account info with recommendations
-    const recommendations = await retryDatabaseOperation(() =>
+    // Get recent recommendations
+    let recommendations = await retryDatabaseOperation(() =>
       prisma.aIRecommendation.findMany({
         where: {
           userId: session.user.id,
@@ -429,9 +443,27 @@ export async function GET(request: NextRequest) {
           position: true
         },
         orderBy: { createdAt: 'desc' },
-        take: 50 // Get more to allow for filtering
+        take: 100 // Get more to allow for filtering
       })
     )
+
+    // Filter recommendations by account if specific account is selected
+    if (accountId && recommendations.length > 0) {
+      recommendations = recommendations.filter(rec => {
+        try {
+          // Parse the account info stored in userFeedback field
+          if (rec.userFeedback) {
+            const accountInfo = JSON.parse(rec.userFeedback)
+            return accountInfo.accountId === accountId
+          }
+          // If no account info stored (old recommendations), include them for backward compatibility
+          return true
+        } catch {
+          // If parsing fails, include the recommendation for backward compatibility
+          return true
+        }
+      })
+    }
 
     // Determine response account info
     let responseAccountInfo = null
@@ -452,18 +484,40 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Process recommendations to include account info from metadata
+    const processedRecommendations = recommendations.map(rec => {
+      let accountInfo = null
+      try {
+        if (rec.userFeedback) {
+          const parsed = JSON.parse(rec.userFeedback)
+          accountInfo = {
+            name: parsed.accountName,
+            isPractice: parsed.isPractice,
+            isDefault: false // We don't store this, but it's not critical
+          }
+        }
+      } catch {
+        // If parsing fails, accountInfo remains null
+      }
+
+      return {
+        ...rec,
+        accountInfo
+      }
+    })
+
     // Debug logging for recommendations
-    console.log('🔍 AI Recommendations from DB:', recommendations.map(rec => ({
+    console.log('🔍 AI Recommendations from DB:', processedRecommendations.map(rec => ({
       symbol: rec.symbol,
       pnlPercent: rec.position?.pnlPercent,
       averagePrice: rec.position?.averagePrice,
       currentPrice: rec.position?.currentPrice,
       pnl: rec.position?.pnl,
-      lastUpdated: rec.position?.lastUpdated
+      accountInfo: rec.accountInfo
     })))
 
     return NextResponse.json({ 
-      recommendations,
+      recommendations: processedRecommendations,
       accountInfo: responseAccountInfo
     })
 
