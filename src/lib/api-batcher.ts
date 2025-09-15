@@ -25,7 +25,7 @@ export interface APIResult {
 
 export class APIBatcher {
   private static instance: APIBatcher
-  private batches: Map<string, BatchedRequest<unknown>[]> = new Map()
+  private batches: Map<string, BatchedRequest<any>[]> = new Map()
   private batchTimeout: NodeJS.Timeout | null = null
   private readonly BATCH_DELAY = 100 // 100ms batching window
   private readonly MAX_BATCH_SIZE = 10
@@ -98,7 +98,7 @@ export class APIBatcher {
     this.batches.delete(batchKey)
 
     // Group requests by account
-    const accountGroups = new Map<string, BatchedRequest[]>()
+    const accountGroups = new Map<string, BatchedRequest<any>[]>()
     requests.forEach(req => {
       if (!accountGroups.has(req.accountId)) {
         accountGroups.set(req.accountId, [])
@@ -116,7 +116,7 @@ export class APIBatcher {
 
   private async executeAccountBatch(
     accountId: string,
-    requests: BatchedRequest[],
+    requests: BatchedRequest<any>[],
     apiKey: string,
     isPractice: boolean
   ): Promise<void> {

@@ -210,5 +210,32 @@ describe('/api/ai/optimized-analyze', () => {
       const googl = data.recommendations.find((r: any) => r.symbol === 'GOOGL_US_EQ')
       expect(googl.id).toBe('2')
     })
+
+    it('should filter recommendations by accountId and then dedupe', async () => {
+      const { prisma } = require('@/lib/prisma')
+      const { getServerSession } = require('next-auth')
+      getServerSession.mockResolvedValue(mockSession)
+
+      const now = new Date()
+      const recs = [
+        { id: '1', userId: 'user123', positionId: 'p1', symbol: 'GOOGL_US_EQ', isActive: true, createdAt: new Date(now.getTime() - 2000), userFeedback: JSON.stringify({ accountId: 'accountA' }), position: {} },
+        { id: '2', userId: 'user123', positionId: 'p2', symbol: 'GOOGL_US_EQ', isActive: true, createdAt: new Date(now.getTime() - 1000), userFeedback: JSON.stringify({ accountId: 'accountB' }), position: {} },
+        { id: '3', userId: 'user123', positionId: 'p3', symbol: 'AAPL_US_EQ',  isActive: true, createdAt: now,                               userFeedback: JSON.stringify({ accountId: 'accountA' }), position: {} },
+      ]
+
+      prisma.aIRecommendation.findMany.mockResolvedValue(recs)
+
+      const request = new NextRequest('http://localhost/api/ai/optimized-analyze?accountId=accountA')
+      const response = await GET(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      // After filtering to accountA, we have ids 1 and 3, dedupe keeps both since symbols differ
+      expect(data.recommendations).toHaveLength(2)
+      const symbols = data.recommendations.map((r: any) => r.symbol).sort()
+      expect(symbols).toEqual(['AAPL_US_EQ', 'GOOGL_US_EQ'])
+      const googl = data.recommendations.find((r: any) => r.symbol === 'GOOGL_US_EQ')
+      expect(googl.id).toBe('1')
+    })
   })
 })

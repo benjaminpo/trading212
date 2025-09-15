@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         performance: {
           cacheHitRate: await calculateCacheHitRate(),
           averageResponseTime: await calculateAverageResponseTime(),
-          rateLimitStatus: await getRateLimitStatus(session.user.id)
+          rateLimitStatus: await getRateLimitStatus()
         },
         recommendations: {
           totalOptimizations: 4,
