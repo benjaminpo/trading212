@@ -234,12 +234,12 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Name</label>
-                  <Input value={session.user?.name || ''} disabled className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50" />
+                  <label htmlFor="account-name" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Name</label>
+                  <Input id="account-name" value={session.user?.name || ''} disabled className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Email</label>
-                  <Input value={session.user?.email || ''} disabled className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50" />
+                  <label htmlFor="account-email" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Email</label>
+                  <Input id="account-email" value={session.user?.email || ''} disabled className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50" />
                 </div>
                 <LogoutButton />
               </CardContent>
@@ -305,10 +305,11 @@ export default function SettingsPage() {
                     <CardContent>
                       <form onSubmit={handleAddAccount} className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                          <label htmlFor="new-account-name" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                             Account Name
                           </label>
                           <Input
+                            id="new-account-name"
                             type="text"
                             placeholder="e.g., Personal, Business, Demo"
                             value={newAccountName}
@@ -318,10 +319,11 @@ export default function SettingsPage() {
                           />
                 </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                      <label htmlFor="new-api-key" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                         Trading212 API Key
                       </label>
                       <Input
+                        id="new-api-key"
                         type="password"
                         placeholder="Enter your Trading212 API key"
                             value={newApiKey}

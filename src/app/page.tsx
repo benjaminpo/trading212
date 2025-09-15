@@ -85,8 +85,8 @@ export default function Home() {
             </Badge>
             
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-8 leading-tight">
-              Advanced Trading212
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent"> Management</span>
+              Advanced Trading212{' '}
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">Management</span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
@@ -297,8 +297,8 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            Ready to take your trading to the 
-            <span className="text-yellow-300"> next level?</span>
+            Ready to take your trading to the{' '}
+            <span className="text-yellow-300">next level?</span>
           </h2>
           <p className="text-xl md:text-2xl mb-10 opacity-90 leading-relaxed max-w-2xl mx-auto">
             Join thousands of traders who trust Trading212 Extra for their portfolio management and AI-powered insights

@@ -322,10 +322,11 @@ export default function TrailStopPage() {
                   <form onSubmit={handleCreateOrder} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                        <label htmlFor="trail-symbol" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                           Symbol
                         </label>
                         <select
+                          id="trail-symbol"
                           value={formData.symbol}
                           onChange={(e) => setFormData({...formData, symbol: e.target.value})}
                           required
@@ -341,10 +342,11 @@ export default function TrailStopPage() {
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                        <label htmlFor="trail-quantity" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                           Quantity
                         </label>
                         <Input
+                          id="trail-quantity"
                           type="number"
                           step="any"
                           min="0"
@@ -387,10 +389,11 @@ export default function TrailStopPage() {
 
                     {formData.trailType === 'amount' ? (
                       <div>
-                        <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                        <label htmlFor="trail-amount" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                           Trail Amount ($)
                         </label>
                         <Input
+                          id="trail-amount"
                           type="number"
                           step="0.01"
                           min="0"
@@ -406,10 +409,11 @@ export default function TrailStopPage() {
                       </div>
                     ) : (
                       <div>
-                        <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                        <label htmlFor="trail-percent" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                           Trail Percentage (%)
                         </label>
                         <Input
+                          id="trail-percent"
                           type="number"
                           step="0.1"
                           min="0"

@@ -101,6 +101,9 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
         variant="outline"
         onClick={handleButtonClick}
         className="w-full justify-between bg-white/90 dark:bg-slate-800/90 border-slate-200/60 dark:border-slate-600/60 hover:bg-slate-50 dark:hover:bg-slate-700/90 backdrop-blur-sm"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={mounted && isOpen ? 'account-selector-dropdown' : undefined}
       >
         <div className="flex items-center space-x-2">
           {selectedAccountId ? (
@@ -147,6 +150,8 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
               width: dropdownPosition.width,
               minWidth: '200px'
             }}
+            id="account-selector-dropdown"
+            role="listbox"
           >
             {/* All Accounts Option */}
             <button
@@ -154,6 +159,8 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
               className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center space-x-2 ${
                 !selectedAccountId ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300' : ''
               }`}
+              role="option"
+              aria-selected={!selectedAccountId}
             >
               <span className="font-medium">All Accounts</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">(Aggregated View)</span>
@@ -176,6 +183,8 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
                   className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between ${
                     selectedAccountId === account.id ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300' : ''
                   }`}
+                  role="option"
+                  aria-selected={selectedAccountId === account.id}
                 >
                   <div className="flex items-center space-x-2">
                     {account.isDefault && (

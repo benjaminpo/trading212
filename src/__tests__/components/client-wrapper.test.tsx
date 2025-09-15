@@ -106,8 +106,8 @@ describe('ClientWrapper Component', () => {
       <ClientWrapper>
         <div>String child</div>
         {42}
-        {true && <span>Conditional child</span>}
-        {false && <span>Hidden child</span>}
+        {(() => { const show = true; return show && <span>Conditional child</span> })()}
+        {(() => { const show = false; return show && <span>Hidden child</span> })()}
       </ClientWrapper>
     )
 

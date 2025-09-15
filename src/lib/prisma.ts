@@ -13,7 +13,7 @@ const createPrismaClient = () => {
     : `${databaseUrl}?pgbouncer=true&connection_limit=1&pool_timeout=0`
 
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error'] : ['error'], // Reduce logging to avoid noise
+    log: ['error'], // Reduce logging to avoid noise
     datasources: {
       db: {
         url: urlWithParams,
