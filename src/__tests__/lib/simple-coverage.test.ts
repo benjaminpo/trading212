@@ -45,7 +45,9 @@ describe('Simple Coverage Test', () => {
   it('should handle null and undefined', () => {
     expect(null).toBeNull()
     expect(undefined).toBeUndefined()
-    expect(null == undefined).toBe(true)
-    expect(null === undefined).toBe(false)
+    const n = null
+    const u = undefined
+    expect(n == u).toBe(true)
+    expect(n === u).toBe(false)
   })
 })

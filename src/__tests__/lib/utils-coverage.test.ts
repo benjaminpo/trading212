@@ -7,7 +7,9 @@ describe('Utils Coverage Tests', () => {
     })
 
     it('should handle conditional classes', () => {
-      expect(cn('class1', true && 'class2', false && 'class3')).toBe('class1 class2')
+      const includeTwo = true
+      const includeThree = false
+      expect(cn('class1', includeTwo && 'class2', includeThree && 'class3')).toBe('class1 class2')
     })
 
     it('should handle undefined and null values', () => {

@@ -161,7 +161,8 @@ export class APICache {
     try {
       // For now, we'll use memory cache only
       // In the future, this could be extended to use Redis or database
-      return null
+      const result = null as T | null
+      return result
     } catch (error) {
       console.error('Database cache error:', error)
       return null
@@ -172,6 +173,7 @@ export class APICache {
     try {
       // For now, we'll use memory cache only
       // In the future, this could be extended to use Redis or database
+      return
     } catch (error) {
       console.error('Database cache error:', error)
     }
