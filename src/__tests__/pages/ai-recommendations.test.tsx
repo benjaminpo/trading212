@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { useRouter as _useRouter } from 'next/navigation'
+import { setSession as _setSession, mockFetchJson as _mockFetchJson, renderPageByPath as _renderPageByPath } from '@/__tests__/helpers/test-utils'
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -40,24 +41,11 @@ describe('AI Recommendations Page', () => {
     })
   })
 
-  const setSession = (status: 'authenticated' | 'unauthenticated' | 'loading', user: unknown = { name: 'Test User' }) => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: status === 'authenticated' ? { user } : null,
-      status
-    })
-  }
+  const setSession = _setSession
 
-  const mockFetchRecommendations = (recs: unknown[] = []) => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({ recommendations: recs })
-    })
-  }
+  const mockFetchRecommendations = (recs: unknown[] = []) => _mockFetchJson({ recommendations: recs }, true)
 
-  const renderPage = async () => {
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
-  }
+  const renderPage = async () => _renderPageByPath('@/app/ai-recommendations/page')
 
   const waitForHeader = async () => {
     await waitFor(() => {
@@ -157,10 +145,11 @@ describe('AI Recommendations Page', () => {
 
   it('handles manual analysis trigger', async () => {
     setSession('authenticated')
+    const recs = [] as unknown[]
     ;(global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ recommendations: mockRecommendations }),
+        json: async () => ({ recommendations: recs }),
       })
       .mockResolvedValueOnce({
         ok: true,
