@@ -40,14 +40,34 @@ describe('AI Recommendations Page', () => {
     })
   })
 
-  it('redirects unauthenticated users to signin', async () => {
+  const setSession = (status: 'authenticated' | 'unauthenticated' | 'loading', user: unknown = { name: 'Test User' }) => {
     ;(useSession as jest.Mock).mockReturnValue({
-      data: null,
-      status: 'unauthenticated',
+      data: status === 'authenticated' ? { user } : null,
+      status
     })
+  }
 
+  const mockFetchRecommendations = (recs: unknown[] = []) => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ recommendations: recs })
+    })
+  }
+
+  const renderPage = async () => {
     const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
     render(React.createElement(AIRecommendationsPage))
+  }
+
+  const waitForHeader = async () => {
+    await waitFor(() => {
+      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+    })
+  }
+
+  it('redirects unauthenticated users to signin', async () => {
+    setSession('unauthenticated')
+    await renderPage()
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith('/auth/signin')
@@ -55,26 +75,15 @@ describe('AI Recommendations Page', () => {
   })
 
   it('shows loading state initially', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
-    // Mock fetch to return pending promise
+    setSession('authenticated')
     ;(global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}))
-
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
     expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
   })
 
   it('loads and displays AI recommendations', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
+    setSession('authenticated')
     const mockRecommendations = [
       {
         id: '1',
@@ -116,71 +125,38 @@ describe('AI Recommendations Page', () => {
       },
     ]
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({ recommendations: mockRecommendations }),
-    })
+    mockFetchRecommendations(mockRecommendations)
+    await renderPage()
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
-
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Just check that the component renders without errors
     expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
   })
 
   it('displays recommendation details correctly', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+    setSession('authenticated')
+    await renderPage()
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
-
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Just check that the component renders without errors
     expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
   })
 
   it('handles refresh functionality', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+    setSession('authenticated')
+    mockFetchRecommendations([])
+    await renderPage()
 
-    const mockRecommendations: any[] = []
-
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({ recommendations: mockRecommendations }),
-    })
-
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
-
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Just check that the component renders without errors
     expect(screen.getByText('Run Analysis')).toBeInTheDocument()
   })
 
   it('handles manual analysis trigger', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
-    const mockRecommendations: any[] = []
-
+    setSession('authenticated')
     ;(global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
@@ -191,64 +167,43 @@ describe('AI Recommendations Page', () => {
         json: async () => ({ success: true }),
       })
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Just check that the component renders without errors
     expect(screen.getByText('Run Analysis')).toBeInTheDocument()
   })
 
   it('displays empty state when no recommendations exist', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
+    setSession('authenticated')
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ recommendations: [] }),
     })
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     expect(screen.getByText('No AI Recommendations Yet')).toBeInTheDocument()
     expect(screen.getByText('Run an AI analysis to get personalized exit strategy recommendations for your positions.')).toBeInTheDocument()
   })
 
   it('handles API errors gracefully', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
+    setSession('authenticated')
     ;(global.fetch as jest.Mock).mockRejectedValue(new Error('API Error'))
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Should still render the page even with API errors
     expect(screen.getByText('Run Analysis')).toBeInTheDocument()
   })
 
   it('displays different recommendation types with correct styling', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
+    setSession('authenticated')
     const mockRecommendations = [
       {
         id: '1',
@@ -311,12 +266,9 @@ describe('AI Recommendations Page', () => {
       json: async () => ({ recommendations: mockRecommendations }),
     })
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     expect(screen.getByText('EXIT')).toBeInTheDocument()
     expect(screen.getByText('REDUCE')).toBeInTheDocument()
@@ -324,11 +276,7 @@ describe('AI Recommendations Page', () => {
   })
 
   it('displays confidence levels correctly', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
+    setSession('authenticated')
     const mockRecommendations = [
       {
         id: '1',
@@ -373,23 +321,16 @@ describe('AI Recommendations Page', () => {
       json: async () => ({ recommendations: mockRecommendations }),
     })
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Just check that the component renders without errors
     expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
   })
 
   it('displays position information correctly', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
+    setSession('authenticated')
     const mockRecommendations = [
       {
         id: '1',
@@ -416,12 +357,9 @@ describe('AI Recommendations Page', () => {
       json: async () => ({ recommendations: mockRecommendations }),
     })
 
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    await renderPage()
 
-    await waitFor(() => {
-      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
-    })
+    await waitForHeader()
 
     // Just check that the component renders without errors
     expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
@@ -603,13 +541,8 @@ describe('AI Recommendations Page', () => {
   })
 
   it('handles session loading state', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: null,
-      status: 'loading',
-    })
-
-    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
-    render(React.createElement(AIRecommendationsPage))
+    setSession('loading')
+    await renderPage()
 
     // Should show loading state
     expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
