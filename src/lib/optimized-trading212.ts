@@ -87,13 +87,24 @@ export class OptimizedTrading212Service {
         totalPnL: 0,
         totalPnLPercent: 0,
         totalValue: 0,
-        todayPnL: 0, // This would need to be calculated from historical data
+        todayPnL: 0,
         todayPnLPercent: 0,
         ...(batchedData.stats as Record<string, unknown>)
       },
       currency: (batchedData.account as { currencyCode?: string })?.currencyCode || 'USD',
       lastUpdated: new Date().toISOString(),
       cacheHit: false
+    }
+
+    // Derive today's P/L from account summary if available
+    const accountSummary = batchedData.account as Trading212Account | null
+    if (accountSummary) {
+      const todayPnL = typeof accountSummary.result === 'number' ? accountSummary.result : 0
+      const totalValue = typeof optimizedData.stats.totalValue === 'number' ? optimizedData.stats.totalValue : 0
+      optimizedData.stats.todayPnL = todayPnL
+      optimizedData.stats.todayPnLPercent = totalValue > 0
+        ? (todayPnL / (totalValue - todayPnL)) * 100
+        : 0
     }
 
     // Cache the result

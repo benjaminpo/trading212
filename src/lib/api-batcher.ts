@@ -215,7 +215,7 @@ export class APIBatcher {
 
   private calculateStats(portfolio: unknown[]): Record<string, unknown> {
     const activePositions = portfolio.length
-    const totalPnL = portfolio.reduce((sum: number, pos) => sum + ((pos as { pnl?: number }).pnl || 0), 0)
+    const totalPnL = portfolio.reduce((sum: number, pos) => sum + ((pos as { ppl?: number }).ppl || 0), 0)
     const totalValue = portfolio.reduce((sum: number, pos) => sum + ((pos as { quantity?: number; currentPrice?: number }).quantity || 0) * ((pos as { quantity?: number; currentPrice?: number }).currentPrice || 0), 0)
     const totalPnLPercent = totalValue > 0 ? (totalPnL / (totalValue - totalPnL)) * 100 : 0
 
