@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma, retryDatabaseOperation } from '@/lib/prisma'
 import { optimizedTrading212Service } from '@/lib/optimized-trading212'
 import { optimizedAIService, PositionData, MarketData, BatchAnalysisRequest } from '@/lib/optimized-ai-service'
+import { dedupeLatestBy } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -311,28 +312,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Dedupe by symbol, keeping the latest by createdAt, then sort desc by createdAt
-    const toTimestamp = (value: unknown): number => {
-      if (value instanceof Date) return value.getTime()
-      return new Date(String(value)).getTime()
-    }
-    const symbolToLatest = new Map<string, typeof recommendations[number]>()
-    for (const rec of recommendations) {
-      const existing = symbolToLatest.get(rec.symbol)
-      if (!existing) {
-        symbolToLatest.set(rec.symbol, rec)
-        continue
-      }
-      const recTime = toTimestamp(rec.createdAt)
-      const existingTime = toTimestamp(existing.createdAt)
-      if (recTime > existingTime) {
-        symbolToLatest.set(rec.symbol, rec)
-      }
-    }
-    const dedupedRecommendations = Array.from(symbolToLatest.values()).sort((a, b) => {
-      const at = toTimestamp(a.createdAt)
-      const bt = toTimestamp(b.createdAt)
-      return bt - at
-    })
+    const dedupedRecommendations = dedupeLatestBy(recommendations, r => r.symbol, r => r.createdAt)
 
     const processedRecommendations = dedupedRecommendations.map(rec => {
       let accountInfo = null

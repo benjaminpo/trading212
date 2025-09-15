@@ -185,6 +185,19 @@ describe('/api/ai/optimized-analyze', () => {
   })
 
   describe('GET', () => {
+    const makeRec = (overrides: Partial<any> = {}) => {
+      const base = {
+        id: 'id',
+        userId: 'user123',
+        positionId: 'p',
+        symbol: 'SYM',
+        isActive: true,
+        createdAt: new Date(),
+        userFeedback: JSON.stringify({ accountId: 'account1' }),
+        position: {}
+      }
+      return { ...base, ...overrides }
+    }
     it('should dedupe recommendations by symbol keeping the latest', async () => {
       const { prisma } = require('@/lib/prisma')
       const { getServerSession } = require('next-auth')
@@ -192,9 +205,9 @@ describe('/api/ai/optimized-analyze', () => {
 
       const now = new Date()
       const recs = [
-        { id: '1', userId: 'user123', positionId: 'p1', symbol: 'GOOGL_US_EQ', isActive: true, createdAt: new Date(now.getTime() - 1000), userFeedback: JSON.stringify({ accountId: 'account1' }), position: {} },
-        { id: '2', userId: 'user123', positionId: 'p2', symbol: 'GOOGL_US_EQ', isActive: true, createdAt: now, userFeedback: JSON.stringify({ accountId: 'account1' }), position: {} },
-        { id: '3', userId: 'user123', positionId: 'p3', symbol: 'AAPL_US_EQ', isActive: true, createdAt: now, userFeedback: JSON.stringify({ accountId: 'account1' }), position: {} },
+        makeRec({ id: '1', symbol: 'GOOGL_US_EQ', createdAt: new Date(now.getTime() - 1000) }),
+        makeRec({ id: '2', symbol: 'GOOGL_US_EQ', createdAt: now }),
+        makeRec({ id: '3', symbol: 'AAPL_US_EQ', createdAt: now }),
       ]
 
       prisma.aIRecommendation.findMany.mockResolvedValue(recs)
@@ -218,9 +231,9 @@ describe('/api/ai/optimized-analyze', () => {
 
       const now = new Date()
       const recs = [
-        { id: '1', userId: 'user123', positionId: 'p1', symbol: 'GOOGL_US_EQ', isActive: true, createdAt: new Date(now.getTime() - 2000), userFeedback: JSON.stringify({ accountId: 'accountA' }), position: {} },
-        { id: '2', userId: 'user123', positionId: 'p2', symbol: 'GOOGL_US_EQ', isActive: true, createdAt: new Date(now.getTime() - 1000), userFeedback: JSON.stringify({ accountId: 'accountB' }), position: {} },
-        { id: '3', userId: 'user123', positionId: 'p3', symbol: 'AAPL_US_EQ',  isActive: true, createdAt: now,                               userFeedback: JSON.stringify({ accountId: 'accountA' }), position: {} },
+        makeRec({ id: '1', symbol: 'GOOGL_US_EQ', createdAt: new Date(now.getTime() - 2000), userFeedback: JSON.stringify({ accountId: 'accountA' }) }),
+        makeRec({ id: '2', symbol: 'GOOGL_US_EQ', createdAt: new Date(now.getTime() - 1000), userFeedback: JSON.stringify({ accountId: 'accountB' }) }),
+        makeRec({ id: '3', symbol: 'AAPL_US_EQ',  createdAt: now, userFeedback: JSON.stringify({ accountId: 'accountA' }) }),
       ]
 
       prisma.aIRecommendation.findMany.mockResolvedValue(recs)
