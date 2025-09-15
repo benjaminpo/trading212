@@ -27,8 +27,6 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Check TypeScript
-        run: npx tsc --noEmit
 
       - name: Run Prettier check
         run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}"

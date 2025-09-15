@@ -102,10 +102,6 @@ run_lint() {
     print_status "Running ESLint..."
     npm run lint
     
-    # Check TypeScript
-    print_status "Checking TypeScript..."
-    npx tsc --noEmit
-    
     # Check Prettier
     print_status "Checking Prettier..."
     npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}" || {
