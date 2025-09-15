@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
 
   const loadAggregatedAnalytics = useCallback(async () => {
     // Load all accounts first
-    const accountsResponse = await fetch('/api/trading212/accounts')
+    const accountsResponse = await fetch('/api/trading212/optimized/accounts')
     let accounts = []
     
     if (accountsResponse.ok) {
@@ -129,7 +129,7 @@ export default function AnalyticsPage() {
       .filter((account: { isActive: boolean }) => account.isActive)
       .map(async (account: { id: string; name: string }) => {
         try {
-          const response = await fetch(`/api/trading212/portfolio?accountId=${account.id}`)
+          const response = await fetch(`/api/trading212/optimized/portfolio?accountId=${account.id}`)
           if (response.ok) {
             const data = await response.json()
             return { account, data }

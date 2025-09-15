@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { GET, POST } from '@/app/api/ai/daily-analysis/route'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
-import { DailyAnalysisScheduler, dailyScheduler } from '@/lib/scheduler'
+import { dailyScheduler } from '@/lib/scheduler'
 
 // Mock dependencies
 jest.mock('next-auth')
@@ -154,7 +154,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedDailyScheduler.analyzeUser.mockResolvedValue(undefined)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()
@@ -167,7 +167,7 @@ describe('/api/ai/daily-analysis', () => {
     it('should return 401 for unauthenticated user', async () => {
       mockedGetServerSession.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()
@@ -184,7 +184,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedDailyScheduler.analyzeUser.mockRejectedValue(new Error('API rate limit exceeded'))
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()
@@ -201,7 +201,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedDailyScheduler.analyzeUser.mockRejectedValue(new Error('Database error'))
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()
@@ -218,7 +218,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedDailyScheduler.analyzeUser.mockRejectedValue(new Error('Scheduler initialization failed'))
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()
@@ -235,7 +235,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedDailyScheduler.analyzeUser.mockResolvedValue(undefined)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()
@@ -252,7 +252,7 @@ describe('/api/ai/daily-analysis', () => {
 
       mockedDailyScheduler.analyzeUser.mockResolvedValue(undefined)
 
-      const request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
+      const _request = new NextRequest('http://localhost:3000/api/ai/daily-analysis', {
         method: 'POST'
       })
       const response = await POST()

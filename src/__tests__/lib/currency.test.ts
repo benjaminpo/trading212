@@ -104,6 +104,43 @@ describe('Currency utilities', () => {
 
   })
 
+  describe('formatCurrency with options', () => {
+    it('handles showSymbol option', () => {
+      expect(formatCurrency(1234.56, 'USD', { showSymbol: false })).toBe('1,234.56')
+      expect(formatCurrency(1234.56, 'USD', { showSymbol: true })).toBe('$1,234.56')
+    })
+
+    it('handles showCode option', () => {
+      expect(formatCurrency(1234.56, 'USD', { showCode: true, showSymbol: false })).toBe('1,234.56 USD')
+      expect(formatCurrency(1234.56, 'EUR', { showCode: true, showSymbol: false })).toBe('1.234,56 EUR')
+    })
+
+    it('handles compact option', () => {
+      expect(formatCurrency(1000, 'USD', { compact: true })).toBe('$1.00K')
+      expect(formatCurrency(1000000, 'USD', { compact: true })).toBe('$1.00M')
+    })
+
+    it('handles multiple options together', () => {
+      expect(formatCurrency(1234.56, 'USD', { showSymbol: false, showCode: true })).toBe('1,234.56 USD')
+      expect(formatCurrency(1000, 'USD', { showSymbol: true, compact: true })).toBe('$1.00K')
+    })
+
+    it('handles currencies with symbol after position', () => {
+      expect(formatCurrency(1234.56, 'CHF')).toBe(`1${String.fromCharCode(8217)}234.56 CHF`)
+      expect(formatCurrency(1234.56, 'SEK')).toBe(`1${String.fromCharCode(160)}234,56 kr`)
+    })
+
+    it('handles currencies with different decimal places', () => {
+      expect(formatCurrency(1234.56, 'JPY')).toBe('¥1,235') // JPY has 0 decimals
+      expect(formatCurrency(1234.56, 'HUF')).toBe('1235 Ft') // HUF has 0 decimals
+    })
+
+    it('handles currencies with 3 decimal places', () => {
+      expect(formatCurrency(1234.567, 'LYD')).toBe('ل.د1.234,567')
+      expect(formatCurrency(1234.567, 'TND')).toBe('د.ت1.234,567')
+    })
+  })
+
   describe('formatCurrency edge cases', () => {
     it('handles zero values for all currencies', () => {
       expect(formatCurrency(0, 'USD')).toBe('$0.00')
@@ -127,6 +164,10 @@ describe('Currency utilities', () => {
 
     it('handles NaN values', () => {
       expect(formatCurrency(NaN, 'USD')).toBe('$NaN')
+    })
+
+    it('defaults to USD when no currency provided', () => {
+      expect(formatCurrency(1234.56)).toBe('$1,234.56')
     })
   })
 

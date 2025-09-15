@@ -178,7 +178,7 @@ describe('Settings Page', () => {
     }
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/trading212/accounts', {
+      expect(global.fetch).toHaveBeenCalledWith('/api/trading212/optimized/accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

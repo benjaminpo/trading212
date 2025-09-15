@@ -127,13 +127,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ### Trading212 Integration
 - `POST /api/trading212/connect` - Connect Trading212 account
 - `DELETE /api/trading212/connect` - Disconnect account
-- `GET /api/trading212/accounts` - List user accounts
+- `GET /api/trading212/optimized/accounts` - List user accounts
 - `GET /api/trading212/portfolio` - Get portfolio data
-- `GET /api/trading212/account` - Get account information
+- `GET /api/trading212/optimized/account` - Get account information
 
 ### Analytics & AI
 - `GET /api/ai/daily-analysis` - Get daily analysis logs
-- `POST /api/ai/analyze-positions` - Analyze specific positions
+- `POST /api/ai/optimized-analyze` - Analyze positions with optimization
 
 ### Trail Stops
 - `GET /api/trail-stop/orders` - List trail stop orders

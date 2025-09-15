@@ -21,6 +21,9 @@ jest.mock('bcryptjs', () => ({
 describe('Auth Configuration', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Reset mocks to default values
+    mockedPrisma.user.findUnique.mockResolvedValue(null)
+    ;(_bcrypt.compare as jest.Mock).mockResolvedValue(false)
   })
 
   describe('Credentials Provider', () => {
@@ -226,6 +229,7 @@ describe('Auth Configuration', () => {
 
       expect(result).toBeNull()
     })
+
 
 
     it('returns null when credentials are missing both email and password', async () => {

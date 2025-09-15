@@ -70,7 +70,7 @@ describe('/api/trail-stop/orders', () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any)
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockTrailStopOrders)
 
-      const request = new NextRequest('http://localhost/api/trail-stop/orders')
+      const _request = new NextRequest('http://localhost/api/trail-stop/orders')
       const response = await GET()
       const data = await response.json()
 
@@ -86,7 +86,7 @@ describe('/api/trail-stop/orders', () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any)
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([])
 
-      const request = new NextRequest('http://localhost/api/trail-stop/orders')
+      const _request = new NextRequest('http://localhost/api/trail-stop/orders')
       const response = await GET()
       const data = await response.json()
 
@@ -97,7 +97,7 @@ describe('/api/trail-stop/orders', () => {
     it('should return 401 for unauthenticated user', async () => {
       mockedGetServerSession.mockResolvedValue(null)
 
-      const request = new NextRequest('http://localhost/api/trail-stop/orders')
+      const _request = new NextRequest('http://localhost/api/trail-stop/orders')
       const response = await GET()
       const data = await response.json()
 
@@ -109,7 +109,7 @@ describe('/api/trail-stop/orders', () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any)
       mockedPrisma.trailStopLossOrder.findMany.mockRejectedValue(new Error('Database error'))
 
-      const request = new NextRequest('http://localhost/api/trail-stop/orders')
+      const _request = new NextRequest('http://localhost/api/trail-stop/orders')
       const response = await GET()
       const data = await response.json()
 

@@ -92,7 +92,7 @@ describe('checkDatabaseConnection', () => {
     // Just test that the function can be called without throwing
     try {
       await checkDatabaseConnection(1)
-    } catch (error) {
+    } catch {
       // Expected to fail in test environment, but function should exist
     }
     expect(true).toBe(true)

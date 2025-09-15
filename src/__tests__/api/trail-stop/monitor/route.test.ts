@@ -198,7 +198,7 @@ describe('/api/trail-stop/monitor', () => {
         getAccount: jest.fn().mockRejectedValue(new Error('API Error'))
       }) as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -216,7 +216,7 @@ describe('/api/trail-stop/monitor', () => {
         isActive: false
       } as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -239,7 +239,7 @@ describe('/api/trail-stop/monitor', () => {
         isActive: false
       } as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -258,7 +258,7 @@ describe('/api/trail-stop/monitor', () => {
         isActive: false
       } as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -279,7 +279,7 @@ describe('/api/trail-stop/monitor', () => {
     it('should handle database errors', async () => {
       mockedPrisma.trailStopLossOrder.findMany.mockRejectedValue(new Error('Database error'))
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -292,7 +292,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedCreateTrailStopNotification.mockRejectedValue(new Error('Notification creation failed'))
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -307,7 +307,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.update.mockRejectedValue(new Error('Order update failed'))
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -326,7 +326,7 @@ describe('/api/trail-stop/monitor', () => {
         getAccount: jest.fn().mockResolvedValue({ id: 'account-1', currencyCode: 'USD' })
       }) as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -346,7 +346,7 @@ describe('/api/trail-stop/monitor', () => {
       }
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithoutAccount] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -369,7 +369,7 @@ describe('/api/trail-stop/monitor', () => {
       }
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithoutApiKey] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -385,7 +385,7 @@ describe('/api/trail-stop/monitor', () => {
       }
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithAccountId] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -407,7 +407,7 @@ describe('/api/trail-stop/monitor', () => {
       }
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithDefaultAccount] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -429,7 +429,7 @@ describe('/api/trail-stop/monitor', () => {
       }
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithActiveAccount] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -450,7 +450,7 @@ describe('/api/trail-stop/monitor', () => {
       }
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithFirstAccount] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -468,7 +468,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -485,7 +485,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([mockActiveOrders[0]] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -503,7 +503,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -520,7 +520,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -537,7 +537,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue(mockActiveOrders as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -558,7 +558,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithDifferentSymbol] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -584,7 +584,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithPracticeAccount] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 
@@ -610,7 +610,7 @@ describe('/api/trail-stop/monitor', () => {
 
       mockedPrisma.trailStopLossOrder.findMany.mockResolvedValue([orderWithLiveAccount] as any)
 
-      const request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
+      const _request = new NextRequest('http://localhost:3000/api/trail-stop/monitor', { method: 'POST' })
       const response = await POST()
       const _data = await response.json()
 

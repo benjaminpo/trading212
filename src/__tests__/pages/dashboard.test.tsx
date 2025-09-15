@@ -37,10 +37,10 @@ describe('Dashboard page behaviors', () => {
     // Minimal successful responses to allow mounting
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [] }) } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any
@@ -56,10 +56,10 @@ describe('Dashboard page behaviors', () => {
   it('loads aggregated data when authenticated', async () => {
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [{ id: 'a1', name: 'Acc1', isActive: true, isDefault: true, isPractice: false }] }) } as any
       }
-      if (url.includes('/api/trading212/account?accountId=a1')) {
+      if (url.includes('/api/trading212/optimized/account?accountId=a1')) {
         return {
           ok: true,
           json: async () => ({
@@ -71,7 +71,7 @@ describe('Dashboard page behaviors', () => {
           }),
         } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [1, 2] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any
@@ -100,15 +100,15 @@ describe('Dashboard page behaviors', () => {
     const callCounts: Record<string, number> = { accounts: 0, account: 0, ai: 0 }
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         callCounts.accounts++
         return { ok: true, json: async () => ({ accounts: [] }) } as any
       }
-      if (url.includes('/api/trading212/account?')) {
+      if (url.includes('/api/trading212/optimized/account?')) {
         callCounts.account++
         return { ok: true, json: async () => ({ connected: false, stats: {} }) } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         callCounts.ai++
         return { ok: true, json: async () => ({ recommendations: [] }) } as any
       }
@@ -134,10 +134,10 @@ describe('Dashboard page behaviors', () => {
   it('shows Demo Mode badge when no accounts are connected', async () => {
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [] }) } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any
@@ -155,14 +155,14 @@ describe('Dashboard page behaviors', () => {
     let accountCalls = 0
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [{ id: 'a1', name: 'Acc1', isActive: true, isDefault: true, isPractice: false }] }) } as any
       }
-      if (url.includes('/api/trading212/account?accountId=a1')) {
+      if (url.includes('/api/trading212/optimized/account?accountId=a1')) {
         accountCalls++
         return { ok: true, json: async () => ({ connected: true, error: null, stats: { totalPnL: 0, totalPnLPercent: 0, todayPnL: 0, todayPnLPercent: 0, activePositions: 1, trailStopOrders: 0 }, account: { id: 'a1', name: 'Acc1', isPractice: false, currency: 'USD', cash: 0 }, portfolio: [] }) } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any
@@ -186,17 +186,17 @@ describe('Dashboard page behaviors', () => {
     let accountCallCount = 0
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [{ id: 'a1', name: 'Acc1', isActive: true, isDefault: true, isPractice: false }] }) } as any
       }
-      if (url.includes('/api/trading212/account?accountId=a1')) {
+      if (url.includes('/api/trading212/optimized/account?accountId=a1')) {
         accountCallCount++
         if (accountCallCount === 1) {
           return { ok: false, status: 500 } as any
         }
         return { ok: true, json: async () => ({ connected: true, error: null, stats: { totalPnL: 5, totalPnLPercent: 0.1, todayPnL: 1, todayPnLPercent: 0.02, activePositions: 2, trailStopOrders: 0 }, account: { id: 'a1', name: 'Acc1', isPractice: false, currency: 'USD', cash: 0 }, portfolio: [] }) } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any
@@ -214,13 +214,13 @@ describe('Dashboard page behaviors', () => {
   it('handles 429 gracefully and stays in Demo Mode when single-account is rate-limited', async () => {
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [{ id: 'a1', name: 'Acc1', isActive: true, isDefault: true, isPractice: false }] }) } as any
       }
-      if (url.includes('/api/trading212/account?accountId=a1')) {
+      if (url.includes('/api/trading212/optimized/account?accountId=a1')) {
         return { ok: false, status: 429 } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any
@@ -242,10 +242,10 @@ describe('Dashboard page behaviors', () => {
   it('shows Latest AI Insights card when there are recommendations', async () => {
     ;(global.fetch as jest.Mock).mockImplementation(async (input: RequestInfo | URL) => {
       const url = String(input)
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return { ok: true, json: async () => ({ accounts: [] }) } as any
       }
-      if (url.includes('/api/ai/analyze-positions')) {
+      if (url.includes('/api/ai/optimized-analyze')) {
         return { ok: true, json: async () => ({ recommendations: [1, 2, 3] }) } as any
       }
       return { ok: true, json: async () => ({}) } as any

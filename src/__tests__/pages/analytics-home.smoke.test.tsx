@@ -21,7 +21,7 @@ beforeEach(() => {
     if (url.includes('/api/trading212/portfolio')) {
       return { ok: true, json: async () => ({ positions: [], connected: false, totalValue: 0, totalPnL: 0, totalPnLPercent: 0, account: { cash: 0, currency: 'USD' } }) } as any
     }
-    if (url.includes('/api/trading212/accounts')) {
+    if (url.includes('/api/trading212/optimized/accounts')) {
       return { ok: true, json: async () => ({ accounts: [] }) } as any
     }
     if (url.includes('/api/trading212/account')) {

@@ -58,8 +58,8 @@ export default function AIRecommendationsPage() {
   const fetchRecommendations = useCallback(async () => {
     try {
       const url = selectedAccountId 
-        ? `/api/ai/analyze-positions?accountId=${selectedAccountId}`
-        : '/api/ai/analyze-positions'
+        ? `/api/ai/optimized-analyze?accountId=${selectedAccountId}`
+        : '/api/ai/optimized-analyze'
       
       
       const response = await fetch(url)
@@ -108,14 +108,15 @@ export default function AIRecommendationsPage() {
   const runAnalysis = async () => {
     setAnalyzing(true)
     try {
-      const response = await fetch('/api/ai/analyze-positions', {
+      const response = await fetch('/api/ai/optimized-analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          analysisType: 'ON_DEMAND',
-          accountId: selectedAccountId 
+          analysisType: 'BATCH_ANALYSIS',
+          accountId: selectedAccountId,
+          forceRefresh: true
         }),
       })
 
@@ -132,7 +133,11 @@ export default function AIRecommendationsPage() {
           })
         }
         
-        alert(`Analysis completed! Generated ${data.recommendations?.length || 0} recommendations in ${data.executionTime}ms`)
+        const executionTime = data.summary?.executionTime || 0
+        const recommendationsCount = data.recommendations?.length || 0
+        const cacheHits = data.summary?.cacheHits || 0
+        
+        alert(`Analysis completed! Generated ${recommendationsCount} recommendations in ${executionTime}ms (${cacheHits} cache hits)`)
       } else {
         alert(data.error || 'Failed to run analysis')
       }

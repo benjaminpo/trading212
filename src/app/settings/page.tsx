@@ -61,7 +61,7 @@ export default function SettingsPage() {
 
   const loadAccounts = async () => {
     try {
-      const response = await fetch('/api/trading212/accounts')
+      const response = await fetch('/api/trading212/optimized/accounts')
       if (response.ok) {
         const data = await response.json()
         setAccounts(data.accounts || [])
@@ -82,7 +82,7 @@ export default function SettingsPage() {
     setSubmitting(true)
 
     try {
-      const response = await fetch('/api/trading212/accounts', {
+      const response = await fetch('/api/trading212/optimized/accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ export default function SettingsPage() {
     if (!confirm(`Are you sure you want to delete the account "${accountName}"? This action cannot be undone.`)) return
 
     try {
-      const response = await fetch(`/api/trading212/accounts/${accountId}`, {
+      const response = await fetch(`/api/trading212/optimized/accounts/${accountId}`, {
         method: 'DELETE',
       })
 
@@ -140,7 +140,7 @@ export default function SettingsPage() {
 
   const handleSetDefault = async (accountId: string, accountName: string) => {
     try {
-      const response = await fetch(`/api/trading212/accounts/${accountId}/set-default`, {
+      const response = await fetch(`/api/trading212/optimized/accounts/${accountId}/set-default`, {
         method: 'POST',
       })
 
@@ -158,7 +158,7 @@ export default function SettingsPage() {
 
   const handleToggleActive = async (accountId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/trading212/accounts/${accountId}`, {
+      const response = await fetch(`/api/trading212/optimized/accounts/${accountId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

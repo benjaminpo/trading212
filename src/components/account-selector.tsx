@@ -42,7 +42,7 @@ export default function AccountSelector({ selectedAccountId, onAccountChange, cl
 
   const loadAccounts = async () => {
     try {
-      const response = await fetch('/api/trading212/accounts')
+      const response = await fetch('/api/trading212/optimized/accounts')
       if (response.ok) {
         const data = await response.json()
         setAccounts(data.accounts || [])

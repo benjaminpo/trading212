@@ -79,8 +79,8 @@ export default function TrailStopPage() {
 
       // Load current positions for the form
       const portfolioUrl = selectedAccountId 
-        ? `/api/trading212/portfolio?accountId=${selectedAccountId}`
-        : '/api/trading212/portfolio'
+        ? `/api/trading212/optimized/portfolio?accountId=${selectedAccountId}`
+        : '/api/trading212/optimized/portfolio'
       const portfolioResponse = await fetch(portfolioUrl)
       if (portfolioResponse.ok) {
         const portfolioData = await portfolioResponse.json()
@@ -141,7 +141,7 @@ export default function TrailStopPage() {
       let isPractice = false
       if (selectedAccountId) {
         // Get account info to determine practice mode
-        const accountsResponse = await fetch('/api/trading212/accounts')
+        const accountsResponse = await fetch('/api/trading212/optimized/accounts')
         if (accountsResponse.ok) {
           const accountsData = await accountsResponse.json()
           const selectedAccount = accountsData.accounts?.find((acc: { id: string; isPractice: boolean }) => acc.id === selectedAccountId)

@@ -59,7 +59,7 @@ describe('Trail Stop Page', () => {
           json: async () => ({ positions: [] }),
         })
       }
-      if (url.includes('/api/trading212/accounts')) {
+      if (url.includes('/api/trading212/optimized/accounts')) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ accounts: [] }),

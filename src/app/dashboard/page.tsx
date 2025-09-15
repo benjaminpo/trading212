@@ -103,7 +103,7 @@ export default function Dashboard() {
   }, [])
 
   const loadSingleAccountData = useCallback(async () => {
-    const accountUrl = `/api/trading212/account?accountId=${selectedAccountId}`
+    const accountUrl = `/api/trading212/optimized/account?accountId=${selectedAccountId}`
     const accountResponse = await fetchWithRetry(accountUrl)
     let accountData = null
     
@@ -113,7 +113,7 @@ export default function Dashboard() {
       console.log('Trading212 API rate limited, using cached data')
     }
 
-    const aiResponse = await fetchWithRetry('/api/ai/analyze-positions')
+    const aiResponse = await fetchWithRetry('/api/ai/optimized-analyze')
     let aiCount = 0
     if (aiResponse && aiResponse.ok) {
       const aiData = await aiResponse.json()
@@ -170,7 +170,7 @@ export default function Dashboard() {
 
   const loadAggregatedAccountData = useCallback(async () => {
     // Load all accounts first
-    const accountsResponse = await fetchWithRetry('/api/trading212/accounts')
+    const accountsResponse = await fetchWithRetry('/api/trading212/optimized/accounts')
     let accounts = []
     
     if (accountsResponse && accountsResponse.ok) {
@@ -179,7 +179,7 @@ export default function Dashboard() {
     }
 
     // Load AI recommendations count
-    const aiResponse = await fetchWithRetry('/api/ai/analyze-positions')
+    const aiResponse = await fetchWithRetry('/api/ai/optimized-analyze')
     let aiCount = 0
     if (aiResponse && aiResponse.ok) {
       const aiData = await aiResponse.json()
@@ -209,7 +209,7 @@ export default function Dashboard() {
       .filter((account: Trading212Account) => account.isActive)
       .map(async (account: Trading212Account) => {
         try {
-          const response = await fetchWithRetry(`/api/trading212/account?accountId=${account.id}`)
+          const response = await fetchWithRetry(`/api/trading212/optimized/account?accountId=${account.id}`)
           if (response && response.ok) {
             const data = await response.json()
             return { account, data }

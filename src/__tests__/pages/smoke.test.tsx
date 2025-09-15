@@ -21,7 +21,7 @@ beforeEach(() => {
 
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
-    if (url.includes('/api/trading212/accounts')) {
+    if (url.includes('/api/trading212/optimized/accounts')) {
       return {
         ok: true,
         json: async () => ({ accounts: [] })

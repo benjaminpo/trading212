@@ -452,4 +452,166 @@ describe('AI Recommendations Page', () => {
     // Should show loading state - use getAllByText to handle multiple elements
     expect(screen.getAllByText('Analyzing...')).toHaveLength(2)
   })
+
+  it('handles different recommendation types correctly', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    const mockRecommendations = [
+      {
+        id: '1',
+        symbol: 'AAPL',
+        recommendationType: 'EXIT',
+        confidence: 0.85,
+        reasoning: 'Take profits',
+        suggestedAction: 'Sell',
+        riskLevel: 'LOW',
+        timeframe: 'SHORT',
+        createdAt: '2024-01-01T00:00:00Z',
+        position: {
+          symbol: 'AAPL',
+          quantity: 100,
+          currentPrice: 160,
+          pnl: 1000,
+          pnlPercent: 6.67,
+        },
+      },
+    ]
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ recommendations: mockRecommendations }),
+    })
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+    })
+
+    // Just check that the component renders without errors
+    expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+  })
+
+  it('handles loading state correctly', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    // Mock fetch to return pending promise
+    ;(global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}))
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    // Should show loading state
+    expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
+  })
+
+  it('handles fetch error gracefully', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+    })
+
+    // Should still render the page even with fetch errors
+    expect(screen.getByText('Run Analysis')).toBeInTheDocument()
+  })
+
+  it('handles non-ok response from API', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'Server error' }),
+    })
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+    })
+
+    // Should still render the page even with API errors
+    expect(screen.getByText('Run Analysis')).toBeInTheDocument()
+  })
+
+  it('handles malformed API response', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ invalidData: 'not recommendations' }),
+    })
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+    })
+
+    // Should still render the page even with malformed data
+    expect(screen.getByText('Run Analysis')).toBeInTheDocument()
+  })
+
+  it('handles analysis button click', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: 'Test User' } },
+      status: 'authenticated',
+    })
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ recommendations: [] }),
+    })
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    await waitFor(() => {
+      expect(screen.getByText('AI Recommendations')).toBeInTheDocument()
+    })
+
+    // Click analyze button
+    const analyzeButton = screen.getByText('Run Analysis')
+    fireEvent.click(analyzeButton)
+
+    // Should show analyzing state
+    expect(screen.getAllByText('Analyzing...')).toHaveLength(2)
+  })
+
+  it('handles session loading state', async () => {
+    ;(useSession as jest.Mock).mockReturnValue({
+      data: null,
+      status: 'loading',
+    })
+
+    const AIRecommendationsPage = (await import('@/app/ai-recommendations/page')).default
+    render(React.createElement(AIRecommendationsPage))
+
+    // Should show loading state
+    expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
+  })
 })
