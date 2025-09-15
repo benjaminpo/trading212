@@ -36,7 +36,7 @@ const CACHE_TTL = {
 
 export class APICache {
   private static instance: APICache
-  private memoryCache: Map<string, CacheEntry<unknown>> = new Map()
+  private readonly memoryCache: Map<string, CacheEntry<unknown>> = new Map()
   private readonly MAX_MEMORY_ENTRIES = 1000
 
   private constructor() {}
@@ -170,13 +170,7 @@ export class APICache {
   }
 
   async setInDatabase(): Promise<void> {
-    try {
-      // For now, we'll use memory cache only
-      // In the future, this could be extended to use Redis or database
-      return
-    } catch (error) {
-      console.error('Database cache error:', error)
-    }
+    // No-op placeholder; using in-memory cache only for now
   }
 }
 
