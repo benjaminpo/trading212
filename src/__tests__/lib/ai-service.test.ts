@@ -1,4 +1,4 @@
-import { aiAnalysisService, AIRecommendationResult as _AIRecommendationResult, PositionData, MarketData } from '@/lib/ai-service'
+import { aiAnalysisService, PositionData, MarketData } from '@/lib/ai-service'
 
 // Mock OpenAI
 jest.mock('openai', () => {
