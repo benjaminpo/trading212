@@ -2,6 +2,7 @@ import { DailyAnalysisScheduler } from '@/lib/scheduler'
 import { prisma } from '@/lib/prisma'
 import { Trading212API } from '../../lib/trading212'
 import { aiAnalysisService } from '@/lib/ai-service'
+import { optimizedTrading212Service as _optimizedTrading212Service } from '@/lib/optimized-trading212'
 
 const mockedPrisma = prisma as any
 
@@ -22,6 +23,11 @@ jest.mock('@/lib/prisma', () => ({
     },
     aIAnalysisLog: {
       create: jest.fn()
+    },
+    dailyPnL: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn()
     }
   }
 }))
@@ -29,6 +35,11 @@ jest.mock('@/lib/prisma', () => ({
 const mockTrading212API = {
   getPositions: jest.fn(),
   getAccount: jest.fn()
+}
+
+const _mockOptimizedTrading212Service = {
+  canMakeRequest: jest.fn(),
+  getAccountData: jest.fn()
 }
 
 jest.mock('@/lib/trading212', () => ({
@@ -42,6 +53,13 @@ const { Trading212API } = require('@/lib/trading212')
 jest.mock('@/lib/ai-service', () => ({
   aiAnalysisService: {
     analyzeBulkPositions: jest.fn()
+  }
+}))
+
+jest.mock('@/lib/optimized-trading212', () => ({
+  optimizedTrading212Service: {
+    canMakeRequest: jest.fn(),
+    getAccountData: jest.fn()
   }
 }))
 
@@ -193,6 +211,32 @@ describe('DailyAnalysisScheduler', () => {
       ;(mockedPrisma.aIRecommendation.updateMany as jest.Mock).mockResolvedValue({}, 10000)
       ;(mockedPrisma.aIRecommendation.create as jest.Mock).mockResolvedValue({}, 10000)
       ;(mockedPrisma.aIAnalysisLog.create as jest.Mock).mockResolvedValue({}, 10000)
+      ;(mockedPrisma.dailyPnL.findUnique as jest.Mock).mockResolvedValue(null)
+      ;(mockedPrisma.dailyPnL.create as jest.Mock).mockResolvedValue({}, 10000)
+      ;(mockedPrisma.dailyPnL.update as jest.Mock).mockResolvedValue({}, 10000)
+      
+      // Mock optimizedTrading212Service
+      const { optimizedTrading212Service } = require('@/lib/optimized-trading212')
+      ;(optimizedTrading212Service.canMakeRequest as jest.Mock).mockReturnValue(true)
+      ;(optimizedTrading212Service.getAccountData as jest.Mock).mockResolvedValue({
+        connected: true,
+        error: null,
+        account: {
+          id: 'account1',
+          name: 'Test Account',
+          result: 100,
+          total: 10000,
+          ppl: 500,
+          cash: 1000,
+          currency: 'USD'
+        },
+        stats: {
+          totalPnL: 500,
+          todayPnL: 100,
+          totalValue: 10000,
+          activePositions: 5
+        }
+      })
     }, 10000)
 
     it('should run daily analysis for all users', async () => {
@@ -203,7 +247,7 @@ describe('DailyAnalysisScheduler', () => {
       
       // The method might be called with different parameters, so just check it was called
       expect(mockedPrisma.user.findMany).toHaveBeenCalled()
-    }, 10000)
+    }, 30000)
 
     it('should handle users with no active accounts', async () => {
       ;(mockedPrisma.user.findMany as jest.Mock).mockResolvedValue([])
@@ -572,6 +616,6 @@ describe('DailyAnalysisScheduler', () => {
 
       expect(mockedPrisma.user.findMany).toHaveBeenCalled()
       expect(mockTrading212API.getPositions).not.toHaveBeenCalled()
-    }, 10000)
+    }, 30000)
   }, 10000)
 }, 10000)

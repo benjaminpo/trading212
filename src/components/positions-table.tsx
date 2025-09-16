@@ -133,11 +133,11 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto -mx-2 sm:mx-0">
+        <table className="w-full min-w-[720px] sm:min-w-0">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-700">
-              <th className="text-left py-3 px-2">
+              <th className="text-left py-3 px-2 sticky left-0 bg-white dark:bg-slate-900 z-10">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -161,7 +161,7 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
                   </Button>
                 </th>
               )}
-              <th className="text-right py-3 px-2">
+              <th className="text-right py-3 px-2 hidden sm:table-cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -172,7 +172,7 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
                   {getSortIcon('quantity')}
                 </Button>
               </th>
-              <th className="text-right py-3 px-2">
+              <th className="text-right py-3 px-2 hidden md:table-cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -194,7 +194,7 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
                   {getSortIcon('currentPrice')}
                 </Button>
               </th>
-              <th className="text-right py-3 px-2">
+              <th className="text-right py-3 px-2 hidden md:table-cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -245,10 +245,10 @@ export default function PositionsTable({ positions, currency, showAccountColumn 
                     </div>
                   </td>
                 )}
-                <td className="py-3 px-2 text-right text-slate-700 dark:text-slate-300">{position.quantity || 0}</td>
-                <td className="py-3 px-2 text-right text-slate-700 dark:text-slate-300">{formatCurrency(position.averagePrice || 0, currency)}</td>
+                <td className="py-3 px-2 text-right text-slate-700 dark:text-slate-300 hidden sm:table-cell">{position.quantity || 0}</td>
+                <td className="py-3 px-2 text-right text-slate-700 dark:text-slate-300 hidden md:table-cell">{formatCurrency(position.averagePrice || 0, currency)}</td>
                 <td className="py-3 px-2 text-right text-slate-700 dark:text-slate-300">{formatCurrency(position.currentPrice || 0, currency)}</td>
-                <td className="py-3 px-2 text-right font-medium text-slate-900 dark:text-slate-100">{formatCurrency(position.marketValue || 0, currency)}</td>
+                <td className="py-3 px-2 text-right font-medium text-slate-900 dark:text-slate-100 hidden md:table-cell">{formatCurrency(position.marketValue || 0, currency)}</td>
                 <td className={`py-3 px-2 text-right font-medium ${(position.ppl || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {(position.ppl || 0) >= 0 ? '+' : ''}{formatCurrency(position.ppl || 0, currency)}
                 </td>

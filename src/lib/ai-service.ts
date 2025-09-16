@@ -60,7 +60,7 @@ class AIAnalysisService {
       const prompt = this.buildAnalysisPrompt(position, marketData, userRiskProfile)
       
       const completion = await this.openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",

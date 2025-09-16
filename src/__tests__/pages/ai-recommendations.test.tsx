@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { useRouter as _useRouter } from 'next/navigation'
-import { setSession as _setSession, mockFetchJson as _mockFetchJson, renderPageByPath as _renderPageByPath } from '@/__tests__/helpers/test-utils'
+import { setSession as _setSession, mockFetchJson as _mockFetchJson, renderPageByPath as _renderPageByPath } from '@/test/test-utils'
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -376,8 +376,8 @@ describe('AI Recommendations Page', () => {
     const analyzeButton = screen.getByText('Run Analysis')
     fireEvent.click(analyzeButton)
 
-    // Should show loading state - use getAllByText to handle multiple elements
-    expect(screen.getAllByText('Analyzing...')).toHaveLength(2)
+    // Should show loading state - allow mobile+desktop variants
+    expect(screen.getAllByText('Analyzing...').length).toBeGreaterThanOrEqual(2)
   })
 
   it('handles different recommendation types correctly', async () => {
@@ -525,8 +525,8 @@ describe('AI Recommendations Page', () => {
     const analyzeButton = screen.getByText('Run Analysis')
     fireEvent.click(analyzeButton)
 
-    // Should show analyzing state
-    expect(screen.getAllByText('Analyzing...')).toHaveLength(2)
+    // Should show analyzing state - allow mobile+desktop variants
+    expect(screen.getAllByText('Analyzing...').length).toBeGreaterThanOrEqual(2)
   })
 
   it('handles session loading state', async () => {

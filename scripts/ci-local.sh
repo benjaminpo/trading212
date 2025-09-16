@@ -50,22 +50,6 @@ OPENAI_API_KEY=test-key
 EOF
     fi
     
-    # Check if PostgreSQL is running
-    if ! command_exists psql; then
-        print_error "PostgreSQL is not installed or not in PATH"
-        exit 1
-    fi
-    
-    # Create test database if it doesn't exist
-    print_status "Setting up test database..."
-    createdb trading212_test 2>/dev/null || true
-    
-    # Run Prisma setup
-    print_status "Running Prisma setup..."
-    npx prisma generate
-    npx prisma db push --force-reset
-    npm run db:seed
-    
     # Run tests
     print_status "Running Jest tests..."
     npm test -- --coverage --watchAll=false

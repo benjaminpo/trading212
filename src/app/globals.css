@@ -1,5 +1,39 @@
 @import "tailwindcss";
 
+/* Mobile optimizations */
+@layer base {
+  html {
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+  }
+  
+  body {
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+  }
+  
+  /* Ensure all containers respect viewport width */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Mobile-specific text sizing */
+  @media (max-width: 640px) {
+    .text-3xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+    
+    .text-2xl {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+  }
+}
+
 @layer base {
   :root {
     /* Light Mode - Optimized for readability and modern look */
@@ -108,6 +142,20 @@
 
 /* Trading-specific styles */
 @layer components {
+  /* iOS safe-area utilities */
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .px-safe {
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-right: max(env(safe-area-inset-right), 1rem);
+  }
+
   .profit {
     color: rgb(21 128 61); /* green-700 - better contrast */
   }

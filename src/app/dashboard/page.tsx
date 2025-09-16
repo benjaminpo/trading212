@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import AccountSelector from '@/components/account-selector'
 import NotificationBell from '@/components/notification-bell'
 import MobileNav from '@/components/mobile-nav'
+import DailyPnLChart from '@/components/daily-pnl-chart'
 import { formatCurrency } from '@/lib/currency'
 
 interface DashboardStats {
@@ -308,24 +309,12 @@ export default function Dashboard() {
     }
   }, [mounted, status, selectedAccountId, loadSingleAccountData, loadAggregatedAccountData])
 
-  // Reload data when window gains focus (helps after login redirect/cookie propagation)
-  useEffect(() => {
-    if (status !== 'authenticated') return
-    const onFocus = () => {
-      setLoading(true)
-      if (selectedAccountId) {
-        void loadSingleAccountData()
-      } else {
-        void loadAggregatedAccountData()
-      }
-    }
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [status, selectedAccountId, loadSingleAccountData, loadAggregatedAccountData])
+  // Note: Removed window focus event listener to avoid unnecessary data refreshes
+  // when users switch back from other windows
 
   if (!mounted || status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+      <div className="min-h-screen pt-safe pb-safe flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     )
@@ -337,7 +326,7 @@ export default function Dashboard() {
 
   return (
     <ClientWrapper>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
+      <div className="min-h-screen pt-safe pb-safe bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Header */}
       <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-700/60 shadow-sm dark:shadow-slate-950/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -594,6 +583,11 @@ export default function Dashboard() {
               </Link>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Daily P/L Chart */}
+        <div className="mt-8">
+          <DailyPnLChart selectedAccountId={selectedAccountId || undefined} />
         </div>
 
         {/* AI Recommendations Preview */}

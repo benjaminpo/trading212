@@ -34,7 +34,7 @@ describe('Trading212API', () => {
       trading212API = new Trading212API(mockApiKey)
       
       expect(mockedAxios.create).toHaveBeenCalledWith({
-        baseURL: 'https://live.trading212.com/api/v0',
+        baseURL: 'https://live.trading212.com/api/v1',
         headers: {
           'Authorization': mockApiKey,
           'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ describe('Trading212API', () => {
       trading212API = new Trading212API(mockApiKey, true)
       
       expect(mockedAxios.create).toHaveBeenCalledWith({
-        baseURL: 'https://demo.trading212.com/api/v0',
+        baseURL: 'https://demo.trading212.com/api/v1',
         headers: {
           'Authorization': mockApiKey,
           'Content-Type': 'application/json',
