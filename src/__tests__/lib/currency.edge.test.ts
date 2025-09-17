@@ -1,71 +1,69 @@
-import { formatCurrency, getCurrencySymbol } from '@/lib/currency'
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
-describe('currency utils edge cases', () => {
-  it('handles very small amounts with correct decimals', () => {
-    expect(formatCurrency(0.0049, 'GBP')).toBe('£0.00')
-    expect(formatCurrency(0.005, 'GBP')).toBe('£0.01')
-    expect(formatCurrency(0.009, 'USD')).toBe('$0.01')
-  })
+describe("currency utils edge cases", () => {
+  it("handles very small amounts with correct decimals", () => {
+    expect(formatCurrency(0.0049, "GBP")).toBe("£0.00");
+    expect(formatCurrency(0.005, "GBP")).toBe("£0.01");
+    expect(formatCurrency(0.009, "USD")).toBe("$0.01");
+  });
 
-  it('handles very large amounts with grouping', () => {
-    expect(formatCurrency(123456789.12, 'USD')).toBe('$123,456,789.12')
-    expect(formatCurrency(9876543.21, 'GBP')).toBe('£9,876,543.21')
-  })
+  it("handles very large amounts with grouping", () => {
+    expect(formatCurrency(123456789.12, "USD")).toBe("$123,456,789.12");
+    expect(formatCurrency(9876543.21, "GBP")).toBe("£9,876,543.21");
+  });
 
-  it('returns correct symbols', () => {
-    expect(getCurrencySymbol('GBP')).toBe('£')
-    expect(getCurrencySymbol('USD')).toBe('$')
-  })
+  it("returns correct symbols", () => {
+    expect(getCurrencySymbol("GBP")).toBe("£");
+    expect(getCurrencySymbol("USD")).toBe("$");
+  });
 
-  it('supports EUR and JPY formatting', () => {
+  it("supports EUR and JPY formatting", () => {
     // Depending on implementation, symbol might be € and ¥
-    expect(getCurrencySymbol('EUR')).toBe('€')
-    expect(getCurrencySymbol('JPY')).toBe('¥')
+    expect(getCurrencySymbol("EUR")).toBe("€");
+    expect(getCurrencySymbol("JPY")).toBe("¥");
     // JPY is typically 0 decimals
-    expect(formatCurrency(1234, 'JPY')).toBe('¥1,234')
+    expect(formatCurrency(1234, "JPY")).toBe("¥1,234");
     // Locale-dependent thousand/decimal separators; accept both common formats
-    const eur = formatCurrency(1234.56, 'EUR')
-    expect(["€1,234.56", "€1.234,56"]).toContain(eur)
-  })
+    const eur = formatCurrency(1234.56, "EUR");
+    expect(["€1,234.56", "€1.234,56"]).toContain(eur);
+  });
 
-  it('falls back gracefully on unknown currency codes', () => {
+  it("falls back gracefully on unknown currency codes", () => {
     // Should not throw, and should default to USD or show as-is per implementation
-    const formatted = formatCurrency(100, 'UNKNOWN' as any)
-    expect(typeof formatted).toBe('string')
-    expect(formatted).toContain('100')
-  })
+    const formatted = formatCurrency(100, "UNKNOWN" as any);
+    expect(typeof formatted).toBe("string");
+    expect(formatted).toContain("100");
+  });
 
-  it('handles edge case amounts', () => {
-    expect(formatCurrency(0.0001, 'USD')).toBe('$0.00')
-    expect(formatCurrency(0.0009, 'USD')).toBe('$0.00')
-    expect(formatCurrency(0.001, 'USD')).toBe('$0.00')
-    expect(formatCurrency(0.004, 'USD')).toBe('$0.00')
-    expect(formatCurrency(0.005, 'USD')).toBe('$0.01')
-  })
+  it("handles edge case amounts", () => {
+    expect(formatCurrency(0.0001, "USD")).toBe("$0.00");
+    expect(formatCurrency(0.0009, "USD")).toBe("$0.00");
+    expect(formatCurrency(0.001, "USD")).toBe("$0.00");
+    expect(formatCurrency(0.004, "USD")).toBe("$0.00");
+    expect(formatCurrency(0.005, "USD")).toBe("$0.01");
+  });
 
-  it('handles negative edge case amounts', () => {
-    expect(formatCurrency(-0.0001, 'USD')).toBe('$-0.00')
-    expect(formatCurrency(-0.0009, 'USD')).toBe('$-0.00')
-    expect(formatCurrency(-0.001, 'USD')).toBe('$-0.00')
-    expect(formatCurrency(-0.004, 'USD')).toBe('$-0.00')
-    expect(formatCurrency(-0.005, 'USD')).toBe('$-0.01')
-  })
+  it("handles negative edge case amounts", () => {
+    expect(formatCurrency(-0.0001, "USD")).toBe("$-0.00");
+    expect(formatCurrency(-0.0009, "USD")).toBe("$-0.00");
+    expect(formatCurrency(-0.001, "USD")).toBe("$-0.00");
+    expect(formatCurrency(-0.004, "USD")).toBe("$-0.00");
+    expect(formatCurrency(-0.005, "USD")).toBe("$-0.01");
+  });
 
-  it('handles very large numbers', () => {
-    expect(formatCurrency(999999999999.99, 'USD')).toBe('$999,999,999,999.99')
-    expect(formatCurrency(1000000000000, 'USD')).toBe('$1,000,000,000,000.00')
-  })
+  it("handles very large numbers", () => {
+    expect(formatCurrency(999999999999.99, "USD")).toBe("$999,999,999,999.99");
+    expect(formatCurrency(1000000000000, "USD")).toBe("$1,000,000,000,000.00");
+  });
 
-  it('handles scientific notation inputs', () => {
-    expect(formatCurrency(1e6, 'USD')).toBe('$1,000,000.00')
-    expect(formatCurrency(1e-6, 'USD')).toBe('$0.00')
-  })
+  it("handles scientific notation inputs", () => {
+    expect(formatCurrency(1e6, "USD")).toBe("$1,000,000.00");
+    expect(formatCurrency(1e-6, "USD")).toBe("$0.00");
+  });
 
-  it('handles different currency symbols consistently', () => {
-    expect(getCurrencySymbol('CAD')).toBe('C$')
-    expect(getCurrencySymbol('AUD')).toBe('A$')
-    expect(getCurrencySymbol('CHF')).toBe('CHF')
-  })
-})
-
-
+  it("handles different currency symbols consistently", () => {
+    expect(getCurrencySymbol("CAD")).toBe("C$");
+    expect(getCurrencySymbol("AUD")).toBe("A$");
+    expect(getCurrencySymbol("CHF")).toBe("CHF");
+  });
+});

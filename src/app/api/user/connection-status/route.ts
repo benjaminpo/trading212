@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma, retryDatabaseOperation } from '@/lib/prisma'
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma, retryDatabaseOperation } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await retryDatabaseOperation(() =>
@@ -16,30 +16,30 @@ export async function GET() {
         select: {
           trading212Accounts: {
             where: {
-              isActive: true
+              isActive: true,
             },
             select: {
               id: true,
               name: true,
               isPractice: true,
-              isDefault: true
-            }
-          }
-        }
-      })
-    )
+              isDefault: true,
+            },
+          },
+        },
+      }),
+    );
 
-    const activeAccounts = user?.trading212Accounts || []
-    
+    const activeAccounts = user?.trading212Accounts || [];
+
     return NextResponse.json({
       hasApiKey: activeAccounts.length > 0,
-      accounts: activeAccounts
-    })
+      accounts: activeAccounts,
+    });
   } catch (error) {
-    console.error('Error fetching connection status:', error)
+    console.error("Error fetching connection status:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch connection status' },
-      { status: 500 }
-    )
+      { error: "Failed to fetch connection status" },
+      { status: 500 },
+    );
   }
 }

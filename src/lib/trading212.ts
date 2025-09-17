@@ -1,5 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
-import { trading212RateLimiter } from './rate-limiter';
+import axios, { AxiosInstance } from "axios";
+import { trading212RateLimiter } from "./rate-limiter";
 
 export interface Trading212Account {
   id: string;
@@ -43,62 +43,75 @@ export class Trading212API {
   constructor(apiKey: string, isPractice: boolean = false) {
     this.apiKey = apiKey;
     this.isPractice = isPractice;
-    const baseURL = isPractice 
-      ? process.env.TRADING212_DEMO_API_URL || 'https://demo.trading212.com/api/v0'
-      : process.env.TRADING212_LIVE_API_URL || 'https://live.trading212.com/api/v0';
+    const baseURL = isPractice
+      ? process.env.TRADING212_DEMO_API_URL ||
+        "https://demo.trading212.com/api/v0"
+      : process.env.TRADING212_LIVE_API_URL ||
+        "https://live.trading212.com/api/v0";
 
     this.api = axios.create({
       baseURL,
       headers: {
-        'Authorization': `${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `${apiKey}`,
+        "Content-Type": "application/json",
       },
     });
   }
 
   private async waitForRateLimit(): Promise<void> {
     // Skip rate limiting in test environment
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === "test") {
       return;
     }
-    
+
     const rateLimitKey = `trading212_${this.apiKey}`;
-    
+
     while (!trading212RateLimiter.canMakeRequest(rateLimitKey)) {
       const waitTime = trading212RateLimiter.getTimeUntilReset(rateLimitKey);
-      console.log(`⏳ Rate limit reached. Waiting ${Math.ceil(waitTime / 1000)} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime + 1000)); // Add 1 second buffer
+      console.log(
+        `⏳ Rate limit reached. Waiting ${Math.ceil(waitTime / 1000)} seconds...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitTime + 1000)); // Add 1 second buffer
     }
   }
 
-  private async makeRequestWithRetry<T>(requestFn: () => Promise<T>, maxRetries: number = 3): Promise<T> {
-    let lastError: Error = new Error('Unknown error');
-    
+  private async makeRequestWithRetry<T>(
+    requestFn: () => Promise<T>,
+    maxRetries: number = 3,
+  ): Promise<T> {
+    let lastError: Error = new Error("Unknown error");
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await this.waitForRateLimit();
         return await requestFn();
       } catch (error: unknown) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         // Handle 429 errors specifically
-        if (error && typeof error === 'object' && 'response' in error) {
-          const axiosError = error as { response?: { status?: number; headers?: Record<string, string> } };
+        if (error && typeof error === "object" && "response" in error) {
+          const axiosError = error as {
+            response?: { status?: number; headers?: Record<string, string> };
+          };
           if (axiosError.response?.status === 429) {
-            const retryAfter = axiosError.response.headers?.['retry-after'];
-            const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
-            
-            console.log(`🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
+            const retryAfter = axiosError.response.headers?.["retry-after"];
+            const waitTime = retryAfter
+              ? parseInt(retryAfter) * 1000
+              : Math.pow(2, attempt) * 1000;
+
+            console.log(
+              `🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
             continue;
           }
         }
-        
+
         // For other errors, don't retry
         throw lastError;
       }
     }
-    
+
     throw lastError;
   }
 
@@ -106,30 +119,33 @@ export class Trading212API {
     return this.makeRequestWithRetry(async () => {
       try {
         // Try the account/cash endpoint first
-        const response = await this.api.get('/equity/account/cash');
-        console.log('💰 Trading212 API account response:', {
+        const response = await this.api.get("/equity/account/cash");
+        console.log("💰 Trading212 API account response:", {
           status: response.status,
           data: response.data,
           isPractice: this.isPractice,
-          url: response.config.url
+          url: response.config.url,
         });
         return response.data;
       } catch (error) {
-        console.error('❌ Trading212 API account/cash error:', error);
-        
+        console.error("❌ Trading212 API account/cash error:", error);
+
         // Try alternative endpoint if the first one fails
         try {
-          console.log('🔄 Trying alternative account endpoint...');
-          const altResponse = await this.api.get('/equity/account');
-          console.log('💰 Trading212 API alternative account response:', {
+          console.log("🔄 Trying alternative account endpoint...");
+          const altResponse = await this.api.get("/equity/account");
+          console.log("💰 Trading212 API alternative account response:", {
             status: altResponse.status,
             data: altResponse.data,
             isPractice: this.isPractice,
-            url: altResponse.config.url
+            url: altResponse.config.url,
           });
           return altResponse.data;
         } catch (altError) {
-          console.error('❌ Trading212 API alternative account error:', altError);
+          console.error(
+            "❌ Trading212 API alternative account error:",
+            altError,
+          );
           throw error; // Throw the original error
         }
       }
@@ -138,14 +154,14 @@ export class Trading212API {
 
   async getPositions(): Promise<Trading212Position[]> {
     return this.makeRequestWithRetry(async () => {
-      const response = await this.api.get('/equity/portfolio');
+      const response = await this.api.get("/equity/portfolio");
       return response.data;
     });
   }
 
   async getOrders(): Promise<Trading212Order[]> {
     return this.makeRequestWithRetry(async () => {
-      const response = await this.api.get('/equity/orders');
+      const response = await this.api.get("/equity/orders");
       return response.data;
     });
   }
@@ -154,23 +170,25 @@ export class Trading212API {
     ticker: string,
     quantity: number,
     trailAmount: number,
-    trailPercent?: number
+    trailPercent?: number,
   ): Promise<Trading212Order> {
     if (!this.isPractice) {
-      throw new Error('Trail stop orders are only available in practice mode due to API limitations');
+      throw new Error(
+        "Trail stop orders are only available in practice mode due to API limitations",
+      );
     }
 
     return this.makeRequestWithRetry(async () => {
       const orderData = {
         ticker,
         quantity,
-        orderType: 'STOP',
-        timeValidity: 'GTC',
+        orderType: "STOP",
+        timeValidity: "GTC",
         trailAmount,
         ...(trailPercent && { trailPercent }),
       };
 
-      const response = await this.api.post('/equity/orders', orderData);
+      const response = await this.api.post("/equity/orders", orderData);
       return response.data;
     });
   }
@@ -181,10 +199,13 @@ export class Trading212API {
     });
   }
 
-  async getHistoricalData(ticker: string, period: string = '1DAY'): Promise<unknown[]> {
+  async getHistoricalData(
+    ticker: string,
+    period: string = "1DAY",
+  ): Promise<unknown[]> {
     return this.makeRequestWithRetry(async () => {
       const response = await this.api.get(`/equity/historical/${ticker}`, {
-        params: { period }
+        params: { period },
       });
       return response.data;
     });
@@ -193,7 +214,7 @@ export class Trading212API {
   async getInstrumentDetails(ticker: string): Promise<unknown> {
     return this.makeRequestWithRetry(async () => {
       const response = await this.api.get(`/equity/metadata/instruments`, {
-        params: { ticker }
+        params: { ticker },
       });
       return response.data;
     });
@@ -201,36 +222,43 @@ export class Trading212API {
 
   async validateConnection(): Promise<boolean> {
     try {
-      console.log(`🔍 Testing Trading212 API connection to: ${this.api.defaults.baseURL}`);
-      console.log(`🎯 Mode: ${this.isPractice ? 'Practice' : 'Live'}`);
-      
+      console.log(
+        `🔍 Testing Trading212 API connection to: ${this.api.defaults.baseURL}`,
+      );
+      console.log(`🎯 Mode: ${this.isPractice ? "Practice" : "Live"}`);
+
       await this.getAccount();
-      console.log('✅ Trading212 API connection successful');
+      console.log("✅ Trading212 API connection successful");
       return true;
     } catch (error: unknown) {
-      const errorObj = error as { response?: { status?: number; statusText?: string; data?: unknown }; message?: string }
-      console.error('❌ Trading212 API validation failed:', {
+      const errorObj = error as {
+        response?: { status?: number; statusText?: string; data?: unknown };
+        message?: string;
+      };
+      console.error("❌ Trading212 API validation failed:", {
         status: errorObj.response?.status,
         statusText: errorObj.response?.statusText,
         data: errorObj.response?.data,
-        message: errorObj.message || 'Unknown error',
+        message: errorObj.message || "Unknown error",
         baseURL: this.api.defaults.baseURL,
         isPractice: this.isPractice,
-        headers: this.api.defaults.headers
+        headers: this.api.defaults.headers,
       });
-      
+
       // Additional debugging information
-      const errCode = (error as { code?: string } | undefined)?.code
-      if (errCode === 'ENOTFOUND' || errCode === 'ECONNREFUSED') {
-        console.error('🌐 Network connectivity issue - check internet connection and API URL');
+      const errCode = (error as { code?: string } | undefined)?.code;
+      if (errCode === "ENOTFOUND" || errCode === "ECONNREFUSED") {
+        console.error(
+          "🌐 Network connectivity issue - check internet connection and API URL",
+        );
       } else if (errorObj.response?.status === 401) {
-        console.error('🔑 Authentication failed - check API key validity');
+        console.error("🔑 Authentication failed - check API key validity");
       } else if (errorObj.response?.status === 403) {
-        console.error('🚫 Access forbidden - check API key permissions');
+        console.error("🚫 Access forbidden - check API key permissions");
       } else if (errorObj.response?.status === 404) {
-        console.error('🔍 API endpoint not found - check API URL and version');
+        console.error("🔍 API endpoint not found - check API URL and version");
       }
-      
+
       return false;
     }
   }

@@ -1,172 +1,195 @@
-import { prisma } from './prisma'
-import { Trading212API } from './trading212'
-import { aiAnalysisService, PositionData, MarketData } from './ai-service'
-import { optimizedTrading212Service } from './optimized-trading212'
+import { prisma } from "./prisma";
+import { Trading212API } from "./trading212";
+import { aiAnalysisService, PositionData, MarketData } from "./ai-service";
+import { optimizedTrading212Service } from "./optimized-trading212";
 
 export class DailyAnalysisScheduler {
-  private static instance: DailyAnalysisScheduler
-  private intervalId: NodeJS.Timeout | null = null
-  private isRunning = false
+  private static instance: DailyAnalysisScheduler;
+  private intervalId: NodeJS.Timeout | null = null;
+  private isRunning = false;
 
   private constructor() {}
 
   static getInstance(): DailyAnalysisScheduler {
     if (!DailyAnalysisScheduler.instance) {
-      DailyAnalysisScheduler.instance = new DailyAnalysisScheduler()
+      DailyAnalysisScheduler.instance = new DailyAnalysisScheduler();
     }
-    return DailyAnalysisScheduler.instance
+    return DailyAnalysisScheduler.instance;
   }
 
   start() {
     if (this.isRunning) {
-      console.log('Daily analysis scheduler is already running')
-      return
+      console.log("Daily analysis scheduler is already running");
+      return;
     }
 
-    this.isRunning = true
-    console.log('Starting daily analysis scheduler...')
+    this.isRunning = true;
+    console.log("Starting daily analysis scheduler...");
 
     // Run immediately on start
-    this.runDailyAnalysis()
+    this.runDailyAnalysis();
 
     // Schedule to run every 24 hours (at market close time - 4:00 PM EST)
-    const now = new Date()
-    const targetTime = new Date()
-    targetTime.setHours(21, 0, 0, 0) // 9:00 PM UTC = 4:00 PM EST
+    const now = new Date();
+    const targetTime = new Date();
+    targetTime.setHours(21, 0, 0, 0); // 9:00 PM UTC = 4:00 PM EST
 
     // If it's past the target time today, schedule for tomorrow
     if (now > targetTime) {
-      targetTime.setDate(targetTime.getDate() + 1)
+      targetTime.setDate(targetTime.getDate() + 1);
     }
 
-    const timeUntilTarget = targetTime.getTime() - now.getTime()
+    const timeUntilTarget = targetTime.getTime() - now.getTime();
 
     // Set initial timeout
     setTimeout(() => {
-      this.runDailyAnalysis()
-      
-      // Then run every 24 hours
-      this.intervalId = setInterval(() => {
-        this.runDailyAnalysis()
-      }, 24 * 60 * 60 * 1000) // 24 hours
-    }, timeUntilTarget)
+      this.runDailyAnalysis();
 
-    console.log(`Next daily analysis scheduled for: ${targetTime.toISOString()}`)
+      // Then run every 24 hours
+      this.intervalId = setInterval(
+        () => {
+          this.runDailyAnalysis();
+        },
+        24 * 60 * 60 * 1000,
+      ); // 24 hours
+    }, timeUntilTarget);
+
+    console.log(
+      `Next daily analysis scheduled for: ${targetTime.toISOString()}`,
+    );
   }
 
   stop() {
     if (this.intervalId) {
-      clearInterval(this.intervalId)
-      this.intervalId = null
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
-    this.isRunning = false
-    console.log('Daily analysis scheduler stopped')
+    this.isRunning = false;
+    console.log("Daily analysis scheduler stopped");
   }
 
   async runDailyAnalysis() {
-    console.log('Running daily AI analysis for all users...')
-    
+    console.log("Running daily AI analysis for all users...");
+
     try {
       // Get all users with active Trading212 accounts
       const users = await prisma.user.findMany({
         where: {
           trading212Accounts: {
             some: {
-              isActive: true
-            }
-          }
+              isActive: true,
+            },
+          },
         },
         select: {
           id: true,
           email: true,
           trading212Accounts: {
             where: {
-              isActive: true
+              isActive: true,
             },
             select: {
               id: true,
               name: true,
               apiKey: true,
-              isPractice: true
-            }
-          }
-        }
-      })
+              isPractice: true,
+            },
+          },
+        },
+      });
 
-      console.log(`Found ${users.length} users with active Trading212 accounts`)
+      console.log(
+        `Found ${users.length} users with active Trading212 accounts`,
+      );
 
       for (const user of users) {
         try {
           // Capture daily P/L snapshots first
-          await this.captureDailyPnLSnapshots(user.id, user.trading212Accounts)
-          
+          await this.captureDailyPnLSnapshots(user.id, user.trading212Accounts);
+
           // Then analyze positions for each active account
-          if (user.trading212Accounts && Array.isArray(user.trading212Accounts)) {
+          if (
+            user.trading212Accounts &&
+            Array.isArray(user.trading212Accounts)
+          ) {
             for (const account of user.trading212Accounts) {
-              await this.analyzeUserPositions(user.id, account.apiKey, account.isPractice)
+              await this.analyzeUserPositions(
+                user.id,
+                account.apiKey,
+                account.isPractice,
+              );
             }
           }
         } catch (error: unknown) {
-          console.error(`Failed to analyze positions for user ${user.id}:`, error)
-          
+          console.error(
+            `Failed to analyze positions for user ${user.id}:`,
+            error,
+          );
+
           // Log the error
           await prisma.aIAnalysisLog.create({
             data: {
               userId: user.id,
-              analysisType: 'DAILY_REVIEW',
+              analysisType: "DAILY_REVIEW",
               totalPositions: 0,
               recommendations: 0,
               executionTime: 0,
               success: false,
-              errorMessage: error instanceof Error ? error.message : 'Unknown error'
-            }
-          })
+              errorMessage:
+                error instanceof Error ? error.message : "Unknown error",
+            },
+          });
         }
 
         // Add delay between users to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
 
-      console.log('Daily AI analysis completed for all users')
+      console.log("Daily AI analysis completed for all users");
     } catch (error: unknown) {
-      console.error('Failed to run daily analysis:', error)
+      console.error("Failed to run daily analysis:", error);
     }
   }
 
-  private async analyzeUserPositions(userId: string, apiKey: string, isPractice: boolean = true) {
-    const startTime = Date.now()
-    
+  private async analyzeUserPositions(
+    userId: string,
+    apiKey: string,
+    isPractice: boolean = true,
+  ) {
+    const startTime = Date.now();
+
     try {
       // Fetch positions from Trading212
-      const trading212 = new Trading212API(apiKey, isPractice)
-      const trading212Positions = await trading212.getPositions()
+      const trading212 = new Trading212API(apiKey, isPractice);
+      const trading212Positions = await trading212.getPositions();
 
       if (trading212Positions.length === 0) {
-        console.log(`No positions found for user ${userId}`)
-        return
+        console.log(`No positions found for user ${userId}`);
+        return;
       }
 
       // Optionally fetch account info (not used directly)
-      await trading212.getAccount().catch(() => null)
-      
+      await trading212.getAccount().catch(() => null);
+
       // Determine currency - Trading212 API doesn't always return currencyCode
       // Note: currency is inferred but not used directly; conversion handled per-position
       // Currency inference not used directly; conversion handled per-position
-      
+
       // Convert to our position format with position-specific currency conversion
-      const positions: PositionData[] = trading212Positions.map(pos => {
+      const positions: PositionData[] = trading212Positions.map((pos) => {
         // Determine position-specific currency and conversion factor
         // Check if this is a USD stock (e.g., NVDA_US_EQ, TSLA_US_EQ)
-        const isUSDStock = pos.ticker.includes('_US_')
-        const isGBPStock = pos.ticker.includes('_GB_') || 
-                          pos.ticker.includes('_UK_') || 
-                          pos.ticker.includes('_LON_') ||
-                          (pos.ticker.includes('_EQ') && !pos.ticker.includes('_US_'))
-        
+        const isUSDStock = pos.ticker.includes("_US_");
+        const isGBPStock =
+          pos.ticker.includes("_GB_") ||
+          pos.ticker.includes("_UK_") ||
+          pos.ticker.includes("_LON_") ||
+          (pos.ticker.includes("_EQ") && !pos.ticker.includes("_US_"));
+
         // Determine conversion factor based on position currency and value magnitude
         // Some positions are in pence (e.g., ISFl_EQ: 904.5 pence = £9.045)
         // Others are in pounds (e.g., RRl_EQ: 1123.5 pounds)
-        let conversionFactor = 1
+        let conversionFactor = 1;
         if (isGBPStock) {
           // For GBP stocks, check if values are in pence or pounds
           // Based on the data patterns:
@@ -174,45 +197,64 @@ export class DailyAnalysisScheduler {
           // - Medium values (100-1000) need more careful analysis
           // - Small values (<100) are in pounds (e.g., AIRp_EQ: 194 pounds = £194)
           if (pos.currentPrice > 1000) {
-            conversionFactor = 100 // Convert from pence to pounds
+            conversionFactor = 100; // Convert from pence to pounds
           } else if (pos.currentPrice > 100) {
             // For values between 100-1000, use a more sophisticated approach
             // Check if the value looks like it's already in pounds by examining the magnitude
             // Values around 200-500 are likely already in pounds (e.g., QQQ3l_EQ: 284.685)
             // Values around 800-1000 are likely in pence (e.g., ISFl_EQ: 904.5)
             if (pos.currentPrice > 800) {
-              conversionFactor = 100 // High values in this range are likely pence
+              conversionFactor = 100; // High values in this range are likely pence
             } else {
-              conversionFactor = 1 // Lower values in this range are likely pounds
+              conversionFactor = 1; // Lower values in this range are likely pounds
             }
           } else {
-            conversionFactor = 1 // Already in pounds
+            conversionFactor = 1; // Already in pounds
           }
         } else if (isUSDStock) {
           // USD stocks: no conversion needed (already in dollars)
-          conversionFactor = 1
+          conversionFactor = 1;
         } else {
           // Default: no conversion needed
-          conversionFactor = 1
+          conversionFactor = 1;
         }
-        
+
         // Debug logging for conversion factors
-        if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ') {
-          console.log(`🔍 Scheduler ${pos.ticker}: isGBPStock=${isGBPStock}, isUSDStock=${isUSDStock}, conversionFactor=${conversionFactor}, rawValue=${pos.currentPrice}, convertedValue=${pos.currentPrice / conversionFactor}`)
+        if (
+          pos.ticker === "AIRp_EQ" ||
+          pos.ticker === "RRl_EQ" ||
+          pos.ticker === "NVDA_US_EQ" ||
+          pos.ticker === "ISFl_EQ" ||
+          pos.ticker === "QQQ3l_EQ"
+        ) {
+          console.log(
+            `🔍 Scheduler ${pos.ticker}: isGBPStock=${isGBPStock}, isUSDStock=${isUSDStock}, conversionFactor=${conversionFactor}, rawValue=${pos.currentPrice}, convertedValue=${pos.currentPrice / conversionFactor}`,
+          );
         }
-        
-        const averagePrice = pos.averagePrice / conversionFactor
-        const currentPrice = pos.currentPrice / conversionFactor
-        const pnl = pos.ppl / conversionFactor
-        
+
+        const averagePrice = pos.averagePrice / conversionFactor;
+        const currentPrice = pos.currentPrice / conversionFactor;
+        const pnl = pos.ppl / conversionFactor;
+
         // Calculate P/L % correctly: (currentPrice - averagePrice) / averagePrice * 100
-        const pnlPercent = averagePrice !== 0 ? ((currentPrice - averagePrice) / averagePrice) * 100 : 0
-        
+        const pnlPercent =
+          averagePrice !== 0
+            ? ((currentPrice - averagePrice) / averagePrice) * 100
+            : 0;
+
         // Debug logging for P/L % calculation
-        if (pos.ticker === 'AIRp_EQ' || pos.ticker === 'RRl_EQ' || pos.ticker === 'NVDA_US_EQ' || pos.ticker === 'ISFl_EQ' || pos.ticker === 'QQQ3l_EQ') {
-          console.log(`💰 Scheduler P/L % Calculation ${pos.ticker}: avgPrice=${averagePrice.toFixed(2)}, currentPrice=${currentPrice.toFixed(2)}, pnlPercent=${pnlPercent.toFixed(2)}%`)
+        if (
+          pos.ticker === "AIRp_EQ" ||
+          pos.ticker === "RRl_EQ" ||
+          pos.ticker === "NVDA_US_EQ" ||
+          pos.ticker === "ISFl_EQ" ||
+          pos.ticker === "QQQ3l_EQ"
+        ) {
+          console.log(
+            `💰 Scheduler P/L % Calculation ${pos.ticker}: avgPrice=${averagePrice.toFixed(2)}, currentPrice=${currentPrice.toFixed(2)}, pnlPercent=${pnlPercent.toFixed(2)}%`,
+          );
         }
-        
+
         return {
           symbol: pos.ticker,
           quantity: pos.quantity,
@@ -220,12 +262,12 @@ export class DailyAnalysisScheduler {
           currentPrice,
           pnl,
           pnlPercent,
-          marketValue: (pos.currentPrice * pos.quantity) / conversionFactor
-        }
-      })
+          marketValue: (pos.currentPrice * pos.quantity) / conversionFactor,
+        };
+      });
 
       // Get or create market data (simplified for demo)
-      const marketData: MarketData[] = positions.map(pos => ({
+      const marketData: MarketData[] = positions.map((pos) => ({
         symbol: pos.symbol,
         price: pos.currentPrice,
         volume: 1000000, // Mock data
@@ -233,7 +275,7 @@ export class DailyAnalysisScheduler {
         changePercent: pos.pnlPercent,
         high52Week: pos.currentPrice * 1.3, // Mock data
         low52Week: pos.currentPrice * 0.7, // Mock data
-      }))
+      }));
 
       // Update positions in database
       for (const position of positions) {
@@ -241,8 +283,8 @@ export class DailyAnalysisScheduler {
           where: {
             userId_symbol: {
               userId: userId,
-              symbol: position.symbol
-            }
+              symbol: position.symbol,
+            },
           },
           update: {
             quantity: position.quantity,
@@ -251,7 +293,7 @@ export class DailyAnalysisScheduler {
             pnl: position.pnl,
             pnlPercent: position.pnlPercent,
             marketValue: position.marketValue,
-            lastUpdated: new Date()
+            lastUpdated: new Date(),
           },
           create: {
             userId: userId,
@@ -262,31 +304,31 @@ export class DailyAnalysisScheduler {
             pnl: position.pnl,
             pnlPercent: position.pnlPercent,
             marketValue: position.marketValue,
-            lastUpdated: new Date()
-          }
-        })
+            lastUpdated: new Date(),
+          },
+        });
       }
 
       // Get AI recommendations
       const aiRecommendations = await aiAnalysisService.analyzeBulkPositions(
         positions,
         marketData,
-        'MODERATE' // Default risk profile
-      )
+        "MODERATE", // Default risk profile
+      );
 
       // Save recommendations to database
-      let savedCount = 0
+      let savedCount = 0;
       for (let i = 0; i < positions.length; i++) {
-        const position = positions[i]
-        const recommendation = aiRecommendations[i]
+        const position = positions[i];
+        const recommendation = aiRecommendations[i];
 
         // Find the position in database
         const dbPosition = await prisma.position.findFirst({
           where: {
             userId: userId,
-            symbol: position.symbol
-          }
-        })
+            symbol: position.symbol,
+          },
+        });
 
         if (dbPosition) {
           // Deactivate old recommendations
@@ -294,10 +336,10 @@ export class DailyAnalysisScheduler {
             where: {
               userId: userId,
               positionId: dbPosition.id,
-              isActive: true
+              isActive: true,
             },
-            data: { isActive: false }
-          })
+            data: { isActive: false },
+          });
 
           // Create new recommendation
           await prisma.aIRecommendation.create({
@@ -313,46 +355,48 @@ export class DailyAnalysisScheduler {
               stopLoss: recommendation.stopLoss,
               riskLevel: recommendation.riskLevel,
               timeframe: recommendation.timeframe,
-            }
-          })
+            },
+          });
 
-          savedCount++
+          savedCount++;
         }
       }
 
-      const executionTime = Date.now() - startTime
+      const executionTime = Date.now() - startTime;
 
       // Log successful analysis
       await prisma.aIAnalysisLog.create({
         data: {
           userId: userId,
-          analysisType: 'DAILY_REVIEW',
+          analysisType: "DAILY_REVIEW",
           totalPositions: positions.length,
           recommendations: savedCount,
           executionTime,
-          success: true
-        }
-      })
+          success: true,
+        },
+      });
 
-      console.log(`Daily analysis completed for user ${userId}: ${savedCount} recommendations in ${executionTime}ms`)
-
+      console.log(
+        `Daily analysis completed for user ${userId}: ${savedCount} recommendations in ${executionTime}ms`,
+      );
     } catch (error: unknown) {
-      const executionTime = Date.now() - startTime
-      
+      const executionTime = Date.now() - startTime;
+
       // Log failed analysis
       await prisma.aIAnalysisLog.create({
         data: {
           userId: userId,
-          analysisType: 'DAILY_REVIEW',
+          analysisType: "DAILY_REVIEW",
           totalPositions: 0,
           recommendations: 0,
           executionTime,
           success: false,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error'
-        }
-      })
+          errorMessage:
+            error instanceof Error ? error.message : "Unknown error",
+        },
+      });
 
-      throw error
+      throw error;
     }
   }
 
@@ -363,44 +407,57 @@ export class DailyAnalysisScheduler {
       select: {
         trading212Accounts: {
           where: {
-            isActive: true
+            isActive: true,
           },
           select: {
             id: true,
             name: true,
             apiKey: true,
-            isPractice: true
-          }
-        }
-      }
-    })
+            isPractice: true,
+          },
+        },
+      },
+    });
 
     if (!user?.trading212Accounts || user.trading212Accounts.length === 0) {
-      throw new Error('User does not have active Trading212 accounts')
+      throw new Error("User does not have active Trading212 accounts");
     }
 
     // Analyze positions for the first active account (could be modified to analyze all)
-    const account = user.trading212Accounts[0]
-    return this.analyzeUserPositions(userId, account.apiKey, account.isPractice)
+    const account = user.trading212Accounts[0];
+    return this.analyzeUserPositions(
+      userId,
+      account.apiKey,
+      account.isPractice,
+    );
   }
 
-  private async captureDailyPnLSnapshots(userId: string, accounts: { id: string; name: string; apiKey: string; isPractice: boolean }[] | null) {
-    console.log(`📊 Capturing daily P/L snapshots for user ${userId}`)
-    
+  private async captureDailyPnLSnapshots(
+    userId: string,
+    accounts:
+      | { id: string; name: string; apiKey: string; isPractice: boolean }[]
+      | null,
+  ) {
+    console.log(`📊 Capturing daily P/L snapshots for user ${userId}`);
+
     if (!accounts || !Array.isArray(accounts)) {
-      console.log(`⚠️ No accounts provided for user ${userId}, skipping daily P/L capture`)
-      return
+      console.log(
+        `⚠️ No accounts provided for user ${userId}, skipping daily P/L capture`,
+      );
+      return;
     }
-    
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // Start of day
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of day
 
     for (const account of accounts) {
       try {
         // Check rate limiting
         if (!optimizedTrading212Service.canMakeRequest(userId, account.id)) {
-          console.log(`⏳ Rate limited for account ${account.id}, skipping daily P/L capture`)
-          continue
+          console.log(
+            `⏳ Rate limited for account ${account.id}, skipping daily P/L capture`,
+          );
+          continue;
         }
 
         // Get current account data
@@ -408,29 +465,35 @@ export class DailyAnalysisScheduler {
           userId,
           account.id,
           account.apiKey,
-          account.isPractice
-        )
+          account.isPractice,
+        );
 
         if (!accountData.account) {
-          console.log(`⚠️ Account ${account.id} not connected, skipping daily P/L capture`)
-          continue
+          console.log(
+            `⚠️ Account ${account.id} not connected, skipping daily P/L capture`,
+          );
+          continue;
         }
 
         // Check if we already have data for today
-        let existingRecord = null
+        let existingRecord = null;
         try {
           existingRecord = await prisma.dailyPnL.findUnique({
             where: {
               userId_accountId_date: {
                 userId,
                 accountId: account.id,
-                date: today
-              }
-            }
-          })
+                date: today,
+              },
+            },
+          });
         } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-          console.log('DailyPnL table not found, will create new record:', errorMessage)
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          console.log(
+            "DailyPnL table not found, will create new record:",
+            errorMessage,
+          );
         }
 
         const dailyPnLData = {
@@ -441,54 +504,66 @@ export class DailyAnalysisScheduler {
           todayPnL: accountData.stats.todayPnL || 0,
           totalValue: accountData.stats.totalValue || 0,
           cash: accountData.account?.cash || null,
-          currency: accountData.account?.currencyCode || 'USD',
-          positions: accountData.stats.activePositions || 0
-        }
+          currency: accountData.account?.currencyCode || "USD",
+          positions: accountData.stats.activePositions || 0,
+        };
 
         if (existingRecord) {
           // Update existing record
           try {
             await prisma.dailyPnL.update({
               where: { id: existingRecord.id },
-              data: dailyPnLData
-            })
-            console.log(`📊 Updated daily P/L for account ${account.name}`)
+              data: dailyPnLData,
+            });
+            console.log(`📊 Updated daily P/L for account ${account.name}`);
           } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-            console.log('Failed to update daily P/L record:', errorMessage)
+            const errorMessage =
+              error instanceof Error ? error.message : "Unknown error";
+            console.log("Failed to update daily P/L record:", errorMessage);
           }
         } else {
           // Create new record
           try {
             await prisma.dailyPnL.create({
-              data: dailyPnLData
-            })
-            console.log(`📊 Created daily P/L snapshot for account ${account.name}`)
+              data: dailyPnLData,
+            });
+            console.log(
+              `📊 Created daily P/L snapshot for account ${account.name}`,
+            );
           } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-            console.log('Failed to create daily P/L record:', errorMessage)
+            const errorMessage =
+              error instanceof Error ? error.message : "Unknown error";
+            console.log("Failed to create daily P/L record:", errorMessage);
           }
         }
 
-        console.log(`📊 Daily P/L captured for account ${account.name}: Total P/L: ${dailyPnLData.totalPnL}, Today P/L: ${dailyPnLData.todayPnL}`)
+        console.log(
+          `📊 Daily P/L captured for account ${account.name}: Total P/L: ${dailyPnLData.totalPnL}, Today P/L: ${dailyPnLData.todayPnL}`,
+        );
 
         // Add delay between accounts to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error: unknown) {
-        console.error(`Error capturing daily P/L for account ${account.id}:`, error)
+        console.error(
+          `Error capturing daily P/L for account ${account.id}:`,
+          error,
+        );
       }
     }
   }
 }
 
 // Export singleton instance
-export const dailyScheduler = DailyAnalysisScheduler.getInstance()
+export const dailyScheduler = DailyAnalysisScheduler.getInstance();
 
 // Auto-start scheduler in production (but not during build)
-if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.NEXT_BUILD) {
+if (
+  typeof window === "undefined" &&
+  process.env.NODE_ENV === "production" &&
+  !process.env.NEXT_BUILD
+) {
   // Only start in server environment, not during build
   setTimeout(() => {
-    dailyScheduler.start()
-  }, 1000)
+    dailyScheduler.start();
+  }, 1000);
 }

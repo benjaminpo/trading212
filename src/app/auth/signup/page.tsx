@@ -1,80 +1,95 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { signIn } from 'next-auth/react'
-import { TrendingUp, User, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { signIn } from "next-auth/react";
+import {
+  TrendingUp,
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SignUp() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ name, email, password }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         // Auto-sign in after successful registration
-        const result = await signIn('credentials', {
+        const result = await signIn("credentials", {
           email,
           password,
           redirect: false,
-        })
+        });
 
         if (result?.ok) {
-          router.push('/dashboard')
+          router.push("/dashboard");
         } else {
-          router.push('/auth/signin')
+          router.push("/auth/signin");
         }
       } else {
-        setError(data.error || 'Registration failed')
+        setError(data.error || "Registration failed");
       }
     } catch {
-      setError('An error occurred. Please try again.')
+      setError("An error occurred. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard' })
-  }
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 gradient-bg">
@@ -82,22 +97,26 @@ export default function SignUp() {
       <div className="fixed top-4 right-4 z-10">
         <ThemeToggle />
       </div>
-      
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div 
+            <div
               className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{
-                background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)'
+                background: "linear-gradient(45deg, #3b82f6, #8b5cf6)",
               }}
             >
               <TrendingUp className="w-7 h-7 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trading212 Extra</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Join the future of intelligent trading</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Trading212 Extra
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            Join the future of intelligent trading
+          </p>
         </div>
 
         <Card className="shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
@@ -158,7 +177,11 @@ export default function SignUp() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -180,21 +203,27 @@ export default function SignUp() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
               {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>
+                  <div className="text-red-600 dark:text-red-400 text-sm text-center">
+                    {error}
+                  </div>
                 </div>
               )}
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-0" 
+              <Button
+                type="submit"
+                className="w-full h-12 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-0"
                 disabled={loading}
                 style={{
-                  background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)'
+                  background: "linear-gradient(45deg, #3b82f6, #8b5cf6)",
                 }}
               >
                 {loading ? (
@@ -211,7 +240,7 @@ export default function SignUp() {
                 )}
               </Button>
             </form>
-          
+
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-200 dark:border-gray-600" />
@@ -222,7 +251,7 @@ export default function SignUp() {
                 </span>
               </div>
             </div>
-            
+
             <Button
               type="button"
               variant="outline"
@@ -250,24 +279,33 @@ export default function SignUp() {
               </svg>
               Continue with Google
             </Button>
-            
+
             <div className="text-center text-sm mt-6">
-              <span className="text-gray-600 dark:text-gray-400">Already have an account? </span>
-              <Link href="/auth/signin" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+              <span className="text-gray-600 dark:text-gray-400">
+                Already have an account?{" "}
+              </span>
+              <Link
+                href="/auth/signin"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              >
                 Sign in
               </Link>
             </div>
-            
+
             {/* Terms and Privacy */}
             <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4 leading-relaxed">
-              By creating an account, you agree to our{' '}
-              <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Terms of Service</span>
-              {' '}and{' '}
-              <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Privacy Policy</span>
+              By creating an account, you agree to our{" "}
+              <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                Terms of Service
+              </span>{" "}
+              and{" "}
+              <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                Privacy Policy
+              </span>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }

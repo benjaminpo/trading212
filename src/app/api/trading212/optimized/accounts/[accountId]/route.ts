@@ -1,26 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma, retryDatabaseOperation } from '@/lib/prisma'
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma, retryDatabaseOperation } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ accountId: string }> }
+  { params }: { params: Promise<{ accountId: string }> },
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { accountId } = await params
-    const { name, apiKey, isPractice } = await request.json()
+    const { accountId } = await params;
+    const { name, apiKey, isPractice } = await request.json();
 
     if (!name || !apiKey) {
       return NextResponse.json(
-        { error: 'Name and API key are required' },
-        { status: 400 }
-      )
+        { error: "Name and API key are required" },
+        { status: 400 },
+      );
     }
 
     // Check if account belongs to user
@@ -28,16 +28,13 @@ export async function PUT(
       prisma.trading212Account.findFirst({
         where: {
           id: accountId,
-          userId: session.user.id
-        }
-      })
-    )
+          userId: session.user.id,
+        },
+      }),
+    );
 
     if (!existingAccount) {
-      return NextResponse.json(
-        { error: 'Account not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
     // Check if another account with this name already exists
@@ -47,16 +44,16 @@ export async function PUT(
           userId: session.user.id,
           name: name,
           id: { not: accountId },
-          isActive: true
-        }
-      })
-    )
+          isActive: true,
+        },
+      }),
+    );
 
     if (duplicateAccount) {
       return NextResponse.json(
-        { error: 'An account with this name already exists' },
-        { status: 400 }
-      )
+        { error: "An account with this name already exists" },
+        { status: 400 },
+      );
     }
 
     // Update account
@@ -67,10 +64,10 @@ export async function PUT(
           name,
           apiKey,
           isPractice: Boolean(isPractice),
-          updatedAt: new Date()
-        }
-      })
-    )
+          updatedAt: new Date(),
+        },
+      }),
+    );
 
     return NextResponse.json({
       account: {
@@ -78,47 +75,43 @@ export async function PUT(
         name: updatedAccount.name,
         isPractice: updatedAccount.isPractice,
         isDefault: updatedAccount.isDefault,
-        isActive: updatedAccount.isActive
+        isActive: updatedAccount.isActive,
       },
-      message: 'Account updated successfully'
-    })
-
+      message: "Account updated successfully",
+    });
   } catch (error) {
-    console.error('Optimized account update error:', error)
+    console.error("Optimized account update error:", error);
     return NextResponse.json(
-      { error: 'Failed to update account' },
-      { status: 500 }
-    )
+      { error: "Failed to update account" },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ accountId: string }> }
+  { params }: { params: Promise<{ accountId: string }> },
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { accountId } = await params
+    const { accountId } = await params;
 
     // Check if account belongs to user
     const existingAccount = await retryDatabaseOperation(() =>
       prisma.trading212Account.findFirst({
         where: {
           id: accountId,
-          userId: session.user.id
-        }
-      })
-    )
+          userId: session.user.id,
+        },
+      }),
+    );
 
     if (!existingAccount) {
-      return NextResponse.json(
-        { error: 'Account not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Account not found" }, { status: 404 });
     }
 
     // Check if this is the last account
@@ -126,16 +119,16 @@ export async function DELETE(
       prisma.trading212Account.count({
         where: {
           userId: session.user.id,
-          isActive: true
-        }
-      })
-    )
+          isActive: true,
+        },
+      }),
+    );
 
     if (accountCount <= 1) {
       return NextResponse.json(
-        { error: 'Cannot delete the last account' },
-        { status: 400 }
-      )
+        { error: "Cannot delete the last account" },
+        { status: 400 },
+      );
     }
 
     // Soft delete account
@@ -144,10 +137,10 @@ export async function DELETE(
         where: { id: accountId },
         data: {
           isActive: false,
-          updatedAt: new Date()
-        }
-      })
-    )
+          updatedAt: new Date(),
+        },
+      }),
+    );
 
     // If deleted account was default, make another account default
     if (existingAccount.isDefault) {
@@ -156,31 +149,30 @@ export async function DELETE(
           where: {
             userId: session.user.id,
             isActive: true,
-            id: { not: accountId }
+            id: { not: accountId },
           },
-          orderBy: { createdAt: 'asc' }
-        })
-      )
+          orderBy: { createdAt: "asc" },
+        }),
+      );
 
       if (nextAccount) {
         await retryDatabaseOperation(() =>
           prisma.trading212Account.update({
             where: { id: nextAccount.id },
-            data: { isDefault: true }
-          })
-        )
+            data: { isDefault: true },
+          }),
+        );
       }
     }
 
     return NextResponse.json({
-      message: 'Account deleted successfully'
-    })
-
+      message: "Account deleted successfully",
+    });
   } catch (error) {
-    console.error('Optimized account deletion error:', error)
+    console.error("Optimized account deletion error:", error);
     return NextResponse.json(
-      { error: 'Failed to delete account' },
-      { status: 500 }
-    )
+      { error: "Failed to delete account" },
+      { status: 500 },
+    );
   }
 }

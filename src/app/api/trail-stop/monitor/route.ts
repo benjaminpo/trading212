@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { Trading212API } from '@/lib/trading212'
-import { createTrailStopNotification } from '@/app/api/notifications/route'
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { Trading212API } from "@/lib/trading212";
+import { createTrailStopNotification } from "@/app/api/notifications/route";
 
 // POST /api/trail-stop/monitor - Monitor and process trail stop orders
 export async function POST() {
@@ -9,94 +9,110 @@ export async function POST() {
     // Get all active trail stop orders
     const activeOrders = await prisma.trailStopLossOrder.findMany({
       where: { isActive: true },
-      include: { user: { include: { trading212Accounts: true } } }
-    })
+      include: { user: { include: { trading212Accounts: true } } },
+    });
 
-    console.log(`🔍 Monitoring ${activeOrders.length} active trail stop orders`)
+    console.log(
+      `🔍 Monitoring ${activeOrders.length} active trail stop orders`,
+    );
 
-    let processedCount = 0
-    let triggeredCount = 0
+    let processedCount = 0;
+    let triggeredCount = 0;
 
     for (const order of activeOrders) {
       try {
         // Find the associated Trading212 account
-        let trading212Account = null
+        let trading212Account = null;
         if (order.accountId) {
-          trading212Account = order.user.trading212Accounts.find(acc => acc.id === order.accountId)
+          trading212Account = order.user.trading212Accounts.find(
+            (acc) => acc.id === order.accountId,
+          );
         } else {
           // Fallback to default or first active account
-          trading212Account = order.user.trading212Accounts.find(acc => acc.isDefault) ||
-                             order.user.trading212Accounts.find(acc => acc.isActive) ||
-                             order.user.trading212Accounts[0]
+          trading212Account =
+            order.user.trading212Accounts.find((acc) => acc.isDefault) ||
+            order.user.trading212Accounts.find((acc) => acc.isActive) ||
+            order.user.trading212Accounts[0];
         }
 
         if (!trading212Account?.apiKey) {
-          console.log(`⚠️ No Trading212 account found for order ${order.id}`)
-          continue
+          console.log(`⚠️ No Trading212 account found for order ${order.id}`);
+          continue;
         }
 
         // Create Trading212 API instance
-        const trading212 = new Trading212API(trading212Account.apiKey, trading212Account.isPractice)
-        
+        const trading212 = new Trading212API(
+          trading212Account.apiKey,
+          trading212Account.isPractice,
+        );
+
         // Get current positions to find the symbol
-        const positions = await trading212.getPositions()
-        const position = positions.find(p => p.ticker === order.symbol)
-        
+        const positions = await trading212.getPositions();
+        const position = positions.find((p) => p.ticker === order.symbol);
+
         if (!position) {
-          console.log(`⚠️ Position ${order.symbol} not found for order ${order.id}`)
-          continue
+          console.log(
+            `⚠️ Position ${order.symbol} not found for order ${order.id}`,
+          );
+          continue;
         }
 
-        const currentPrice = position.currentPrice
-        processedCount++
+        const currentPrice = position.currentPrice;
+        processedCount++;
 
         // Calculate trail stop logic
-        let shouldTrigger = false
-        let newStopPrice = order.stopPrice
+        let shouldTrigger = false;
+        let newStopPrice = order.stopPrice;
 
         if (order.trailPercent) {
           // Percentage-based trailing
-          const trailDistance = currentPrice * (order.trailPercent / 100)
-          const potentialStopPrice = currentPrice - trailDistance
-          
+          const trailDistance = currentPrice * (order.trailPercent / 100);
+          const potentialStopPrice = currentPrice - trailDistance;
+
           // Update stop price if market moved favorably
           if (!order.stopPrice || potentialStopPrice > order.stopPrice) {
-            newStopPrice = potentialStopPrice
+            newStopPrice = potentialStopPrice;
           }
-          
+
           // Check if current price hit the stop price
-          shouldTrigger = currentPrice <= (order.stopPrice || 0)
+          shouldTrigger = currentPrice <= (order.stopPrice || 0);
         } else {
           // Fixed amount trailing
-          const potentialStopPrice = currentPrice - order.trailAmount
-          
+          const potentialStopPrice = currentPrice - order.trailAmount;
+
           // Update stop price if market moved favorably
           if (!order.stopPrice || potentialStopPrice > order.stopPrice) {
-            newStopPrice = potentialStopPrice
+            newStopPrice = potentialStopPrice;
           }
-          
+
           // Check if current price hit the stop price
-          shouldTrigger = currentPrice <= (order.stopPrice || 0)
+          shouldTrigger = currentPrice <= (order.stopPrice || 0);
         }
 
         // Update stop price if it changed
         if (newStopPrice !== order.stopPrice) {
           await prisma.trailStopLossOrder.update({
             where: { id: order.id },
-            data: { stopPrice: newStopPrice }
-          })
-          console.log(`📈 Updated stop price for ${order.symbol}: $${newStopPrice?.toFixed(2)}`)
+            data: { stopPrice: newStopPrice },
+          });
+          console.log(
+            `📈 Updated stop price for ${order.symbol}: $${newStopPrice?.toFixed(2)}`,
+          );
         }
 
         // Handle triggered orders
         if (shouldTrigger && order.stopPrice) {
-          triggeredCount++
-          console.log(`🚨 Trail stop triggered for ${order.symbol} at $${currentPrice.toFixed(2)}`)
+          triggeredCount++;
+          console.log(
+            `🚨 Trail stop triggered for ${order.symbol} at $${currentPrice.toFixed(2)}`,
+          );
 
           if (order.isPractice) {
             // For practice accounts, we could simulate order execution
-            console.log(`🎯 [PRACTICE] Simulating sell order for ${order.quantity} shares of ${order.symbol}`)
-            
+            console.log(
+              `🎯 [PRACTICE] Simulating sell order for ${order.quantity} shares of ${order.symbol}`,
+            );
+
             // Create notification for practice execution
             await createTrailStopNotification(order.userId, {
               symbol: order.symbol,
@@ -104,32 +120,33 @@ export async function POST() {
               stopPrice: order.stopPrice,
               trailAmount: order.trailAmount,
               trailPercent: order.trailPercent || undefined,
-              isPractice: true
-            })
+              isPractice: true,
+            });
           } else {
             // For production accounts, create notification for manual action
-            console.log(`📧 [PRODUCTION] Creating notification for manual execution of ${order.symbol}`)
-            
+            console.log(
+              `📧 [PRODUCTION] Creating notification for manual execution of ${order.symbol}`,
+            );
+
             await createTrailStopNotification(order.userId, {
               symbol: order.symbol,
               quantity: order.quantity,
               stopPrice: order.stopPrice,
               trailAmount: order.trailAmount,
               trailPercent: order.trailPercent || undefined,
-              isPractice: false
-            })
+              isPractice: false,
+            });
           }
 
           // Deactivate the order
           await prisma.trailStopLossOrder.update({
             where: { id: order.id },
-            data: { isActive: false }
-          })
+            data: { isActive: false },
+          });
         }
-
       } catch (orderError) {
-        console.error(`Error processing order ${order.id}:`, orderError)
-        continue
+        console.error(`Error processing order ${order.id}:`, orderError);
+        continue;
       }
     }
 
@@ -137,14 +154,13 @@ export async function POST() {
       success: true,
       processed: processedCount,
       triggered: triggeredCount,
-      message: `Monitored ${processedCount} orders, ${triggeredCount} triggered`
-    })
-
+      message: `Monitored ${processedCount} orders, ${triggeredCount} triggered`,
+    });
   } catch (error) {
-    console.error('Error in trail stop monitoring:', error)
+    console.error("Error in trail stop monitoring:", error);
     return NextResponse.json(
-      { error: 'Failed to monitor trail stop orders' },
-      { status: 500 }
-    )
+      { error: "Failed to monitor trail stop orders" },
+      { status: 500 },
+    );
   }
 }

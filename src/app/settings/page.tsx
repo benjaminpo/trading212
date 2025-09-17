@@ -1,192 +1,227 @@
-'use client'
+"use client";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { ArrowLeft, CheckCircle, XCircle, User, Key, Palette, Activity, Plus, Trash2, Star, AlertCircle } from 'lucide-react'
-import Link from 'next/link'
-import LogoutButton from '@/components/logout-button'
-import ClientWrapper from '@/components/client-wrapper'
-import { ThemeToggle } from '@/components/theme-toggle'
-import MobileNav from '@/components/mobile-nav'
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  User,
+  Key,
+  Palette,
+  Activity,
+  Plus,
+  Trash2,
+  Star,
+  AlertCircle,
+} from "lucide-react";
+import Link from "next/link";
+import LogoutButton from "@/components/logout-button";
+import ClientWrapper from "@/components/client-wrapper";
+import { ThemeToggle } from "@/components/theme-toggle";
+import MobileNav from "@/components/mobile-nav";
 
 interface Trading212Account {
-  id: string
-  name: string
-  isPractice: boolean
-  isActive: boolean
-  isDefault: boolean
-  currency?: string
-  cash?: number
-  lastConnected?: string
-  lastError?: string
-  apiKeyPreview?: string
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  isPractice: boolean;
+  isActive: boolean;
+  isDefault: boolean;
+  currency?: string;
+  cash?: number;
+  lastConnected?: string;
+  lastError?: string;
+  apiKeyPreview?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [accounts, setAccounts] = useState<Trading212Account[]>([])
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [accounts, setAccounts] = useState<Trading212Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
   // Add account form state
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newAccountName, setNewAccountName] = useState('')
-  const [newApiKey, setNewApiKey] = useState('')
-  const [newIsPractice, setNewIsPractice] = useState(false)
-  const [newIsDefault, setNewIsDefault] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newAccountName, setNewAccountName] = useState("");
+  const [newApiKey, setNewApiKey] = useState("");
+  const [newIsPractice, setNewIsPractice] = useState(false);
+  const [newIsDefault, setNewIsDefault] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!mounted || status === 'loading') return
+    if (!mounted || status === "loading") return;
     if (!session) {
-      router.push('/auth/signin')
-      return
+      router.push("/auth/signin");
+      return;
     }
-    
-    loadAccounts()
-  }, [mounted, session, status, router])
+
+    loadAccounts();
+  }, [mounted, session, status, router]);
 
   const loadAccounts = async () => {
     try {
-      const response = await fetch('/api/trading212/optimized/accounts')
+      const response = await fetch("/api/trading212/optimized/accounts");
       if (response.ok) {
-        const data = await response.json()
-        setAccounts(data.accounts || [])
+        const data = await response.json();
+        setAccounts(data.accounts || []);
       } else {
-        console.error('Failed to load accounts')
+        console.error("Failed to load accounts");
       }
     } catch (error) {
-      console.error('Error loading accounts:', error)
+      console.error("Error loading accounts:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleAddAccount = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newAccountName || !newApiKey) return
+    e.preventDefault();
+    if (!newAccountName || !newApiKey) return;
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     try {
-      const response = await fetch('/api/trading212/optimized/accounts', {
-        method: 'POST',
+      const response = await fetch("/api/trading212/optimized/accounts", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           name: newAccountName,
           apiKey: newApiKey,
           isPractice: newIsPractice,
-          isDefault: newIsDefault
+          isDefault: newIsDefault,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        await loadAccounts()
-        setNewAccountName('')
-        setNewApiKey('')
-        setNewIsPractice(false)
-        setNewIsDefault(false)
-        setShowAddForm(false)
-        alert(data.message || 'Account added successfully!')
+        await loadAccounts();
+        setNewAccountName("");
+        setNewApiKey("");
+        setNewIsPractice(false);
+        setNewIsDefault(false);
+        setShowAddForm(false);
+        alert(data.message || "Account added successfully!");
       } else {
-        console.error('Failed to add account:', data)
-        const errorMessage = data.error || 'Failed to add Trading212 account'
-        alert(errorMessage)
+        console.error("Failed to add account:", data);
+        const errorMessage = data.error || "Failed to add Trading212 account";
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error adding account:', error)
-      alert('Error adding Trading212 account')
+      console.error("Error adding account:", error);
+      alert("Error adding Trading212 account");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
-  const handleDeleteAccount = async (accountId: string, accountName: string) => {
-    if (!confirm(`Are you sure you want to delete the account "${accountName}"? This action cannot be undone.`)) return
+  const handleDeleteAccount = async (
+    accountId: string,
+    accountName: string,
+  ) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete the account "${accountName}"? This action cannot be undone.`,
+      )
+    )
+      return;
 
     try {
-      const response = await fetch(`/api/trading212/optimized/accounts/${accountId}`, {
-        method: 'DELETE',
-      })
+      const response = await fetch(
+        `/api/trading212/optimized/accounts/${accountId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (response.ok) {
-        await loadAccounts()
-        alert('Account deleted successfully!')
+        await loadAccounts();
+        alert("Account deleted successfully!");
       } else {
-        alert('Failed to delete account')
+        alert("Failed to delete account");
       }
     } catch (error) {
-      console.error('Error deleting account:', error)
-      alert('Error deleting account')
+      console.error("Error deleting account:", error);
+      alert("Error deleting account");
     }
-  }
+  };
 
   const handleSetDefault = async (accountId: string, accountName: string) => {
     try {
-      const response = await fetch(`/api/trading212/optimized/accounts/${accountId}/set-default`, {
-        method: 'POST',
-      })
+      const response = await fetch(
+        `/api/trading212/optimized/accounts/${accountId}/set-default`,
+        {
+          method: "POST",
+        },
+      );
 
       if (response.ok) {
-        await loadAccounts()
-        alert(`"${accountName}" is now your default account!`)
+        await loadAccounts();
+        alert(`"${accountName}" is now your default account!`);
       } else {
-        alert('Failed to set default account')
+        alert("Failed to set default account");
       }
     } catch (error) {
-      console.error('Error setting default account:', error)
-      alert('Error setting default account')
+      console.error("Error setting default account:", error);
+      alert("Error setting default account");
     }
-  }
+  };
 
   const handleToggleActive = async (accountId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/trading212/optimized/accounts/${accountId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/trading212/optimized/accounts/${accountId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ isActive: !isActive }),
         },
-        body: JSON.stringify({ isActive: !isActive }),
-      })
+      );
 
       if (response.ok) {
-        await loadAccounts()
+        await loadAccounts();
       } else {
-        alert('Failed to update account status')
+        alert("Failed to update account status");
       }
     } catch (error) {
-      console.error('Error updating account:', error)
-      alert('Error updating account')
+      console.error("Error updating account:", error);
+      alert("Error updating account");
     }
-  }
+  };
 
-  if (!mounted || status === 'loading' || loading) {
+  if (!mounted || status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   if (!session) {
-    return null
+    return null;
   }
 
   return (
@@ -204,8 +239,12 @@ export default function SettingsPage() {
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50">Settings</h1>
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">Manage your account and Trading212 connections</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50">
+                    Settings
+                  </h1>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+                    Manage your account and Trading212 connections
+                  </p>
                 </div>
               </div>
               <div className="flex space-x-4">
@@ -234,12 +273,32 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label htmlFor="account-name" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Name</label>
-                  <Input id="account-name" value={session.user?.name || ''} disabled className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50" />
+                  <label
+                    htmlFor="account-name"
+                    className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300"
+                  >
+                    Name
+                  </label>
+                  <Input
+                    id="account-name"
+                    value={session.user?.name || ""}
+                    disabled
+                    className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50"
+                  />
                 </div>
                 <div>
-                  <label htmlFor="account-email" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Email</label>
-                  <Input id="account-email" value={session.user?.email || ''} disabled className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50" />
+                  <label
+                    htmlFor="account-email"
+                    className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300"
+                  >
+                    Email
+                  </label>
+                  <Input
+                    id="account-email"
+                    value={session.user?.email || ""}
+                    disabled
+                    className="bg-slate-100/70 dark:bg-slate-700/70 border-slate-200/50 dark:border-slate-600/50"
+                  />
                 </div>
                 <LogoutButton />
               </CardContent>
@@ -261,7 +320,9 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Dark Mode</label>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Dark Mode
+                    </label>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                       Toggle between light and dark theme
                     </p>
@@ -276,18 +337,18 @@ export default function SettingsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                <CardTitle className="flex items-center text-slate-900 dark:text-slate-50">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-green-500/20">
-                    <Key className="h-4 w-4 text-white" />
-                  </div>
+                    <CardTitle className="flex items-center text-slate-900 dark:text-slate-50">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-green-500/20">
+                        <Key className="h-4 w-4 text-white" />
+                      </div>
                       Trading212 Accounts
-                </CardTitle>
-                <CardDescription className="text-slate-600 dark:text-slate-300">
+                    </CardTitle>
+                    <CardDescription className="text-slate-600 dark:text-slate-300">
                       Manage multiple Trading212 account connections
-                </CardDescription>
+                    </CardDescription>
                   </div>
-                  <Button 
-                    onClick={() => setShowAddForm(!showAddForm)} 
+                  <Button
+                    onClick={() => setShowAddForm(!showAddForm)}
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -300,12 +361,17 @@ export default function SettingsPage() {
                 {showAddForm && (
                   <Card className="bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600">
                     <CardHeader>
-                      <CardTitle className="text-lg text-slate-900 dark:text-slate-100">Add New Trading212 Account</CardTitle>
+                      <CardTitle className="text-lg text-slate-900 dark:text-slate-100">
+                        Add New Trading212 Account
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <form onSubmit={handleAddAccount} className="space-y-4">
                         <div>
-                          <label htmlFor="new-account-name" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                          <label
+                            htmlFor="new-account-name"
+                            className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300"
+                          >
                             Account Name
                           </label>
                           <Input
@@ -317,18 +383,21 @@ export default function SettingsPage() {
                             required
                             className="bg-white dark:bg-slate-800"
                           />
-                </div>
-                    <div>
-                      <label htmlFor="new-api-key" className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
-                        Trading212 API Key
-                      </label>
-                      <Input
-                        id="new-api-key"
-                        type="password"
-                        placeholder="Enter your Trading212 API key"
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="new-api-key"
+                            className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300"
+                          >
+                            Trading212 API Key
+                          </label>
+                          <Input
+                            id="new-api-key"
+                            type="password"
+                            placeholder="Enter your Trading212 API key"
                             value={newApiKey}
                             onChange={(e) => setNewApiKey(e.target.value)}
-                        required
+                            required
                             className="bg-white dark:bg-slate-800"
                           />
                         </div>
@@ -337,26 +406,42 @@ export default function SettingsPage() {
                             <input
                               type="checkbox"
                               checked={newIsPractice}
-                              onChange={(e) => setNewIsPractice(e.target.checked)}
+                              onChange={(e) =>
+                                setNewIsPractice(e.target.checked)
+                              }
                               className="mr-2"
                             />
-                            <span className="text-sm text-slate-700 dark:text-slate-300">Practice Account</span>
+                            <span className="text-sm text-slate-700 dark:text-slate-300">
+                              Practice Account
+                            </span>
                           </label>
                           <label className="flex items-center">
                             <input
                               type="checkbox"
                               checked={newIsDefault}
-                              onChange={(e) => setNewIsDefault(e.target.checked)}
+                              onChange={(e) =>
+                                setNewIsDefault(e.target.checked)
+                              }
                               className="mr-2"
                             />
-                            <span className="text-sm text-slate-700 dark:text-slate-300">Set as Default</span>
+                            <span className="text-sm text-slate-700 dark:text-slate-300">
+                              Set as Default
+                            </span>
                           </label>
                         </div>
                         <div className="flex space-x-2">
-                          <Button type="submit" disabled={submitting} className="bg-green-600 hover:bg-green-700">
-                            {submitting ? 'Adding...' : 'Add Account'}
+                          <Button
+                            type="submit"
+                            disabled={submitting}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            {submitting ? "Adding..." : "Add Account"}
                           </Button>
-                          <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowAddForm(false)}
+                          >
                             Cancel
                           </Button>
                         </div>
@@ -371,11 +456,17 @@ export default function SettingsPage() {
                     <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Key className="h-8 w-8 text-slate-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No Trading212 accounts</h3>
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">
+                      No Trading212 accounts
+                    </h3>
                     <p className="text-slate-600 dark:text-slate-400 mb-4">
-                      Add your first Trading212 account to get started with automated trading features.
+                      Add your first Trading212 account to get started with
+                      automated trading features.
                     </p>
-                    <Button onClick={() => setShowAddForm(true)} className="bg-green-600 hover:bg-green-700 text-white">
+                    <Button
+                      onClick={() => setShowAddForm(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Your First Account
                     </Button>
@@ -383,7 +474,10 @@ export default function SettingsPage() {
                 ) : (
                   <div className="space-y-4">
                     {accounts.map((account) => (
-                      <Card key={account.id} className={`${account.isDefault ? 'ring-2 ring-green-500' : ''} ${!account.isActive ? 'opacity-60' : ''}`}>
+                      <Card
+                        key={account.id}
+                        className={`${account.isDefault ? "ring-2 ring-green-500" : ""} ${!account.isActive ? "opacity-60" : ""}`}
+                      >
                         <CardContent className="pt-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
@@ -423,32 +517,43 @@ export default function SettingsPage() {
 
                           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="text-slate-600 dark:text-slate-400">API Key:</span>
+                              <span className="text-slate-600 dark:text-slate-400">
+                                API Key:
+                              </span>
                               <span className="ml-2 text-slate-900 dark:text-slate-100 font-mono">
                                 {account.apiKeyPreview}
                               </span>
                             </div>
                             {account.currency && (
                               <div>
-                                <span className="text-slate-600 dark:text-slate-400">Currency:</span>
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  Currency:
+                                </span>
                                 <span className="ml-2 text-slate-900 dark:text-slate-100">
                                   {account.currency}
                                 </span>
                               </div>
                             )}
-                            {account.cash !== null && account.cash !== undefined && (
-                              <div>
-                                <span className="text-slate-600 dark:text-slate-400">Cash:</span>
-                                <span className="ml-2 text-slate-900 dark:text-slate-100">
-                                  ${account.cash.toFixed(2)}
-                                </span>
-                              </div>
-                            )}
+                            {account.cash !== null &&
+                              account.cash !== undefined && (
+                                <div>
+                                  <span className="text-slate-600 dark:text-slate-400">
+                                    Cash:
+                                  </span>
+                                  <span className="ml-2 text-slate-900 dark:text-slate-100">
+                                    ${account.cash.toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
                             {account.lastConnected && (
                               <div>
-                                <span className="text-slate-600 dark:text-slate-400">Last Connected:</span>
+                                <span className="text-slate-600 dark:text-slate-400">
+                                  Last Connected:
+                                </span>
                                 <span className="ml-2 text-slate-900 dark:text-slate-100">
-                                  {new Date(account.lastConnected).toLocaleDateString()}
+                                  {new Date(
+                                    account.lastConnected,
+                                  ).toLocaleDateString()}
                                 </span>
                               </div>
                             )}
@@ -457,7 +562,8 @@ export default function SettingsPage() {
                           {account.lastError && (
                             <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
                               <p className="text-sm text-red-800 dark:text-red-200">
-                                <strong>Connection Error:</strong> {account.lastError}
+                                <strong>Connection Error:</strong>{" "}
+                                {account.lastError}
                               </p>
                             </div>
                           )}
@@ -467,7 +573,9 @@ export default function SettingsPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleSetDefault(account.id, account.name)}
+                                onClick={() =>
+                                  handleSetDefault(account.id, account.name)
+                                }
                                 className="text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-950/20"
                               >
                                 <Star className="h-3 w-3 mr-1" />
@@ -477,20 +585,28 @@ export default function SettingsPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleToggleActive(account.id, account.isActive)}
-                              className={account.isActive ? 'text-orange-600' : 'text-green-600'}
+                              onClick={() =>
+                                handleToggleActive(account.id, account.isActive)
+                              }
+                              className={
+                                account.isActive
+                                  ? "text-orange-600"
+                                  : "text-green-600"
+                              }
                             >
-                              {account.isActive ? 'Deactivate' : 'Activate'}
+                              {account.isActive ? "Deactivate" : "Activate"}
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeleteAccount(account.id, account.name)}
+                              onClick={() =>
+                                handleDeleteAccount(account.id, account.name)
+                              }
                               className="text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
                               Delete
-                    </Button>
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -499,24 +615,58 @@ export default function SettingsPage() {
                 )}
 
                 <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Multi-Account Features:</h4>
+                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                    Multi-Account Features:
+                  </h4>
                   <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• <strong>Default Account:</strong> Used when no specific account is selected</li>
-                    <li>• <strong>Account Switching:</strong> Switch between accounts on dashboard and analytics</li>
-                    <li>• <strong>Practice vs Live:</strong> Separate practice and live accounts</li>
-                    <li>• <strong>Aggregated View:</strong> See combined portfolio across all accounts</li>
-                    <li>• <strong>Individual Rate Limits:</strong> Each account has its own API rate limit</li>
+                    <li>
+                      • <strong>Default Account:</strong> Used when no specific
+                      account is selected
+                    </li>
+                    <li>
+                      • <strong>Account Switching:</strong> Switch between
+                      accounts on dashboard and analytics
+                    </li>
+                    <li>
+                      • <strong>Practice vs Live:</strong> Separate practice and
+                      live accounts
+                    </li>
+                    <li>
+                      • <strong>Aggregated View:</strong> See combined portfolio
+                      across all accounts
+                    </li>
+                    <li>
+                      • <strong>Individual Rate Limits:</strong> Each account
+                      has its own API rate limit
+                    </li>
                   </ul>
                 </div>
-                
+
                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-                  <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">🔧 Troubleshooting Connection Issues:</h4>
+                  <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
+                    🔧 Troubleshooting Connection Issues:
+                  </h4>
                   <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
-                    <li>• <strong>401 Unauthorized:</strong> Check if your API key is correct and complete</li>
-                    <li>• <strong>Key too short:</strong> Trading212 API keys should be 40+ characters</li>
-                    <li>• <strong>Access denied:</strong> Enable API access in Trading212 → Settings → API</li>
-                    <li>• <strong>Account issues:</strong> Ensure your Trading212 account is fully verified</li>
-                    <li>• <strong>Still not working:</strong> Try regenerating your API key</li>
+                    <li>
+                      • <strong>401 Unauthorized:</strong> Check if your API key
+                      is correct and complete
+                    </li>
+                    <li>
+                      • <strong>Key too short:</strong> Trading212 API keys
+                      should be 40+ characters
+                    </li>
+                    <li>
+                      • <strong>Access denied:</strong> Enable API access in
+                      Trading212 → Settings → API
+                    </li>
+                    <li>
+                      • <strong>Account issues:</strong> Ensure your Trading212
+                      account is fully verified
+                    </li>
+                    <li>
+                      • <strong>Still not working:</strong> Try regenerating
+                      your API key
+                    </li>
                   </ul>
                 </div>
               </CardContent>
@@ -538,7 +688,9 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">Practice Mode</h4>
+                    <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
+                      Practice Mode
+                    </h4>
                     <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
                       <li>• Full API functionality</li>
                       <li>• Trail stop orders work</li>
@@ -548,7 +700,9 @@ export default function SettingsPage() {
                     </ul>
                   </div>
                   <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-                    <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">Production Mode</h4>
+                    <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">
+                      Production Mode
+                    </h4>
                     <ul className="text-sm text-orange-800 dark:text-orange-200 space-y-1">
                       <li>• Limited API functionality</li>
                       <li>• Orders saved but not executed</li>
@@ -564,5 +718,5 @@ export default function SettingsPage() {
         </div>
       </div>
     </ClientWrapper>
-  )
+  );
 }

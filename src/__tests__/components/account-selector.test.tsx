@@ -1,105 +1,113 @@
-import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import AccountSelector from '@/components/account-selector'
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import AccountSelector from "@/components/account-selector";
 
 // Mock next/link
-jest.mock('next/link', () => {
-  const MockLink = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  MockLink.displayName = 'MockLink'
-  return MockLink
-})
+jest.mock("next/link", () => {
+  const MockLink = ({
+    children,
+    href,
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => <a href={href}>{children}</a>;
+  MockLink.displayName = "MockLink";
+  return MockLink;
+});
 
 // Mock fetch
-global.fetch = jest.fn()
+global.fetch = jest.fn();
 
-describe('AccountSelector', () => {
+describe("AccountSelector", () => {
   const mockAccounts = [
     {
-      id: '1',
-      name: 'Live Account',
+      id: "1",
+      name: "Live Account",
       isPractice: false,
       isActive: true,
       isDefault: true,
     },
     {
-      id: '2',
-      name: 'Demo Account',
+      id: "2",
+      name: "Demo Account",
       isPractice: true,
       isActive: false,
       isDefault: false,
     },
     {
-      id: '3',
-      name: 'Test Account',
+      id: "3",
+      name: "Test Account",
       isPractice: false,
       isActive: true,
       isDefault: false,
     },
-  ]
+  ];
 
   const defaultProps = {
-    selectedAccountId: '1',
+    selectedAccountId: "1",
     onAccountChange: jest.fn(),
-  }
+  };
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    jest.clearAllMocks();
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ accounts: mockAccounts }),
-    })
-  })
+    });
+  });
 
-  it('renders account selector with loading state initially', () => {
-    render(<AccountSelector {...defaultProps} />)
+  it("renders account selector with loading state initially", () => {
+    render(<AccountSelector {...defaultProps} />);
 
-    expect(screen.getByText('', { selector: '.animate-pulse' })).toBeInTheDocument()
-  })
+    expect(
+      screen.getByText("", { selector: ".animate-pulse" }),
+    ).toBeInTheDocument();
+  });
 
-  it('opens dropdown when clicked', async () => {
-    render(<AccountSelector {...defaultProps} />)
-
-    // Wait for component to load
-    await waitFor(() => {
-      expect(screen.getByRole('button')).toBeInTheDocument()
-    })
-
-    const trigger = screen.getByRole('button')
-    fireEvent.click(trigger)
-
-    await waitFor(() => {
-      expect(screen.getByText('All Accounts')).toBeInTheDocument()
-      expect(screen.getAllByText('Live Account')[0]).toBeInTheDocument()
-      expect(screen.getByText('Test Account')).toBeInTheDocument()
-    })
-  })
-
-  it('calls onAccountSelect when account is selected', async () => {
-    render(<AccountSelector {...defaultProps} />)
+  it("opens dropdown when clicked", async () => {
+    render(<AccountSelector {...defaultProps} />);
 
     // Wait for component to load
     await waitFor(() => {
-      expect(screen.getByRole('button')).toBeInTheDocument()
-    })
+      expect(screen.getByRole("button")).toBeInTheDocument();
+    });
 
-    const trigger = screen.getByRole('button')
-    fireEvent.click(trigger)
+    const trigger = screen.getByRole("button");
+    fireEvent.click(trigger);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Account')).toBeInTheDocument()
-    })
+      expect(screen.getByText("All Accounts")).toBeInTheDocument();
+      expect(screen.getAllByText("Live Account")[0]).toBeInTheDocument();
+      expect(screen.getByText("Test Account")).toBeInTheDocument();
+    });
+  });
 
-    const testAccount = screen.getByText('Test Account')
-    fireEvent.click(testAccount)
+  it("calls onAccountSelect when account is selected", async () => {
+    render(<AccountSelector {...defaultProps} />);
 
-    expect(defaultProps.onAccountChange).toHaveBeenCalledWith('3')
-  })
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByRole("button")).toBeInTheDocument();
+    });
 
-  it('shows loading state initially', () => {
-    render(<AccountSelector {...defaultProps} />)
+    const trigger = screen.getByRole("button");
+    fireEvent.click(trigger);
 
-    expect(screen.getByText('', { selector: '.animate-pulse' })).toBeInTheDocument()
-  })
-})
+    await waitFor(() => {
+      expect(screen.getByText("Test Account")).toBeInTheDocument();
+    });
+
+    const testAccount = screen.getByText("Test Account");
+    fireEvent.click(testAccount);
+
+    expect(defaultProps.onAccountChange).toHaveBeenCalledWith("3");
+  });
+
+  it("shows loading state initially", () => {
+    render(<AccountSelector {...defaultProps} />);
+
+    expect(
+      screen.getByText("", { selector: ".animate-pulse" }),
+    ).toBeInTheDocument();
+  });
+});

@@ -12,28 +12,30 @@ export class RateLimiter {
   canMakeRequest(key: string): boolean {
     const now = Date.now();
     const requests = this.requests.get(key) || [];
-    
+
     // Remove old requests outside the window
-    const validRequests = requests.filter(timestamp => now - timestamp < this.windowMs);
-    
+    const validRequests = requests.filter(
+      (timestamp) => now - timestamp < this.windowMs,
+    );
+
     if (validRequests.length >= this.maxRequests) {
       return false;
     }
-    
+
     // Add current request
     validRequests.push(now);
     this.requests.set(key, validRequests);
-    
+
     return true;
   }
 
   getTimeUntilReset(key: string): number {
     const requests = this.requests.get(key) || [];
     if (requests.length === 0) return 0;
-    
+
     const oldestRequest = Math.min(...requests);
     const timeUntilReset = this.windowMs - (Date.now() - oldestRequest);
-    
+
     return Math.max(0, timeUntilReset);
   }
 }

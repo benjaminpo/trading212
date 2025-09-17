@@ -1,85 +1,96 @@
-import React from 'react'
-import { render, screen, waitFor, fireEvent as _fireEvent } from '@testing-library/react'
-import { useSession } from 'next-auth/react'
-import { useRouter as _useRouter } from 'next/navigation'
+import React from "react";
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent as _fireEvent,
+} from "@testing-library/react";
+import { useSession } from "next-auth/react";
+import { useRouter as _useRouter } from "next/navigation";
 
 // Mock next-auth
-jest.mock('next-auth/react', () => ({
+jest.mock("next-auth/react", () => ({
   useSession: jest.fn(),
-}))
+}));
 
 // Mock next/navigation
-const pushMock = jest.fn()
-jest.mock('next/navigation', () => ({
+const pushMock = jest.fn();
+jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
-  usePathname: () => '/analytics',
-}))
+  usePathname: () => "/analytics",
+}));
 
 // Mock next/link
-jest.mock('next/link', () => {
-  const MockLink = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
-  MockLink.displayName = 'MockLink'
-  return MockLink
-})
+jest.mock("next/link", () => {
+  const MockLink = ({
+    children,
+    href,
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => <a href={href}>{children}</a>;
+  MockLink.displayName = "MockLink";
+  return MockLink;
+});
 
 // Mock fetch
-global.fetch = jest.fn()
+global.fetch = jest.fn();
 
-describe('Analytics Page', () => {
+describe("Analytics Page", () => {
   beforeEach(() => {
-    pushMock.mockReset()
-    ;(useSession as jest.Mock).mockReset()
-    ;(global.fetch as jest.Mock).mockReset()
-    
+    pushMock.mockReset();
+    (useSession as jest.Mock).mockReset();
+    (global.fetch as jest.Mock).mockReset();
+
     // Default mock for authenticated user
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-  })
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
+  });
 
-  it('redirects unauthenticated users to signin', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
+  it("redirects unauthenticated users to signin", async () => {
+    (useSession as jest.Mock).mockReturnValue({
       data: null,
-      status: 'unauthenticated',
-    })
+      status: "unauthenticated",
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/auth/signin')
-    })
-  })
+      expect(pushMock).toHaveBeenCalledWith("/auth/signin");
+    });
+  });
 
-  it('shows loading state initially', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("shows loading state initially", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return pending promise
-    ;(global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}))
+    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
-    expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
-  })
+    expect(
+      screen.getByText("", { selector: ".animate-spin" }),
+    ).toBeInTheDocument();
+  });
 
-  it('loads and displays analytics data', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("loads and displays analytics data", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'AAPL',
+          ticker: "AAPL",
           quantity: 100,
           averagePrice: 150,
           currentPrice: 160,
@@ -88,8 +99,8 @@ describe('Analytics Page', () => {
           marketValue: 16000,
           maxBuy: 200,
           maxSell: 100,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
       ],
@@ -99,41 +110,41 @@ describe('Analytics Page', () => {
       totalPositions: 1,
       account: {
         cash: 5000,
-        currency: 'USD',
+        currency: "USD",
       },
       accountSummary: {
         connectedAccounts: 1,
-        accountNames: ['Test Account'],
+        accountNames: ["Test Account"],
         totalInvestedValue: 15000,
         totalCurrentValue: 16000,
         totalPnL: 1000,
         totalPnLPercent: 6.67,
         activePositions: 1,
-        currency: 'USD',
+        currency: "USD",
       },
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('displays connection status when not connected', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("displays connection status when not connected", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: false,
@@ -141,30 +152,30 @@ describe('Analytics Page', () => {
       totalValue: 0,
       totalPnL: 0,
       totalPnLPercent: 0,
-      error: 'No Trading212 account connected',
-    }
+      error: "No Trading212 account connected",
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles refresh functionality', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles refresh functionality", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
@@ -172,28 +183,28 @@ describe('Analytics Page', () => {
       totalValue: 0,
       totalPnL: 0,
       totalPnLPercent: 0,
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-  })
+  });
 
-  it('displays account selector', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("displays account selector", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
@@ -201,35 +212,35 @@ describe('Analytics Page', () => {
       totalValue: 0,
       totalPnL: 0,
       totalPnLPercent: 0,
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('displays positions table when positions exist', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("displays positions table when positions exist", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'AAPL',
+          ticker: "AAPL",
           quantity: 100,
           averagePrice: 150,
           currentPrice: 160,
@@ -238,12 +249,12 @@ describe('Analytics Page', () => {
           marketValue: 16000,
           maxBuy: 200,
           maxSell: 100,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
         {
-          ticker: 'GOOGL',
+          ticker: "GOOGL",
           quantity: 50,
           averagePrice: 2400,
           currentPrice: 2500,
@@ -252,8 +263,8 @@ describe('Analytics Page', () => {
           marketValue: 125000,
           maxBuy: 100,
           maxSell: 50,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
       ],
@@ -261,29 +272,29 @@ describe('Analytics Page', () => {
       totalPnL: 6000,
       totalPnLPercent: 4.26,
       totalPositions: 2,
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('displays empty state when no positions exist', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("displays empty state when no positions exist", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
@@ -292,55 +303,54 @@ describe('Analytics Page', () => {
       totalPnL: 0,
       totalPnLPercent: 0,
       totalPositions: 0,
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles API errors gracefully', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles API errors gracefully", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
+    (global.fetch as jest.Mock).mockRejectedValue(new Error("API Error"));
 
-    ;(global.fetch as jest.Mock).mockRejectedValue(new Error('API Error'))
-
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Should still render the page even with API errors
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('displays performance metrics correctly', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("displays performance metrics correctly", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'AAPL',
+          ticker: "AAPL",
           quantity: 100,
           averagePrice: 150,
           currentPrice: 160,
@@ -349,8 +359,8 @@ describe('Analytics Page', () => {
           marketValue: 16000,
           maxBuy: 200,
           maxSell: 100,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
       ],
@@ -360,32 +370,32 @@ describe('Analytics Page', () => {
       totalPositions: 1,
       account: {
         cash: 5000,
-        currency: 'USD',
+        currency: "USD",
       },
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
     // Just check that the component renders without errors
-  })
+  });
 
-  it('displays account summary when available', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("displays account summary when available", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
@@ -395,43 +405,43 @@ describe('Analytics Page', () => {
       totalPnLPercent: 0,
       accountSummary: {
         connectedAccounts: 2,
-        accountNames: ['Account 1', 'Account 2'],
+        accountNames: ["Account 1", "Account 2"],
         totalInvestedValue: 10000,
         totalCurrentValue: 11000,
         totalPnL: 1000,
         totalPnLPercent: 10,
         activePositions: 5,
-        currency: 'USD',
+        currency: "USD",
       },
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles different currencies', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles different currencies", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'RRl_EQ',
+          ticker: "RRl_EQ",
           quantity: 100,
           averagePrice: 11,
           currentPrice: 11.5,
@@ -440,8 +450,8 @@ describe('Analytics Page', () => {
           marketValue: 1150,
           maxBuy: 200,
           maxSell: 100,
-          accountName: 'UK Account',
-          accountId: '1',
+          accountName: "UK Account",
+          accountId: "1",
           isPractice: true,
         },
       ],
@@ -451,258 +461,261 @@ describe('Analytics Page', () => {
       totalPositions: 1,
       account: {
         cash: 500,
-        currency: 'GBP',
+        currency: "GBP",
       },
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles rate limiting in single account analytics', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles rate limiting in single account analytics", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return 429 status
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ accounts: [{ id: 'acc1', name: 'Test Account', isActive: true }] })
+        json: async () => ({
+          accounts: [{ id: "acc1", name: "Test Account", isActive: true }],
+        }),
       })
       .mockResolvedValueOnce({
         ok: false,
-        status: 429
-      })
+        status: 429,
+      });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+  });
 
-  it('handles error response in single account analytics', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles error response in single account analytics", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return error status
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ accounts: [{ id: 'acc1', name: 'Test Account', isActive: true }] })
+        json: async () => ({
+          accounts: [{ id: "acc1", name: "Test Account", isActive: true }],
+        }),
       })
       .mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({ error: 'Server error' })
-      })
+        json: async () => ({ error: "Server error" }),
+      });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+  });
 
-  it('handles no active accounts in aggregated analytics', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles no active accounts in aggregated analytics", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return accounts with no active ones
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ accounts: [{ id: 'acc1', name: 'Test Account', isActive: false }] })
-      })
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        accounts: [{ id: "acc1", name: "Test Account", isActive: false }],
+      }),
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+  });
 
-  it('handles portfolio fetch errors in aggregated analytics', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles portfolio fetch errors in aggregated analytics", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return accounts and then error on portfolio fetch
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ accounts: [{ id: 'acc1', name: 'Test Account', isActive: true }] })
+        json: async () => ({
+          accounts: [{ id: "acc1", name: "Test Account", isActive: true }],
+        }),
       })
-      .mockRejectedValueOnce(new Error('Network error'))
+      .mockRejectedValueOnce(new Error("Network error"));
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+  });
 
-  it('handles multiple accounts with different currencies', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles multiple accounts with different currencies", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return multiple accounts with different currencies
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ 
+        json: async () => ({
           accounts: [
-            { id: 'acc1', name: 'USD Account', isActive: true },
-            { id: 'acc2', name: 'GBP Account', isActive: true }
-          ] 
-        })
+            { id: "acc1", name: "USD Account", isActive: true },
+            { id: "acc2", name: "GBP Account", isActive: true },
+          ],
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ 
+        json: async () => ({
           connected: true,
-          positions: [{ symbol: 'AAPL', quantity: 10, pnl: 100 }],
+          positions: [{ symbol: "AAPL", quantity: 10, pnl: 100 }],
           totalValue: 1000,
           totalPnL: 100,
-          account: { currency: 'USD' }
-        })
+          account: { currency: "USD" },
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ 
+        json: async () => ({
           connected: true,
-          positions: [{ symbol: 'TSCO', quantity: 5, pnl: 50 }],
+          positions: [{ symbol: "TSCO", quantity: 5, pnl: 50 }],
           totalValue: 500,
           totalPnL: 50,
-          account: { currency: 'GBP' }
-        })
-      })
+          account: { currency: "GBP" },
+        }),
+      });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+  });
 
-  it('handles accounts response error in aggregated analytics', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles accounts response error in aggregated analytics", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock fetch to return error for accounts
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 500
-      })
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-  })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+  });
 
-  it('handles single account analytics with error response', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles single account analytics with error response", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock AccountSelector to simulate account selection
     const mockAccountSelector = jest.fn(({ onAccountChange }) => {
       // Simulate account selection
-      setTimeout(() => onAccountChange('account1'), 100)
-      return <div data-testid="account-selector">Account Selector</div>
-    })
-    jest.doMock('@/components/account-selector', () => mockAccountSelector)
+      setTimeout(() => onAccountChange("account1"), 100);
+      return <div data-testid="account-selector">Account Selector</div>;
+    });
+    jest.doMock("@/components/account-selector", () => mockAccountSelector);
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "Portfolio fetch failed" }),
+    });
 
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ error: 'Portfolio fetch failed' }),
-      })
-
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles single account analytics with network error', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles single account analytics with network error", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     // Mock AccountSelector to simulate account selection
     const mockAccountSelector = jest.fn(({ onAccountChange }) => {
       // Simulate account selection
-      setTimeout(() => onAccountChange('account1'), 100)
-      return <div data-testid="account-selector">Account Selector</div>
-    })
-    jest.doMock('@/components/account-selector', () => mockAccountSelector)
+      setTimeout(() => onAccountChange("account1"), 100);
+      return <div data-testid="account-selector">Account Selector</div>;
+    });
+    jest.doMock("@/components/account-selector", () => mockAccountSelector);
+    (global.fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
-    ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
-
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles aggregated analytics with mixed account results', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles aggregated analytics with mixed account results", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAccounts = [
-      { id: 'account1', name: 'Account 1', isActive: true, isPractice: false },
-      { id: 'account2', name: 'Account 2', isActive: true, isPractice: true },
-      { id: 'account3', name: 'Account 3', isActive: false, isPractice: false }
-    ]
+      { id: "account1", name: "Account 1", isActive: true, isPractice: false },
+      { id: "account2", name: "Account 2", isActive: true, isPractice: true },
+      { id: "account3", name: "Account 3", isActive: false, isPractice: false },
+    ];
 
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ accounts: mockAccounts }),
@@ -713,7 +726,7 @@ describe('Analytics Page', () => {
           connected: true,
           positions: [
             {
-              ticker: 'AAPL',
+              ticker: "AAPL",
               quantity: 100,
               averagePrice: 150,
               currentPrice: 160,
@@ -722,146 +735,146 @@ describe('Analytics Page', () => {
               marketValue: 16000,
               maxBuy: 200,
               maxSell: 100,
-            }
+            },
           ],
           totalValue: 16000,
           totalPnL: 1000,
           totalPnLPercent: 6.25,
-          account: { currency: 'USD', cash: 1000 }
+          account: { currency: "USD", cash: 1000 },
         }),
       })
       .mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ error: 'Account 2 failed' }),
-      })
+        json: async () => ({ error: "Account 2 failed" }),
+      });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles aggregated analytics with no active accounts', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles aggregated analytics with no active accounts", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAccounts = [
-      { id: 'account1', name: 'Account 1', isActive: false, isPractice: false },
-      { id: 'account2', name: 'Account 2', isActive: false, isPractice: true }
-    ]
+      { id: "account1", name: "Account 1", isActive: false, isPractice: false },
+      { id: "account2", name: "Account 2", isActive: false, isPractice: true },
+    ];
 
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ accounts: mockAccounts }),
+    });
+
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
+
+    await waitFor(() => {
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+
+    // Just check that the component renders without errors
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
+
+  it("handles aggregated analytics with empty accounts array", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ accounts: [] }),
+    });
+
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
+
+    await waitFor(() => {
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+
+    // Just check that the component renders without errors
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
+
+  it("handles aggregated analytics with accounts but no accounts property", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ accounts: undefined }),
+    });
+
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
+
+    await waitFor(() => {
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
+
+    // Just check that the component renders without errors
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
+
+  it("handles aggregated analytics with portfolio fetch errors", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
+
+    const mockAccounts = [
+      { id: "account1", name: "Account 1", isActive: true, isPractice: false },
+      { id: "account2", name: "Account 2", isActive: true, isPractice: true },
+    ];
+
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ accounts: mockAccounts }),
       })
+      .mockRejectedValueOnce(new Error("Portfolio fetch error"))
+      .mockRejectedValueOnce(new Error("Portfolio fetch error"));
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
-
-    await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-
-    // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
-
-  it('handles aggregated analytics with empty accounts array', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ accounts: [] }),
-      })
-
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles aggregated analytics with accounts but no accounts property', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ accounts: undefined }),
-      })
-
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
-
-    await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-
-    // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
-
-  it('handles aggregated analytics with portfolio fetch errors', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles aggregated analytics with different currencies", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAccounts = [
-      { id: 'account1', name: 'Account 1', isActive: true, isPractice: false },
-      { id: 'account2', name: 'Account 2', isActive: true, isPractice: true }
-    ]
+      {
+        id: "account1",
+        name: "USD Account",
+        isActive: true,
+        isPractice: false,
+      },
+      { id: "account2", name: "EUR Account", isActive: true, isPractice: true },
+    ];
 
-    ;(global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ accounts: mockAccounts }),
-      })
-      .mockRejectedValueOnce(new Error('Portfolio fetch error'))
-      .mockRejectedValueOnce(new Error('Portfolio fetch error'))
-
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
-
-    await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
-
-    // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
-
-  it('handles aggregated analytics with different currencies', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
-
-    const mockAccounts = [
-      { id: 'account1', name: 'USD Account', isActive: true, isPractice: false },
-      { id: 'account2', name: 'EUR Account', isActive: true, isPractice: true }
-    ]
-
-    ;(global.fetch as jest.Mock)
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ accounts: mockAccounts }),
@@ -872,7 +885,7 @@ describe('Analytics Page', () => {
           connected: true,
           positions: [
             {
-              ticker: 'AAPL',
+              ticker: "AAPL",
               quantity: 100,
               averagePrice: 150,
               currentPrice: 160,
@@ -881,12 +894,12 @@ describe('Analytics Page', () => {
               marketValue: 16000,
               maxBuy: 200,
               maxSell: 100,
-            }
+            },
           ],
           totalValue: 16000,
           totalPnL: 1000,
           totalPnLPercent: 6.25,
-          account: { currency: 'USD', cash: 1000 }
+          account: { currency: "USD", cash: 1000 },
         }),
       })
       .mockResolvedValueOnce({
@@ -895,7 +908,7 @@ describe('Analytics Page', () => {
           connected: true,
           positions: [
             {
-              ticker: 'ASML',
+              ticker: "ASML",
               quantity: 50,
               averagePrice: 300,
               currentPrice: 320,
@@ -904,37 +917,37 @@ describe('Analytics Page', () => {
               marketValue: 16000,
               maxBuy: 400,
               maxSell: 200,
-            }
+            },
           ],
           totalValue: 16000,
           totalPnL: 1000,
           totalPnLPercent: 6.25,
-          account: { currency: 'EUR', cash: 1000 }
+          account: { currency: "EUR", cash: 1000 },
         }),
-      })
+      });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles refresh functionality', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles refresh functionality", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'AAPL',
+          ticker: "AAPL",
           quantity: 100,
           averagePrice: 150,
           currentPrice: 160,
@@ -943,85 +956,89 @@ describe('Analytics Page', () => {
           marketValue: 16000,
           maxBuy: 200,
           maxSell: 100,
-        }
+        },
       ],
       totalValue: 16000,
       totalPnL: 1000,
       totalPnLPercent: 6.25,
-      account: { currency: 'USD', cash: 1000 }
-    }
+      account: { currency: "USD", cash: 1000 },
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Just check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles loading state during session loading', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
+  it("handles loading state during session loading", async () => {
+    (useSession as jest.Mock).mockReturnValue({
       data: null,
-      status: 'loading',
-    })
+      status: "loading",
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
-    expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
-  })
+    expect(
+      screen.getByText("", { selector: ".animate-spin" }),
+    ).toBeInTheDocument();
+  });
 
-  it('handles mounted state', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles mounted state", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     // Just check that the component renders without errors
-    expect(true).toBe(true)
-  })
+    expect(true).toBe(true);
+  });
 
-  it('handles no session gracefully', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
+  it("handles no session gracefully", async () => {
+    (useSession as jest.Mock).mockReturnValue({
       data: null,
-      status: 'authenticated',
-    })
+      status: "authenticated",
+    });
 
     // Mock fetch to prevent loading state
-    ;(global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}))
+    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     // Component should render without crashing, even with no session
     // It will show loading state initially
     await waitFor(() => {
-      expect(screen.getByText('', { selector: '.animate-spin' })).toBeInTheDocument()
-    })
-  })
+      expect(
+        screen.getByText("", { selector: ".animate-spin" }),
+      ).toBeInTheDocument();
+    });
+  });
 
-  it('handles positions with negative P/L for losers calculation', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles positions with negative P/L for losers calculation", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'LOSER1',
+          ticker: "LOSER1",
           quantity: 100,
           averagePrice: 150,
           currentPrice: 140,
@@ -1030,12 +1047,12 @@ describe('Analytics Page', () => {
           marketValue: 14000,
           maxBuy: 200,
           maxSell: 100,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
         {
-          ticker: 'LOSER2',
+          ticker: "LOSER2",
           quantity: 50,
           averagePrice: 200,
           currentPrice: 180,
@@ -1044,8 +1061,8 @@ describe('Analytics Page', () => {
           marketValue: 9000,
           maxBuy: 250,
           maxSell: 100,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
       ],
@@ -1053,35 +1070,35 @@ describe('Analytics Page', () => {
       totalPnL: -2000,
       totalPnLPercent: -8.7,
       totalPositions: 2,
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
 
-  it('handles worst performers when no worst performers exist', async () => {
-    ;(useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: 'Test User' } },
-      status: 'authenticated',
-    })
+  it("handles worst performers when no worst performers exist", async () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User" } },
+      status: "authenticated",
+    });
 
     const mockAnalyticsData = {
       connected: true,
       positions: [
         {
-          ticker: 'WINNER',
+          ticker: "WINNER",
           quantity: 100,
           averagePrice: 150,
           currentPrice: 160,
@@ -1090,8 +1107,8 @@ describe('Analytics Page', () => {
           marketValue: 16000,
           maxBuy: 200,
           maxSell: 100,
-          accountName: 'Test Account',
-          accountId: '1',
+          accountName: "Test Account",
+          accountId: "1",
           isPractice: true,
         },
       ],
@@ -1099,21 +1116,21 @@ describe('Analytics Page', () => {
       totalPnL: 1000,
       totalPnLPercent: 6.67,
       totalPositions: 1,
-    }
+    };
 
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => mockAnalyticsData,
-    })
+    });
 
-    const AnalyticsPage = (await import('@/app/analytics/page')).default
-    render(React.createElement(AnalyticsPage))
+    const AnalyticsPage = (await import("@/app/analytics/page")).default;
+    render(React.createElement(AnalyticsPage));
 
     await waitFor(() => {
-      expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-    })
+      expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+    });
 
     // Check that the component renders without errors
-    expect(screen.getByText('P/L Analysis')).toBeInTheDocument()
-  })
-})
+    expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
+  });
+});

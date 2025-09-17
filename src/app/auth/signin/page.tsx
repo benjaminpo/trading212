@@ -1,54 +1,60 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { useState } from "react";
+import { signIn, getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { TrendingUp, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function SignIn() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
-      })
+      });
 
       if (result?.error) {
-        setError('Invalid email or password')
+        setError("Invalid email or password");
       } else {
         // Get the session to ensure it's established
-        const session = await getSession()
+        const session = await getSession();
         if (session) {
-          router.push('/dashboard')
+          router.push("/dashboard");
         }
       }
     } catch {
-      setError('An error occurred. Please try again.')
+      setError("An error occurred. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard' })
-  }
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-bg py-12 px-4 sm:px-6 lg:px-8">
@@ -56,7 +62,7 @@ export default function SignIn() {
       <div className="fixed top-4 right-4 z-10">
         <ThemeToggle />
       </div>
-      
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -65,13 +71,19 @@ export default function SignIn() {
               <TrendingUp className="w-7 h-7 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trading212 Extra</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Welcome back to your trading dashboard</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Trading212 Extra
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            Welcome back to your trading dashboard
+          </p>
         </div>
 
         <Card className="shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
           <CardHeader className="space-y-1 text-center pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Sign In</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+              Sign In
+            </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-300">
               Enter your credentials to access your account
             </CardDescription>
@@ -109,18 +121,24 @@ export default function SignIn() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
               {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <div className="text-red-600 dark:text-red-400 text-sm text-center">{error}</div>
+                  <div className="text-red-600 dark:text-red-400 text-sm text-center">
+                    {error}
+                  </div>
                 </div>
               )}
-              <Button 
-                type="submit" 
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" 
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 disabled={loading}
               >
                 {loading ? (
@@ -136,7 +154,7 @@ export default function SignIn() {
                 )}
               </Button>
             </form>
-          
+
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-200 dark:border-gray-600" />
@@ -147,7 +165,7 @@ export default function SignIn() {
                 </span>
               </div>
             </div>
-            
+
             <Button
               type="button"
               variant="outline"
@@ -175,10 +193,15 @@ export default function SignIn() {
               </svg>
               Continue with Google
             </Button>
-            
+
             <div className="text-center text-sm mt-6">
-              <span className="text-gray-600 dark:text-gray-400">Don&apos;t have an account? </span>
-              <Link href="/auth/signup" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+              <span className="text-gray-600 dark:text-gray-400">
+                Don&apos;t have an account?{" "}
+              </span>
+              <Link
+                href="/auth/signup"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              >
                 Sign up
               </Link>
             </div>
@@ -186,5 +209,5 @@ export default function SignIn() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
