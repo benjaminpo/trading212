@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma, retryDatabaseOperation } from '@/lib/prisma'
 import { optimizedTrading212Service } from '@/lib/optimized-trading212'
+import { DailyPnL } from '@prisma/client'
 
 // GET /api/daily-pnl - Fetch daily P/L history
 export async function GET(request: NextRequest) {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if DailyPnL table exists, if not return empty data
-    let dailyPnL: unknown[] = []
+    let dailyPnL: DailyPnL[] = []
     try {
       dailyPnL = await retryDatabaseOperation(() =>
         prisma.dailyPnL.findMany({
@@ -62,9 +63,17 @@ export async function GET(request: NextRequest) {
 
     // Calculate summary statistics
     const totalDays = dailyPnL.length
-    const totalPnLChange = totalDays > 1 ? dailyPnL[0].totalPnL - dailyPnL[totalDays - 1].totalPnL : 0
-    const bestDay = dailyPnL.reduce((best, day) => day.todayPnL > best.todayPnL ? day : best, dailyPnL[0] || { todayPnL: 0 })
-    const worstDay = dailyPnL.reduce((worst, day) => day.todayPnL < worst.todayPnL ? day : worst, dailyPnL[0] || { todayPnL: 0 })
+    let totalPnLChange = 0
+    let bestDay: DailyPnL | null = null
+    let worstDay: DailyPnL | null = null
+
+    if (totalDays > 0) {
+      if (totalDays > 1) {
+        totalPnLChange = dailyPnL[0].totalPnL - dailyPnL[totalDays - 1].totalPnL
+      }
+      bestDay = dailyPnL.reduce((best, day) => (day.todayPnL > best.todayPnL ? day : best))
+      worstDay = dailyPnL.reduce((worst, day) => (day.todayPnL < worst.todayPnL ? day : worst))
+    }
 
     return NextResponse.json({
       dailyPnL,
