@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import logger from "@/lib/logger";
 
 interface Notification {
   id: string;
@@ -47,7 +48,7 @@ export default function NotificationBell() {
   const handleNotificationClick = () => {
     // For now, just log the notifications
     // In a full implementation, you'd show a dropdown or navigate to a notifications page
-    console.log("Notifications:", notifications);
+    logger.info("Notifications:", notifications);
     alert(
       `You have ${unreadCount} unread notifications. Check the console for details.`,
     );

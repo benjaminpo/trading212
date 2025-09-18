@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { optimizedTrading212Service } from "./optimized-trading212";
+import logger from "@/lib/logger";
 // import { optimizedAIService } from './optimized-ai-service' // Unused for now
 
 export interface SyncStats {
@@ -29,12 +30,12 @@ export class BackgroundSyncService {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.log("🔄 Background sync is already running");
+      logger.info("🔄 Background sync is already running");
       return;
     }
 
     this.isRunning = true;
-    console.log("🚀 Starting background sync service");
+    logger.info("🚀 Starting background sync service");
 
     // Run initial sync
     await this.runSync();
@@ -56,7 +57,7 @@ export class BackgroundSyncService {
       this.syncInterval = null;
     }
 
-    console.log("⏹️ Background sync service stopped");
+    logger.info("⏹️ Background sync service stopped");
   }
 
   private async runSync(): Promise<SyncStats> {
@@ -70,7 +71,7 @@ export class BackgroundSyncService {
     };
 
     try {
-      console.log("🔄 Starting background sync...");
+      logger.info("🔄 Starting background sync...");
 
       // Get active users with Trading212 accounts
       const users = await prisma.user.findMany({
@@ -92,7 +93,7 @@ export class BackgroundSyncService {
         take: this.MAX_USERS_PER_SYNC,
       });
 
-      console.log(
+      logger.info(
         `👥 Found ${users.length} users with active Trading212 accounts`,
       );
 
@@ -124,7 +125,7 @@ export class BackgroundSyncService {
 
       stats.executionTime = Date.now() - startTime;
 
-      console.log(
+      logger.info(
         `✅ Background sync completed: ${stats.usersProcessed} users, ${stats.accountsProcessed} accounts, ${stats.executionTime}ms`,
       );
 
@@ -200,7 +201,7 @@ export class BackgroundSyncService {
         },
       });
 
-      console.log(
+      logger.info(
         `🗑️ Cleared ${deletedRecommendations.count} old AI recommendations`,
       );
 

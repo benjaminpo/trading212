@@ -6,6 +6,7 @@ import {
 import { apiCache } from "./api-cache";
 import { apiBatcher } from "./api-batcher";
 import { trading212RateLimiter } from "./rate-limiter";
+import logger from "@/lib/logger";
 
 export interface OptimizedAccountData {
   account: Trading212Account | null;
@@ -60,7 +61,7 @@ export class OptimizedTrading212Service {
     isPractice: boolean,
     includeOrders: boolean = false,
   ): Promise<OptimizedAccountData> {
-    console.log(`🎯 Optimized fetch for account ${accountId}`);
+    logger.info(`🎯 Optimized fetch for account ${accountId}`);
 
     // Check cache first
     const cached = await apiCache.get<OptimizedAccountData>(
@@ -69,7 +70,7 @@ export class OptimizedTrading212Service {
       "account",
     );
     if (cached) {
-      console.log(`🎯 Cache HIT for account ${accountId}`);
+      logger.info(`🎯 Cache HIT for account ${accountId}`);
       return {
         ...cached,
         cacheHit: true,
@@ -132,7 +133,7 @@ export class OptimizedTrading212Service {
     apiKey: string,
     isPractice: boolean,
   ): Promise<OptimizedPortfolioData> {
-    console.log(`🎯 Optimized portfolio fetch for account ${accountId}`);
+    logger.info(`🎯 Optimized portfolio fetch for account ${accountId}`);
 
     // Check cache first
     const cached = await apiCache.get<OptimizedPortfolioData>(
@@ -141,7 +142,7 @@ export class OptimizedTrading212Service {
       "portfolio",
     );
     if (cached) {
-      console.log(`🎯 Portfolio Cache HIT for account ${accountId}`);
+      logger.info(`🎯 Portfolio Cache HIT for account ${accountId}`);
       return {
         ...cached,
         cacheHit: true,
@@ -192,7 +193,7 @@ export class OptimizedTrading212Service {
     }>,
     includeOrders: boolean = false,
   ): Promise<MultiAccountResult[]> {
-    console.log(
+    logger.info(
       `🎯 Multi-account optimized fetch for ${accounts.length} accounts`,
     );
 
@@ -235,7 +236,7 @@ export class OptimizedTrading212Service {
     accountResults: MultiAccountResult[];
     cacheHits: number;
   }> {
-    console.log(`🎯 Aggregated data fetch for ${accounts.length} accounts`);
+    logger.info(`🎯 Aggregated data fetch for ${accounts.length} accounts`);
 
     const accountResults = await this.getMultiAccountData(userId, accounts);
 
@@ -285,7 +286,7 @@ export class OptimizedTrading212Service {
     dataType?: "portfolio" | "account" | "orders" | "positions",
   ): Promise<void> {
     await apiCache.invalidate(userId, accountId, dataType);
-    console.log(
+    logger.info(
       `🗑️ Cache invalidated for user ${userId}, account ${accountId}, type ${dataType}`,
     );
   }
@@ -341,7 +342,7 @@ export class OptimizedTrading212Service {
       name: string;
     }>,
   ): Promise<void> {
-    console.log(`🔄 Background sync for user ${userId}`);
+    logger.info(`🔄 Background sync for user ${userId}`);
 
     // Only sync if rate limits allow
     const accountsToSync = accounts.filter((account) =>
@@ -349,13 +350,13 @@ export class OptimizedTrading212Service {
     );
 
     if (accountsToSync.length === 0) {
-      console.log("⏳ All accounts are rate limited, skipping background sync");
+      logger.info("⏳ All accounts are rate limited, skipping background sync");
       return;
     }
 
     try {
       await this.getMultiAccountData(userId, accountsToSync);
-      console.log(
+      logger.info(
         `✅ Background sync completed for ${accountsToSync.length} accounts`,
       );
     } catch (error) {

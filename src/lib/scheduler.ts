@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { Trading212API } from "./trading212";
 import { aiAnalysisService, PositionData, MarketData } from "./ai-service";
 import { optimizedTrading212Service } from "./optimized-trading212";
+import logger from "@/lib/logger";
 
 export class DailyAnalysisScheduler {
   private static instance: DailyAnalysisScheduler;
@@ -19,12 +20,12 @@ export class DailyAnalysisScheduler {
 
   start() {
     if (this.isRunning) {
-      console.log("Daily analysis scheduler is already running");
+      logger.info("Daily analysis scheduler is already running");
       return;
     }
 
     this.isRunning = true;
-    console.log("Starting daily analysis scheduler...");
+    logger.info("Starting daily analysis scheduler...");
 
     // Run immediately on start
     this.runDailyAnalysis();
@@ -54,7 +55,7 @@ export class DailyAnalysisScheduler {
       ); // 24 hours
     }, timeUntilTarget);
 
-    console.log(
+    logger.info(
       `Next daily analysis scheduled for: ${targetTime.toISOString()}`,
     );
   }
@@ -65,11 +66,11 @@ export class DailyAnalysisScheduler {
       this.intervalId = null;
     }
     this.isRunning = false;
-    console.log("Daily analysis scheduler stopped");
+    logger.info("Daily analysis scheduler stopped");
   }
 
   async runDailyAnalysis() {
-    console.log("Running daily AI analysis for all users...");
+    logger.info("Running daily AI analysis for all users...");
 
     try {
       // Get all users with active Trading212 accounts
@@ -98,7 +99,7 @@ export class DailyAnalysisScheduler {
         },
       });
 
-      console.log(
+      logger.info(
         `Found ${users.length} users with active Trading212 accounts`,
       );
 
@@ -145,7 +146,7 @@ export class DailyAnalysisScheduler {
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
 
-      console.log("Daily AI analysis completed for all users");
+      logger.info("Daily AI analysis completed for all users");
     } catch (error: unknown) {
       console.error("Failed to run daily analysis:", error);
     }
@@ -164,7 +165,7 @@ export class DailyAnalysisScheduler {
       const trading212Positions = await trading212.getPositions();
 
       if (trading212Positions.length === 0) {
-        console.log(`No positions found for user ${userId}`);
+        logger.info(`No positions found for user ${userId}`);
         return;
       }
 
@@ -227,7 +228,7 @@ export class DailyAnalysisScheduler {
           pos.ticker === "ISFl_EQ" ||
           pos.ticker === "QQQ3l_EQ"
         ) {
-          console.log(
+          logger.info(
             `🔍 Scheduler ${pos.ticker}: isGBPStock=${isGBPStock}, isUSDStock=${isUSDStock}, conversionFactor=${conversionFactor}, rawValue=${pos.currentPrice}, convertedValue=${pos.currentPrice / conversionFactor}`,
           );
         }
@@ -250,7 +251,7 @@ export class DailyAnalysisScheduler {
           pos.ticker === "ISFl_EQ" ||
           pos.ticker === "QQQ3l_EQ"
         ) {
-          console.log(
+          logger.info(
             `💰 Scheduler P/L % Calculation ${pos.ticker}: avgPrice=${averagePrice.toFixed(2)}, currentPrice=${currentPrice.toFixed(2)}, pnlPercent=${pnlPercent.toFixed(2)}%`,
           );
         }
@@ -376,7 +377,7 @@ export class DailyAnalysisScheduler {
         },
       });
 
-      console.log(
+      logger.info(
         `Daily analysis completed for user ${userId}: ${savedCount} recommendations in ${executionTime}ms`,
       );
     } catch (error: unknown) {
@@ -438,10 +439,10 @@ export class DailyAnalysisScheduler {
       | { id: string; name: string; apiKey: string; isPractice: boolean }[]
       | null,
   ) {
-    console.log(`📊 Capturing daily P/L snapshots for user ${userId}`);
+    logger.info(`📊 Capturing daily P/L snapshots for user ${userId}`);
 
     if (!accounts || !Array.isArray(accounts)) {
-      console.log(
+      logger.info(
         `⚠️ No accounts provided for user ${userId}, skipping daily P/L capture`,
       );
       return;
@@ -454,7 +455,7 @@ export class DailyAnalysisScheduler {
       try {
         // Check rate limiting
         if (!optimizedTrading212Service.canMakeRequest(userId, account.id)) {
-          console.log(
+          logger.info(
             `⏳ Rate limited for account ${account.id}, skipping daily P/L capture`,
           );
           continue;
@@ -469,7 +470,7 @@ export class DailyAnalysisScheduler {
         );
 
         if (!accountData.account) {
-          console.log(
+          logger.info(
             `⚠️ Account ${account.id} not connected, skipping daily P/L capture`,
           );
           continue;
@@ -490,7 +491,7 @@ export class DailyAnalysisScheduler {
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error";
-          console.log(
+          logger.info(
             "DailyPnL table not found, will create new record:",
             errorMessage,
           );
@@ -515,11 +516,11 @@ export class DailyAnalysisScheduler {
               where: { id: existingRecord.id },
               data: dailyPnLData,
             });
-            console.log(`📊 Updated daily P/L for account ${account.name}`);
+            logger.info(`📊 Updated daily P/L for account ${account.name}`);
           } catch (error: unknown) {
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error";
-            console.log("Failed to update daily P/L record:", errorMessage);
+            logger.info("Failed to update daily P/L record:", errorMessage);
           }
         } else {
           // Create new record
@@ -527,17 +528,17 @@ export class DailyAnalysisScheduler {
             await prisma.dailyPnL.create({
               data: dailyPnLData,
             });
-            console.log(
+            logger.info(
               `📊 Created daily P/L snapshot for account ${account.name}`,
             );
           } catch (error: unknown) {
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error";
-            console.log("Failed to create daily P/L record:", errorMessage);
+            logger.info("Failed to create daily P/L record:", errorMessage);
           }
         }
 
-        console.log(
+        logger.info(
           `📊 Daily P/L captured for account ${account.name}: Total P/L: ${dailyPnLData.totalPnL}, Today P/L: ${dailyPnLData.todayPnL}`,
         );
 

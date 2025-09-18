@@ -1,4 +1,5 @@
 // import { prisma } from './prisma' // Unused for now
+import logger from "@/lib/logger";
 
 export interface CacheEntry<T> {
   data: T;
@@ -103,7 +104,7 @@ export class APICache {
       return null;
     }
 
-    console.log(`🎯 Cache HIT for ${dataType} (${accountId}): ${key}`);
+    logger.info(`🎯 Cache HIT for ${dataType} (${accountId}): ${key}`);
     return entry.data as T;
   }
 
@@ -130,7 +131,7 @@ export class APICache {
     this.cleanExpiredEntries();
     this.enforceMemoryLimit();
 
-    console.log(`💾 Cache SET for ${dataType} (${accountId}): ${key}`);
+    logger.info(`💾 Cache SET for ${dataType} (${accountId}): ${key}`);
   }
 
   async invalidate(
@@ -153,7 +154,7 @@ export class APICache {
     keysToDelete.forEach((key) => this.memoryCache.delete(key));
 
     if (keysToDelete.length > 0) {
-      console.log(
+      logger.info(
         `🗑️ Cache INVALIDATED: ${keysToDelete.length} entries for user ${userId}`,
       );
     }
@@ -161,7 +162,7 @@ export class APICache {
 
   async invalidateAll(): Promise<void> {
     this.memoryCache.clear();
-    console.log("🗑️ Cache CLEARED: All entries removed");
+    logger.info("🗑️ Cache CLEARED: All entries removed");
   }
 
   getStats(): { totalEntries: number; memoryUsage: number } {

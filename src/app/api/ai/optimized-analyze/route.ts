@@ -9,6 +9,7 @@ import {
   MarketData,
   BatchAnalysisRequest,
 } from "@/lib/optimized-ai-service";
+import logger from "@/lib/logger";
 import { dedupeLatestBy } from "@/lib/utils";
 
 export async function POST(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now();
 
-    console.log(
+    logger.info(
       `🤖 Optimized AI Analysis: ${analysisType} for account ${accountId || "all"}`,
     );
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
             account.id,
           )
         ) {
-          console.log(`⏳ Rate limited for account ${account.id}, skipping`);
+          logger.info(`⏳ Rate limited for account ${account.id}, skipping`);
           continue;
         }
 
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
 
         allMarketData.push(...marketData);
 
-        console.log(
+        logger.info(
           `📊 Collected ${positions.length} positions from account ${account.name}`,
         );
       } catch (error) {
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log(
+    logger.info(
       `🎯 Starting batch AI analysis for ${allPositions.length} positions`,
     );
 
@@ -210,7 +211,7 @@ export async function POST(request: NextRequest) {
           );
 
           if (!dbPosition) {
-            console.log(
+            logger.info(
               `⚠️ Database position not found for ${position.symbol} in account ${account.id}`,
             );
             continue;
@@ -273,7 +274,7 @@ export async function POST(request: NextRequest) {
 
     const executionTime = Date.now() - startTime;
 
-    console.log(
+    logger.info(
       `✅ Optimized AI Analysis Complete: ${savedRecommendations.length} recommendations saved, ${analysisResult.cacheHits} cache hits, ${executionTime}ms`,
     );
 

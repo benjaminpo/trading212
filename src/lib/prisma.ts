@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import logger from "@/lib/logger";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -71,7 +72,7 @@ export async function retryDatabaseOperation<T>(
         errorObj.code === "ETIMEDOUT";
 
       if (isPreparedStatementError && i < retries - 1) {
-        console.log(
+        logger.info(
           `Retrying database operation (attempt ${i + 2}/${retries}) - ${errorObj.message}`,
         );
 

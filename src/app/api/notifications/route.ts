@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       }),
     );
 
-    console.log(
+    logger.info(
       `📧 Notification created: ${notification.type} for user ${session.user.id}`,
     );
 
@@ -119,7 +120,7 @@ export async function createTrailStopNotification(
       }),
     );
 
-    console.log(
+    logger.info(
       `📧 Trail stop notification created for ${orderData.symbol} - ${orderData.isPractice ? "Executed" : "Manual action required"}`,
     );
 

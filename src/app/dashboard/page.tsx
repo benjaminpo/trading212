@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import logger from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
@@ -136,7 +137,7 @@ export default function Dashboard() {
     if (accountResponse && accountResponse.ok) {
       accountData = await accountResponse.json();
     } else if (accountResponse && accountResponse.status === 429) {
-      console.log("Trading212 API rate limited, using cached data");
+      logger.info("Trading212 API rate limited, using cached data");
     }
 
     const aiResponse = await fetchWithRetry("/api/ai/optimized-analyze");
@@ -179,7 +180,7 @@ export default function Dashboard() {
       });
     } else if (accountResponse && accountResponse.ok) {
       const reason = accountData?.error || "Trading212 not connected";
-      console.log(`${reason}, using demo data`);
+      logger.info(`${reason}, using demo data`);
       setStats({
         totalPnL: 0,
         totalPnLPercent: 0,
@@ -315,7 +316,7 @@ export default function Dashboard() {
         (aggregatedStats.todayPnL / totalInvestedValue) * 100;
     }
 
-    console.log("📊 Aggregated Dashboard Data:", {
+    logger.info("📊 Aggregated Dashboard Data:", {
       connectedAccounts,
       accountNames,
       aggregatedStats,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Trading212API } from "@/lib/trading212";
 import { createTrailStopNotification } from "@/app/api/notifications/route";
+import logger from "@/lib/logger";
 
 // POST /api/trail-stop/monitor - Monitor and process trail stop orders
 export async function POST() {
@@ -12,7 +13,7 @@ export async function POST() {
       include: { user: { include: { trading212Accounts: true } } },
     });
 
-    console.log(
+    logger.info(
       `🔍 Monitoring ${activeOrders.length} active trail stop orders`,
     );
 
@@ -36,7 +37,7 @@ export async function POST() {
         }
 
         if (!trading212Account?.apiKey) {
-          console.log(`⚠️ No Trading212 account found for order ${order.id}`);
+          logger.info(`⚠️ No Trading212 account found for order ${order.id}`);
           continue;
         }
 
@@ -51,7 +52,7 @@ export async function POST() {
         const position = positions.find((p) => p.ticker === order.symbol);
 
         if (!position) {
-          console.log(
+          logger.info(
             `⚠️ Position ${order.symbol} not found for order ${order.id}`,
           );
           continue;
@@ -95,7 +96,7 @@ export async function POST() {
             where: { id: order.id },
             data: { stopPrice: newStopPrice },
           });
-          console.log(
+          logger.info(
             `📈 Updated stop price for ${order.symbol}: $${newStopPrice?.toFixed(2)}`,
           );
         }
@@ -103,13 +104,13 @@ export async function POST() {
         // Handle triggered orders
         if (shouldTrigger && order.stopPrice) {
           triggeredCount++;
-          console.log(
+          logger.info(
             `🚨 Trail stop triggered for ${order.symbol} at $${currentPrice.toFixed(2)}`,
           );
 
           if (order.isPractice) {
             // For practice accounts, we could simulate order execution
-            console.log(
+            logger.info(
               `🎯 [PRACTICE] Simulating sell order for ${order.quantity} shares of ${order.symbol}`,
             );
 
@@ -124,7 +125,7 @@ export async function POST() {
             });
           } else {
             // For production accounts, create notification for manual action
-            console.log(
+            logger.info(
               `📧 [PRODUCTION] Creating notification for manual execution of ${order.symbol}`,
             );
 

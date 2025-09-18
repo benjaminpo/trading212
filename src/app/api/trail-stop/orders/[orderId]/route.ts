@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import logger from "@/lib/logger";
 
 // GET /api/trail-stop/orders/[orderId] - Get specific order details
 export async function GET(
@@ -106,7 +107,7 @@ export async function PUT(
       },
     });
 
-    console.log(
+    logger.info(
       `✅ Trail stop order updated: ${updatedOrder.symbol} - Active: ${updatedOrder.isActive}`,
     );
 
@@ -151,7 +152,7 @@ export async function DELETE(
       where: { id: orderId },
     });
 
-    console.log(`✅ Trail stop order deleted: ${order.symbol}`);
+    logger.info(`✅ Trail stop order deleted: ${order.symbol}`);
 
     return NextResponse.json({
       message: "Trail stop order deleted successfully",

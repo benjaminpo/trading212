@@ -2,6 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
+import logger from "@/lib/logger";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
@@ -89,7 +90,7 @@ export default function AIRecommendationsPage() {
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        console.log(
+        logger.info(
           "🔍 AI Recommendations data:",
           data.recommendations?.map((rec: AIRecommendation) => ({
             symbol: rec.symbol,

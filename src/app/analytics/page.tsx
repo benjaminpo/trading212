@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import logger from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -94,14 +95,14 @@ export default function AnalyticsPage() {
 
     if (response.ok) {
       const data = await response.json();
-      console.log("✅ Single account analytics data loaded:", {
+      logger.info("✅ Single account analytics data loaded:", {
         ...data,
         positionCount: data.positions?.length || 0,
         samplePosition: data.positions?.[0] || null,
       });
       setAnalyticsData(data);
     } else if (response.status === 429) {
-      console.log("⏳ Rate limited, retrying in a moment...");
+      logger.info("⏳ Rate limited, retrying in a moment...");
       setAnalyticsData({
         connected: true,
         positions: [],
@@ -110,9 +111,9 @@ export default function AnalyticsPage() {
         totalPnLPercent: 0,
       });
     } else {
-      console.log("❌ Failed to load analytics data:", response.status);
+      logger.info("❌ Failed to load analytics data:", response.status);
       const errorData = await response.json().catch(() => ({}));
-      console.log("Error details:", errorData);
+      logger.info("Error details:", errorData);
     }
   }, [selectedAccountId]);
 
@@ -127,7 +128,7 @@ export default function AnalyticsPage() {
     }
 
     if (accounts.length === 0) {
-      console.log("❌ No accounts found for analytics aggregation");
+      logger.info("❌ No accounts found for analytics aggregation");
       setAnalyticsData({
         connected: false,
         positions: [],
@@ -221,7 +222,7 @@ export default function AnalyticsPage() {
 
   const loadAnalyticsData = useCallback(async () => {
     try {
-      console.log("📊 Loading P/L analytics data...");
+      logger.info("📊 Loading P/L analytics data...");
 
       if (selectedAccountId) {
         // Load data for specific account

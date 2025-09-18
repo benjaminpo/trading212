@@ -1,3 +1,4 @@
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      console.log(
+      logger.info(
         "DailyPnL table not found, returning empty data:",
         errorMessage,
       );
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
             account.id,
           )
         ) {
-          console.log(
+          logger.info(
             `⏳ Rate limited for account ${account.id}, skipping daily P/L capture`,
           );
           continue;
@@ -188,7 +189,7 @@ export async function POST(request: NextRequest) {
             );
 
         if (!accountData.account) {
-          console.log(
+          logger.info(
             `⚠️ Account ${account.id} not connected, skipping daily P/L capture`,
           );
           continue;
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error";
-          console.log(
+          logger.info(
             "DailyPnL table not found, will create new record:",
             errorMessage,
           );
@@ -246,7 +247,7 @@ export async function POST(request: NextRequest) {
           } catch (error: unknown) {
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error";
-            console.log("Failed to update daily P/L record:", errorMessage);
+            logger.info("Failed to update daily P/L record:", errorMessage);
             results.push({
               accountId: account.id,
               action: "error",
@@ -269,7 +270,7 @@ export async function POST(request: NextRequest) {
           } catch (error: unknown) {
             const errorMessage =
               error instanceof Error ? error.message : "Unknown error";
-            console.log("Failed to create daily P/L record:", errorMessage);
+            logger.info("Failed to create daily P/L record:", errorMessage);
             results.push({
               accountId: account.id,
               action: "error",
@@ -278,7 +279,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        console.log(
+        logger.info(
           `📊 Daily P/L captured for account ${account.name}: Total P/L: ${dailyPnLData.totalPnL}, Today P/L: ${dailyPnLData.todayPnL}`,
         );
       } catch (error: unknown) {

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { prisma } from "./prisma";
+import logger from "@/lib/logger";
 
 export interface PositionData {
   symbol: string;
@@ -88,7 +89,7 @@ export class OptimizedAIService {
       });
 
       if (cached) {
-        console.log(`🎯 AI Cache HIT for ${cacheKey}`);
+        logger.info(`🎯 AI Cache HIT for ${cacheKey}`);
         return {
           recommendationType: cached.recommendationType as
             | "HOLD"
@@ -130,7 +131,7 @@ export class OptimizedAIService {
         riskProfile,
       );
 
-      console.log(`🤖 AI Batch Analysis: ${positions.length} positions`);
+      logger.info(`🤖 AI Batch Analysis: ${positions.length} positions`);
 
       const completion = await this.openai.chat.completions.create({
         model: "gpt-4o",
@@ -291,7 +292,7 @@ Respond with JSON array format:
     let cacheHits = 0;
     const totalTokens = 0;
 
-    console.log(
+    logger.info(
       `🎯 Batch AI Analysis: ${request.positions.length} positions for account ${request.accountId}`,
     );
 
@@ -334,7 +335,7 @@ Respond with JSON array format:
 
     const executionTime = Date.now() - startTime;
 
-    console.log(
+    logger.info(
       `✅ Batch Analysis Complete: ${allRecommendations.length} recommendations, ${cacheHits} cache hits, ${executionTime}ms`,
     );
 
@@ -364,7 +365,7 @@ Respond with JSON array format:
         where: whereClause,
       });
 
-      console.log(
+      logger.info(
         `🗑️ AI Cache cleared for user: ${userId}, account: ${accountId}`,
       );
     } catch (error) {

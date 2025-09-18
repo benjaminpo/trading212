@@ -1,5 +1,6 @@
 import { Trading212API } from "./trading212";
 import { apiCache } from "./api-cache";
+import logger from "@/lib/logger";
 
 export interface BatchedRequest<T = unknown> {
   id: string;
@@ -139,7 +140,7 @@ export class APIBatcher {
     const trading212 = new Trading212API(apiKey, isPractice);
     const requestTypes = [...new Set(requests.map((req) => req.requestType))];
 
-    console.log(
+    logger.info(
       `🔄 Executing batch for account ${accountId}: ${requestTypes.join(", ")}`,
     );
 
@@ -218,7 +219,7 @@ export class APIBatcher {
     orders?: unknown[];
     stats: unknown;
   }> {
-    console.log(`🎯 Smart fetch for account ${accountId}`);
+    logger.info(`🎯 Smart fetch for account ${accountId}`);
 
     // Batch all requests together
     const [accountData, portfolioData, ordersData] = await Promise.allSettled([
@@ -286,7 +287,7 @@ export class APIBatcher {
       error?: string;
     }>
   > {
-    console.log(`🎯 Multi-account fetch for ${accounts.length} accounts`);
+    logger.info(`🎯 Multi-account fetch for ${accounts.length} accounts`);
 
     const accountPromises = accounts.map(async (account) => {
       try {

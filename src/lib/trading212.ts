@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import logger from "@/lib/logger";
 import { trading212RateLimiter } from "./rate-limiter";
 
 export interface Trading212Account {
@@ -68,7 +69,7 @@ export class Trading212API {
 
     while (!trading212RateLimiter.canMakeRequest(rateLimitKey)) {
       const waitTime = trading212RateLimiter.getTimeUntilReset(rateLimitKey);
-      console.log(
+      logger.info(
         `⏳ Rate limit reached. Waiting ${Math.ceil(waitTime / 1000)} seconds...`,
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime + 1000)); // Add 1 second buffer
@@ -99,7 +100,7 @@ export class Trading212API {
               ? parseInt(retryAfter) * 1000
               : Math.pow(2, attempt) * 1000;
 
-            console.log(
+            logger.info(
               `🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`,
             );
             await new Promise((resolve) => setTimeout(resolve, waitTime));
@@ -120,7 +121,7 @@ export class Trading212API {
       try {
         // Try the account/cash endpoint first
         const response = await this.api.get("/equity/account/cash");
-        console.log("💰 Trading212 API account response:", {
+        logger.info("💰 Trading212 API account response:", {
           status: response.status,
           data: response.data,
           isPractice: this.isPractice,
@@ -132,9 +133,9 @@ export class Trading212API {
 
         // Try alternative endpoint if the first one fails
         try {
-          console.log("🔄 Trying alternative account endpoint...");
+          logger.info("🔄 Trying alternative account endpoint...");
           const altResponse = await this.api.get("/equity/account");
-          console.log("💰 Trading212 API alternative account response:", {
+          logger.info("💰 Trading212 API alternative account response:", {
             status: altResponse.status,
             data: altResponse.data,
             isPractice: this.isPractice,
@@ -222,13 +223,13 @@ export class Trading212API {
 
   async validateConnection(): Promise<boolean> {
     try {
-      console.log(
+      logger.info(
         `🔍 Testing Trading212 API connection to: ${this.api.defaults.baseURL}`,
       );
-      console.log(`🎯 Mode: ${this.isPractice ? "Practice" : "Live"}`);
+      logger.info(`🎯 Mode: ${this.isPractice ? "Practice" : "Live"}`);
 
       await this.getAccount();
-      console.log("✅ Trading212 API connection successful");
+      logger.info("✅ Trading212 API connection successful");
       return true;
     } catch (error: unknown) {
       const errorObj = error as {
