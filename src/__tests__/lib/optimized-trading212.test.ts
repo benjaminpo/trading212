@@ -5,6 +5,7 @@ import {
 import { apiBatcher } from "@/lib/api-batcher";
 import { apiCache } from "@/lib/api-cache";
 import { trading212RateLimiter } from "@/lib/rate-limiter";
+import logger from "@/lib/logger";
 
 // Mock dependencies
 jest.mock("@/lib/api-batcher");
@@ -17,8 +18,8 @@ const mockRateLimiter = trading212RateLimiter as jest.Mocked<
   typeof trading212RateLimiter
 >;
 
-// Mock console methods
-const mockConsoleLog = jest.spyOn(console, "log").mockImplementation();
+// Mock logger methods (CI uses logger instead of console.log)
+const mockConsoleLog = jest.spyOn(logger, "info").mockImplementation();
 const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
 
 describe("OptimizedTrading212Service", () => {

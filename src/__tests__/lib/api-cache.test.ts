@@ -1,7 +1,8 @@
 import { APICache, apiCache, CacheEntry } from "@/lib/api-cache";
+import logger from "@/lib/logger";
 
-// Mock console.log to avoid noise in tests
-const mockConsoleLog = jest.spyOn(console, "log").mockImplementation();
+// Mock logger.info to avoid noise in tests
+const mockConsoleLog = jest.spyOn(logger, "info").mockImplementation();
 
 describe("APICache", () => {
   let cache: APICache;

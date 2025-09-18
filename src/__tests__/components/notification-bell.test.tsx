@@ -1,16 +1,19 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import NotificationBell from "@/components/notification-bell";
+import logger from "@/lib/logger";
 
 // Mock fetch
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-// Mock console methods to avoid noise in tests
+// Mock logger methods to match app logging
 const mockConsoleError = jest
   .spyOn(console, "error")
   .mockImplementation(() => {});
-const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
+const mockConsoleLog = jest
+  .spyOn(logger, "info")
+  .mockImplementation(() => {});
 
 describe("NotificationBell", () => {
   const mockNotifications = [
