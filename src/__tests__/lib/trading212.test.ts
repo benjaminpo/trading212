@@ -9,11 +9,9 @@ describe("Trading212API", () => {
   let trading212API: Trading212API;
   const mockApiKey = "test-api-key-123";
   const expectedLiveBaseURL =
-    process.env.TRADING212_LIVE_API_URL ||
-    "https://live.trading212.com/api/v0";
+    process.env.TRADING212_LIVE_API_URL || "https://live.trading212.com/api/v0";
   const expectedDemoBaseURL =
-    process.env.TRADING212_DEMO_API_URL ||
-    "https://demo.trading212.com/api/v0";
+    process.env.TRADING212_DEMO_API_URL || "https://demo.trading212.com/api/v0";
 
   beforeEach(() => {
     jest.clearAllMocks();
