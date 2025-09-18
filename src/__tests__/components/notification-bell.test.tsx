@@ -11,9 +11,7 @@ global.fetch = mockFetch;
 const mockConsoleError = jest
   .spyOn(console, "error")
   .mockImplementation(() => {});
-const mockConsoleLog = jest
-  .spyOn(logger, "info")
-  .mockImplementation(() => {});
+const mockConsoleLog = jest.spyOn(logger, "info").mockImplementation(() => {});
 
 describe("NotificationBell", () => {
   const mockNotifications = [
