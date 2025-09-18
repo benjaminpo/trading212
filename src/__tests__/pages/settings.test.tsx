@@ -30,6 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
+import { setSession } from "@/test/test-utils";
 
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
@@ -44,17 +45,11 @@ describe("Settings Page", () => {
     (global.confirm as jest.Mock).mockReset();
 
     // Default mock for authenticated user
-    (useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: "Test User" } },
-      status: "authenticated",
-    });
+    setSession("authenticated", { name: "Test User" });
   });
 
   it("redirects unauthenticated users to signin", async () => {
-    (useSession as jest.Mock).mockReturnValue({
-      data: null,
-      status: "unauthenticated",
-    });
+    setSession("unauthenticated", null);
 
     const Settings = (await import("@/app/settings/page")).default;
     render(React.createElement(Settings));

@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  render,
-  screen,
-  waitFor,
-  fireEvent as _fireEvent,
-} from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { useSession } from "next-auth/react";
 import { useRouter as _useRouter } from "next/navigation";
 
@@ -35,6 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
+import { setSession } from "@/test/test-utils";
 
 describe("Analytics Page", () => {
   beforeEach(() => {
@@ -43,17 +39,11 @@ describe("Analytics Page", () => {
     (global.fetch as jest.Mock).mockReset();
 
     // Default mock for authenticated user
-    (useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: "Test User" } },
-      status: "authenticated",
-    });
+    setSession("authenticated", { name: "Test User" });
   });
 
   it("redirects unauthenticated users to signin", async () => {
-    (useSession as jest.Mock).mockReturnValue({
-      data: null,
-      status: "unauthenticated",
-    });
+    setSession("unauthenticated", null);
 
     const AnalyticsPage = (await import("@/app/analytics/page")).default;
     render(React.createElement(AnalyticsPage));

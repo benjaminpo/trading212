@@ -117,7 +117,7 @@ describe("APIBatcher - Branch Coverage", () => {
       mockTrading212API.mockImplementation(() => mockTrading212 as any);
 
       // Create a request with invalid type by directly accessing private method
-      const batchKey = "user1:invalid";
+      const _batchKey = "user1:invalid";
       const requests = [
         {
           id: "1",

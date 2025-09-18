@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-  act as _act,
-} from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { useSession } from "next-auth/react";
 import { useRouter as _useRouter } from "next/navigation";
 
@@ -36,6 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
+import { setSession, withDefaultFetch } from "@/test/test-utils";
 
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
@@ -49,45 +44,12 @@ describe("Trail Stop Page", () => {
     (global.alert as jest.Mock).mockReset();
     (global.confirm as jest.Mock).mockReset();
 
-    // Default mock for authenticated user
-    (useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: "Test User" } },
-      status: "authenticated",
-    });
-
-    // Set up a default fetch mock that handles all calls
-    (global.fetch as jest.Mock).mockImplementation((url: string) => {
-      if (url.includes("/api/trail-stop/orders")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ orders: [] }),
-        });
-      }
-      if (url.includes("/api/trading212/portfolio")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ positions: [] }),
-        });
-      }
-      if (url.includes("/api/trading212/optimized/accounts")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ accounts: [] }),
-        });
-      }
-      // Default response for any other API calls
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({}),
-      });
-    });
+    setSession("authenticated", { name: "Test User" });
+    withDefaultFetch();
   });
 
   it("redirects unauthenticated users to signin", async () => {
-    (useSession as jest.Mock).mockReturnValue({
-      data: null,
-      status: "unauthenticated",
-    });
+    setSession("unauthenticated", null);
 
     const TrailStopPage = (await import("@/app/trail-stop/page")).default;
     render(React.createElement(TrailStopPage));
@@ -98,10 +60,7 @@ describe("Trail Stop Page", () => {
   });
 
   it("shows loading state initially", async () => {
-    (useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: "Test User" } },
-      status: "authenticated",
-    });
+    setSession("authenticated", { name: "Test User" });
 
     // Mock fetch to return pending promise
     (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
@@ -115,10 +74,7 @@ describe("Trail Stop Page", () => {
   });
 
   it("loads and displays trail stop orders", async () => {
-    (useSession as jest.Mock).mockReturnValue({
-      data: { user: { name: "Test User" } },
-      status: "authenticated",
-    });
+    setSession("authenticated", { name: "Test User" });
 
     const TrailStopPage = (await import("@/app/trail-stop/page")).default;
     render(React.createElement(TrailStopPage));

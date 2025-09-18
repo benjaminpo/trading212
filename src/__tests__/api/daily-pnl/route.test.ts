@@ -47,7 +47,7 @@ describe("/api/daily-pnl", () => {
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
-      const data = await response.json();
+      const _data = await response.json();
 
       expect(response.status).toBe(401);
       expect(data.error).toBe("Unauthorized");
@@ -58,7 +58,7 @@ describe("/api/daily-pnl", () => {
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
-      const data = await response.json();
+      const _data = await response.json();
 
       expect(response.status).toBe(401);
       expect(data.error).toBe("Unauthorized");
