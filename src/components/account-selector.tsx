@@ -162,7 +162,16 @@ export default function AccountSelector({
             {/* Backdrop */}
             <div
               className="fixed inset-0 z-[9998]"
+              role="button"
+              tabIndex={0}
+              aria-label="Close account selector"
               onClick={() => setIsOpen(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setIsOpen(false);
+                }
+              }}
             />
 
             {/* Dropdown */}
@@ -187,6 +196,13 @@ export default function AccountSelector({
                 }`}
                 role="option"
                 aria-selected={!selectedAccountId}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleViewAll();
+                  }
+                }}
               >
                 <span className="font-medium">All Accounts</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -215,6 +231,13 @@ export default function AccountSelector({
                     }`}
                     role="option"
                     aria-selected={selectedAccountId === account.id}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleAccountSelect(account.id);
+                      }
+                    }}
                   >
                     <div className="flex items-center space-x-2">
                       {account.isDefault && (

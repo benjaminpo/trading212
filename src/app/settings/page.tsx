@@ -320,14 +320,19 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <span
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      id="theme-toggle-label"
+                    >
                       Dark Mode
-                    </label>
+                    </span>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                       Toggle between light and dark theme
                     </p>
                   </div>
-                  <ThemeToggle />
+                  <div aria-labelledby="theme-toggle-label">
+                    <ThemeToggle />
+                  </div>
                 </div>
               </CardContent>
             </Card>
