@@ -5,13 +5,11 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const noop: LogMethod = () => {};
 
-const info: LogMethod = isCi || isProduction
-  ? noop
-  : (...args: unknown[]) => console.log(...args);
+const info: LogMethod =
+  isCi || isProduction ? noop : (...args: unknown[]) => console.log(...args);
 
-const debug: LogMethod = isCi || isProduction
-  ? noop
-  : (...args: unknown[]) => console.debug(...args);
+const debug: LogMethod =
+  isCi || isProduction ? noop : (...args: unknown[]) => console.debug(...args);
 
 const warn: LogMethod = (...args: unknown[]) => console.warn(...args);
 const error: LogMethod = (...args: unknown[]) => console.error(...args);

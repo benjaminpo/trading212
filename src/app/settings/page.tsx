@@ -402,8 +402,12 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="flex items-center space-x-4">
-                          <label className="flex items-center">
+                          <label
+                            htmlFor="practice-checkbox"
+                            className="flex items-center cursor-pointer"
+                          >
                             <input
+                              id="practice-checkbox"
                               type="checkbox"
                               checked={newIsPractice}
                               onChange={(e) =>
@@ -415,8 +419,12 @@ export default function SettingsPage() {
                               Practice Account
                             </span>
                           </label>
-                          <label className="flex items-center">
+                          <label
+                            htmlFor="default-checkbox"
+                            className="flex items-center cursor-pointer"
+                          >
                             <input
+                              id="default-checkbox"
                               type="checkbox"
                               checked={newIsDefault}
                               onChange={(e) =>

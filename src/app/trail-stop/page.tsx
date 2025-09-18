@@ -404,12 +404,19 @@ export default function TrailStopPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
+                      <label
+                        htmlFor="trail-type-amount"
+                        className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300"
+                      >
                         Trail Type
                       </label>
                       <div className="flex space-x-4">
-                        <label className="flex items-center">
+                        <label
+                          htmlFor="trail-type-amount"
+                          className="flex items-center cursor-pointer"
+                        >
                           <input
+                            id="trail-type-amount"
                             type="radio"
                             value="amount"
                             checked={formData.trailType === "amount"}
@@ -425,8 +432,12 @@ export default function TrailStopPage() {
                             Fixed Amount ($)
                           </span>
                         </label>
-                        <label className="flex items-center">
+                        <label
+                          htmlFor="trail-type-percent"
+                          className="flex items-center cursor-pointer"
+                        >
                           <input
+                            id="trail-type-percent"
                             type="radio"
                             value="percent"
                             checked={formData.trailType === "percent"}

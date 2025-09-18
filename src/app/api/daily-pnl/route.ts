@@ -81,11 +81,13 @@ export async function GET(request: NextRequest) {
         totalPnLChange =
           dailyPnL[0].totalPnL - dailyPnL[totalDays - 1].totalPnL;
       }
-      bestDay = dailyPnL.reduce((best, day) =>
-        day.todayPnL > best.todayPnL ? day : best,
+      bestDay = dailyPnL.reduce(
+        (best, day) => (day.todayPnL > best.todayPnL ? day : best),
+        dailyPnL[0],
       );
-      worstDay = dailyPnL.reduce((worst, day) =>
-        day.todayPnL < worst.todayPnL ? day : worst,
+      worstDay = dailyPnL.reduce(
+        (worst, day) => (day.todayPnL < worst.todayPnL ? day : worst),
+        dailyPnL[0],
       );
     }
 

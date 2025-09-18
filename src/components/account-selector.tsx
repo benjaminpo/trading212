@@ -119,6 +119,14 @@ export default function AccountSelector({
         aria-controls={
           mounted && isOpen ? "account-selector-dropdown" : undefined
         }
+        role="combobox"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleButtonClick();
+          }
+        }}
       >
         <div className="flex items-center space-x-2">
           {selectedAccountId ? (
