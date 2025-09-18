@@ -8,6 +8,12 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe("Trading212API", () => {
   let trading212API: Trading212API;
   const mockApiKey = "test-api-key-123";
+  const expectedLiveBaseURL =
+    process.env.TRADING212_LIVE_API_URL ||
+    "https://live.trading212.com/api/v0";
+  const expectedDemoBaseURL =
+    process.env.TRADING212_DEMO_API_URL ||
+    "https://demo.trading212.com/api/v0";
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,7 +40,7 @@ describe("Trading212API", () => {
       trading212API = new Trading212API(mockApiKey);
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
-        baseURL: "https://live.trading212.com/api/v1",
+        baseURL: expectedLiveBaseURL,
         headers: {
           Authorization: mockApiKey,
           "Content-Type": "application/json",
@@ -46,7 +52,7 @@ describe("Trading212API", () => {
       trading212API = new Trading212API(mockApiKey, true);
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
-        baseURL: "https://demo.trading212.com/api/v1",
+        baseURL: expectedDemoBaseURL,
         headers: {
           Authorization: mockApiKey,
           "Content-Type": "application/json",
