@@ -18,7 +18,7 @@ const mockRateLimiter = trading212RateLimiter as jest.Mocked<
   typeof trading212RateLimiter
 >;
 
-// Mock logger methods (CI uses logger instead of console.log)
+// Mock logger methods
 const mockConsoleLog = jest.spyOn(logger, "info").mockImplementation();
 const mockConsoleError = jest.spyOn(console, "error").mockImplementation();
 

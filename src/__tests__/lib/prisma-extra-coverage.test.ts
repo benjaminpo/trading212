@@ -1,15 +1,17 @@
 import { retryDatabaseOperation, checkDatabaseConnection } from "@/lib/prisma";
 
-// Mock console to avoid noisy output
-const originalConsoleError = console.error;
-const originalConsoleLog = console.log;
+// Mock logger to avoid noisy output
+import logger from "@/lib/logger";
+
+const originalLoggerError = logger.error;
+const originalLoggerInfo = logger.info;
 beforeAll(() => {
-  console.error = jest.fn();
-  console.log = jest.fn();
+  logger.error = jest.fn();
+  logger.info = jest.fn();
 });
 afterAll(() => {
-  console.error = originalConsoleError;
-  console.log = originalConsoleLog;
+  logger.error = originalLoggerError;
+  logger.info = originalLoggerInfo;
 });
 
 describe("prisma extra coverage", () => {
