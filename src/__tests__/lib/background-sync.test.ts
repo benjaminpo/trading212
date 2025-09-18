@@ -2,6 +2,7 @@ import {
   BackgroundSyncService,
   backgroundSyncService,
 } from "../../lib/background-sync";
+import logger from "@/lib/logger";
 
 // Mock dependencies
 jest.mock("../../lib/prisma", () => ({
@@ -77,7 +78,7 @@ describe("BackgroundSyncService", () => {
     });
 
     it("should not start if already running", async () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(logger, "info").mockImplementation();
       const { prisma } = require("../../lib/prisma");
 
       prisma.user.findMany.mockResolvedValue([]);
@@ -106,7 +107,7 @@ describe("BackgroundSyncService", () => {
 
   describe("stop()", () => {
     it("should stop the service successfully", async () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(logger, "info").mockImplementation();
       const { prisma } = require("../../lib/prisma");
 
       prisma.user.findMany.mockResolvedValue([]);
@@ -325,7 +326,7 @@ describe("BackgroundSyncService", () => {
   describe("clearOldCache()", () => {
     it("should clear old cache successfully", async () => {
       const { prisma } = require("../../lib/prisma");
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = jest.spyOn(logger, "info").mockImplementation();
 
       prisma.aIRecommendation.deleteMany.mockResolvedValue({ count: 5 });
 
