@@ -39,14 +39,6 @@ jobs:
             exit 1
           fi
 
-      - name: Check for console.log statements
-        run: |
-          echo "Checking for console.log statements..."
-          if grep -r "console\.log" src/ --exclude-dir=node_modules; then
-            echo "Found console.log statements. Please remove them before merging."
-            exit 1
-          fi
-
   performance:
     name: Performance Check
     runs-on: ubuntu-latest

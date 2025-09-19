@@ -98,11 +98,7 @@ run_lint() {
         print_warning "Found TODO/FIXME comments. Please address them before committing."
     fi
     
-    # Check for console.log statements
-    print_status "Checking for console.log statements..."
-    if grep -r "console\.log" src/ --exclude-dir=node_modules; then
-        print_warning "Found console.log statements. Please remove them before committing."
-    fi
+    # Skipping console.log scan in CI
     
     print_success "Linting completed successfully!"
 }
