@@ -30,7 +30,12 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
-import { setSession, renderPageByPath, fixtures, withDefaultFetch } from "@/test/test-utils";
+import {
+  setSession,
+  renderPageByPath,
+  fixtures,
+  withDefaultFetch,
+} from "@/test/test-utils";
 
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
@@ -46,7 +51,7 @@ describe("Settings Page", () => {
 
     // Default mock for authenticated user
     setSession("authenticated", { name: "Test User" });
-    
+
     // Set up default fetch mocking to prevent undefined errors
     withDefaultFetch();
   });

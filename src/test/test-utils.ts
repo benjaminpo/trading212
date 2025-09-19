@@ -49,7 +49,13 @@ export const withDefaultFetch = (overrides: Record<string, unknown> = {}) => {
     if (url.includes("/api/analytics")) {
       return Promise.resolve({
         ok: true,
-        json: async () => ({ connected: false, positions: [], totalValue: 0, totalPnL: 0, totalPnLPercent: 0 }),
+        json: async () => ({
+          connected: false,
+          positions: [],
+          totalValue: 0,
+          totalPnL: 0,
+          totalPnLPercent: 0,
+        }),
       });
     }
     // Default response for any other URL
