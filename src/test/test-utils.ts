@@ -26,6 +26,7 @@ export const renderPageByPath = async (path: string) => {
 
 export const withDefaultFetch = (overrides: Record<string, unknown> = {}) => {
   (global.fetch as unknown as jest.Mock).mockImplementation((url: string) => {
+    // Handle specific API endpoints
     if (url.includes("/api/trail-stop/orders")) {
       return Promise.resolve({ ok: true, json: async () => ({ orders: [] }) });
     }
@@ -44,6 +45,14 @@ export const withDefaultFetch = (overrides: Record<string, unknown> = {}) => {
         json: async () => ({ positions: [] }),
       });
     }
+    // Handle analytics endpoint
+    if (url.includes("/api/analytics")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ connected: false, positions: [], totalValue: 0, totalPnL: 0, totalPnLPercent: 0 }),
+      });
+    }
+    // Default response for any other URL
     return Promise.resolve({
       ok: true,
       json: async () => overrides[url] ?? {},

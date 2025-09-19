@@ -30,7 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
-import { setSession, renderPageByPath, fixtures } from "@/test/test-utils";
+import { setSession, renderPageByPath, fixtures, withDefaultFetch } from "@/test/test-utils";
 
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
@@ -46,6 +46,9 @@ describe("Settings Page", () => {
 
     // Default mock for authenticated user
     setSession("authenticated", { name: "Test User" });
+    
+    // Set up default fetch mocking to prevent undefined errors
+    withDefaultFetch();
   });
 
   it("redirects unauthenticated users to signin", async () => {
@@ -224,8 +227,34 @@ describe("Settings Page", () => {
     });
 
     const mockAccounts = [
-      fixtures.account({ id: "1", name: "Live Account" }),
-      fixtures.account({ id: "2", name: "Demo Account", isPractice: true, isActive: false, isDefault: false, cash: 10000 }),
+      {
+        ...fixtures.account({ id: "1", name: "Live Account" }),
+        isActive: true,
+        isDefault: true,
+        lastConnected: "2024-01-01T00:00:00Z",
+        lastError: null,
+        apiKeyPreview: "test-key-preview",
+        currency: "USD",
+        cash: 1000,
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+      },
+      {
+        ...fixtures.account({
+          id: "2",
+          name: "Demo Account",
+          isPractice: true,
+        }),
+        isActive: false,
+        isDefault: false,
+        lastConnected: null,
+        lastError: null,
+        apiKeyPreview: "demo-key-preview",
+        currency: "USD",
+        cash: 10000,
+        createdAt: "2024-01-01T00:00:00Z",
+        updatedAt: "2024-01-01T00:00:00Z",
+      },
     ];
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -241,7 +270,7 @@ describe("Settings Page", () => {
     });
 
     // Check for status indicators
-    expect(screen.getAllByText("Connected")[0]).toBeInTheDocument();
+    expect(screen.getByText("Connected")).toBeInTheDocument();
     expect(screen.getByText("Practice")).toBeInTheDocument();
   });
 
@@ -375,7 +404,9 @@ describe("Settings Page", () => {
       status: "authenticated",
     });
 
-    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account", isDefault: false })];
+    const mockAccounts = [
+      fixtures.account({ id: "1", name: "Test Account", isDefault: false }),
+    ];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -409,7 +440,9 @@ describe("Settings Page", () => {
       status: "authenticated",
     });
 
-    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account", isDefault: false })];
+    const mockAccounts = [
+      fixtures.account({ id: "1", name: "Test Account", isDefault: false }),
+    ];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({

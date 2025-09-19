@@ -209,7 +209,7 @@ describe("/api/daily-pnl", () => {
         "http://localhost:3000/api/daily-pnl?accountId=acc1&days=7&startDate=2024-01-01&endDate=2024-01-07",
       );
       const response = await GET(request);
-      const data = await response.json();
+      const _data = await response.json();
 
       expect(response.status).toBe(200);
       expect(mockPrisma.dailyPnL.findMany).toHaveBeenCalledWith({
@@ -463,7 +463,7 @@ describe("/api/daily-pnl", () => {
         body: JSON.stringify({ accountId: "acc1", forceRefresh: true }),
       });
       const response = await POST(request);
-      const data = await response.json();
+      const _data = await response.json();
 
       expect(response.status).toBe(200);
       expect(

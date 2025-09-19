@@ -30,7 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
-import { setSession, renderPageByPath, fixtures } from "@/test/test-utils";
+import { setSession, renderPageByPath, fixtures, withDefaultFetch } from "@/test/test-utils";
 
 describe("Analytics Page", () => {
   beforeEach(() => {
@@ -40,6 +40,9 @@ describe("Analytics Page", () => {
 
     // Default mock for authenticated user
     setSession("authenticated", { name: "Test User" });
+    
+    // Set up default fetch mocking to prevent undefined errors
+    withDefaultFetch();
   });
 
   it("redirects unauthenticated users to signin", async () => {
@@ -77,7 +80,13 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150, accountName: "Test Account", accountId: "1", isPractice: true },
+        {
+          ...fixtures.position({ ticker: "AAPL", quantity: 100 }),
+          averagePrice: 150,
+          accountName: "Test Account",
+          accountId: "1",
+          isPractice: true,
+        },
       ],
       totalValue: 16000,
       totalPnL: 1000,
@@ -320,7 +329,13 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150, accountName: "Test Account", accountId: "1", isPractice: true },
+        {
+          ...fixtures.position({ ticker: "AAPL", quantity: 100 }),
+          averagePrice: 150,
+          accountName: "Test Account",
+          accountId: "1",
+          isPractice: true,
+        },
       ],
       totalValue: 16000,
       totalPnL: 1000,
@@ -397,7 +412,17 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        { ...fixtures.position({ ticker: "RRl_EQ", quantity: 100, currentPrice: 11.5 }), averagePrice: 11, accountName: "UK Account", accountId: "1", isPractice: true },
+        {
+          ...fixtures.position({
+            ticker: "RRl_EQ",
+            quantity: 100,
+            currentPrice: 11.5,
+          }),
+          averagePrice: 11,
+          accountName: "UK Account",
+          accountId: "1",
+          isPractice: true,
+        },
       ],
       totalValue: 1150,
       totalPnL: 50,
@@ -648,7 +673,11 @@ describe("Analytics Page", () => {
     });
 
     const mockAccounts = [
-      fixtures.account({ id: "account1", name: "Account 1", isPractice: false }),
+      fixtures.account({
+        id: "account1",
+        name: "Account 1",
+        isPractice: false,
+      }),
       fixtures.account({ id: "account2", name: "Account 2", isPractice: true }),
       fixtures.account({ id: "account3", name: "Account 3" }),
     ];
@@ -663,7 +692,10 @@ describe("Analytics Page", () => {
         json: async () => ({
           connected: true,
           positions: [
-            { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150 },
+            {
+              ...fixtures.position({ ticker: "AAPL", quantity: 100 }),
+              averagePrice: 150,
+            },
           ],
           totalValue: 16000,
           totalPnL: 1000,
@@ -790,7 +822,11 @@ describe("Analytics Page", () => {
 
     const mockAccounts = [
       fixtures.account({ id: "account1", name: "USD Account" }),
-      fixtures.account({ id: "account2", name: "EUR Account", isPractice: true }),
+      fixtures.account({
+        id: "account2",
+        name: "EUR Account",
+        isPractice: true,
+      }),
     ];
 
     (global.fetch as jest.Mock)
@@ -803,7 +839,10 @@ describe("Analytics Page", () => {
         json: async () => ({
           connected: true,
           positions: [
-            { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150 },
+            {
+              ...fixtures.position({ ticker: "AAPL", quantity: 100 }),
+              averagePrice: 150,
+            },
           ],
           totalValue: 16000,
           totalPnL: 1000,
@@ -816,7 +855,14 @@ describe("Analytics Page", () => {
         json: async () => ({
           connected: true,
           positions: [
-            { ...fixtures.position({ ticker: "ASML", quantity: 50, currentPrice: 320 }), averagePrice: 300 },
+            {
+              ...fixtures.position({
+                ticker: "ASML",
+                quantity: 50,
+                currentPrice: 320,
+              }),
+              averagePrice: 300,
+            },
           ],
           totalValue: 16000,
           totalPnL: 1000,
@@ -843,7 +889,12 @@ describe("Analytics Page", () => {
 
     const mockAnalyticsData = {
       connected: true,
-      positions: [{ ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150 }],
+      positions: [
+        {
+          ...fixtures.position({ ticker: "AAPL", quantity: 100 }),
+          averagePrice: 150,
+        },
+      ],
       totalValue: 16000,
       totalPnL: 1000,
       totalPnLPercent: 6.25,
@@ -921,8 +972,32 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        { ...fixtures.position({ ticker: "LOSER1", quantity: 100, currentPrice: 140 }), averagePrice: 150, ppl: -1000, pplPercent: -6.67, accountName: "Test Account", accountId: "1", isPractice: true },
-        { ...fixtures.position({ ticker: "LOSER2", quantity: 50, currentPrice: 180 }), averagePrice: 200, ppl: -1000, pplPercent: -10, accountName: "Test Account", accountId: "1", isPractice: true },
+        {
+          ...fixtures.position({
+            ticker: "LOSER1",
+            quantity: 100,
+            currentPrice: 140,
+          }),
+          averagePrice: 150,
+          ppl: -1000,
+          pplPercent: -6.67,
+          accountName: "Test Account",
+          accountId: "1",
+          isPractice: true,
+        },
+        {
+          ...fixtures.position({
+            ticker: "LOSER2",
+            quantity: 50,
+            currentPrice: 180,
+          }),
+          averagePrice: 200,
+          ppl: -1000,
+          pplPercent: -10,
+          accountName: "Test Account",
+          accountId: "1",
+          isPractice: true,
+        },
       ],
       totalValue: 23000,
       totalPnL: -2000,
@@ -954,7 +1029,19 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        { ...fixtures.position({ ticker: "WINNER", quantity: 100, currentPrice: 160 }), averagePrice: 150, ppl: 1000, pplPercent: 6.67, accountName: "Test Account", accountId: "1", isPractice: true },
+        {
+          ...fixtures.position({
+            ticker: "WINNER",
+            quantity: 100,
+            currentPrice: 160,
+          }),
+          averagePrice: 150,
+          ppl: 1000,
+          pplPercent: 6.67,
+          accountName: "Test Account",
+          accountId: "1",
+          isPractice: true,
+        },
       ],
       totalValue: 16000,
       totalPnL: 1000,
