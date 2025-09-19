@@ -30,7 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
-import { setSession, withDefaultFetch } from "@/test/test-utils";
+import { setSession, withDefaultFetch, renderPageByPath, fixtures } from "@/test/test-utils";
 
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
@@ -51,8 +51,7 @@ describe("Trail Stop Page", () => {
   it("redirects unauthenticated users to signin", async () => {
     setSession("unauthenticated", null);
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/auth/signin");
@@ -65,8 +64,7 @@ describe("Trail Stop Page", () => {
     // Mock fetch to return pending promise
     (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     expect(
       screen.getByText("", { selector: ".animate-spin" }),
@@ -76,8 +74,7 @@ describe("Trail Stop Page", () => {
   it("loads and displays trail stop orders", async () => {
     setSession("authenticated", { name: "Test User" });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     // Wait for the component to load and check basic elements
     await waitFor(
@@ -101,16 +98,7 @@ describe("Trail Stop Page", () => {
       status: "authenticated",
     });
 
-    const mockPositions = [
-      {
-        ticker: "AAPL",
-        quantity: 100,
-        currentPrice: 160,
-        marketValue: 16000,
-        ppl: 1000,
-        pplPercent: 6.67,
-      },
-    ];
+    const mockPositions = [fixtures.position({ ticker: "AAPL", quantity: 100, currentPrice: 160, marketValue: 16000, ppl: 1000, pplPercent: 6.67 })];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -130,8 +118,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ success: true }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -154,20 +141,7 @@ describe("Trail Stop Page", () => {
       status: "authenticated",
     });
 
-    const mockOrders = [
-      {
-        id: "1",
-        symbol: "AAPL",
-        quantity: 100,
-        trailAmount: 5,
-        trailPercent: 3.125,
-        stopPrice: 155,
-        isActive: true,
-        isPractice: true,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockOrders = [fixtures.order({ symbol: "AAPL", quantity: 100, trailAmount: 5, trailPercent: 3.125, stopPrice: 155, isPractice: true })];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -183,8 +157,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ accounts: [] }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {}, { timeout: 15000 });
 
@@ -198,20 +171,7 @@ describe("Trail Stop Page", () => {
       status: "authenticated",
     });
 
-    const mockOrders = [
-      {
-        id: "1",
-        symbol: "AAPL",
-        quantity: 100,
-        trailAmount: 5,
-        trailPercent: 3.125,
-        stopPrice: 155,
-        isActive: true,
-        isPractice: true,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockOrders = [fixtures.order({ symbol: "AAPL", quantity: 100, trailAmount: 5, trailPercent: 3.125, stopPrice: 155, isPractice: true })];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -227,8 +187,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ accounts: [] }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {}, { timeout: 15000 });
 
@@ -243,30 +202,8 @@ describe("Trail Stop Page", () => {
     });
 
     const mockOrders = [
-      {
-        id: "1",
-        symbol: "AAPL",
-        quantity: 100,
-        trailAmount: 5,
-        trailPercent: 3.125,
-        stopPrice: 155,
-        isActive: true,
-        isPractice: true,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-      {
-        id: "2",
-        symbol: "GOOGL",
-        quantity: 50,
-        trailAmount: 10,
-        trailPercent: 2.5,
-        stopPrice: 2400,
-        isActive: false,
-        isPractice: false,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
+      fixtures.order({ symbol: "AAPL", quantity: 100, trailAmount: 5, trailPercent: 3.125, stopPrice: 155, isPractice: true }),
+      fixtures.order({ id: "2", symbol: "GOOGL", quantity: 50, trailAmount: 10, trailPercent: 2.5, stopPrice: 2400, isActive: false, isPractice: false }),
     ];
 
     (global.fetch as jest.Mock)
@@ -283,8 +220,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ accounts: [] }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {});
 
@@ -299,8 +235,7 @@ describe("Trail Stop Page", () => {
     });
     (global.fetch as jest.Mock).mockRejectedValue(new Error("API Error"));
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -329,8 +264,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ accounts: [] }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getByText("No trail stop orders")).toBeInTheDocument();
@@ -370,8 +304,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ positions: mockPositions }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -405,8 +338,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ accounts: [] }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -422,16 +354,7 @@ describe("Trail Stop Page", () => {
       status: "authenticated",
     });
 
-    const mockPositions = [
-      {
-        ticker: "AAPL",
-        quantity: 100,
-        currentPrice: 160,
-        marketValue: 16000,
-        ppl: 1000,
-        pplPercent: 6.67,
-      },
-    ];
+    const mockPositions = [fixtures.position({ ticker: "AAPL", quantity: 100, currentPrice: 160, marketValue: 16000, ppl: 1000, pplPercent: 6.67 })];
 
     const mockAccounts = [
       { id: "account1", isPractice: true, name: "Practice Account" },
@@ -455,8 +378,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ success: true }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -472,16 +394,7 @@ describe("Trail Stop Page", () => {
       status: "authenticated",
     });
 
-    const mockPositions = [
-      {
-        ticker: "AAPL",
-        quantity: 100,
-        currentPrice: 160,
-        marketValue: 16000,
-        ppl: 1000,
-        pplPercent: 6.67,
-      },
-    ];
+    const mockPositions = [fixtures.position({ ticker: "AAPL", quantity: 100, currentPrice: 160, marketValue: 16000, ppl: 1000, pplPercent: 6.67 })];
 
     const mockAccounts = [
       { id: "account1", isPractice: false, name: "Live Account" },
@@ -505,8 +418,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ success: true }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -551,8 +463,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ success: true }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -597,8 +508,7 @@ describe("Trail Stop Page", () => {
         json: async () => ({ error: "API Error" }),
       });
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();
@@ -640,8 +550,7 @@ describe("Trail Stop Page", () => {
       })
       .mockRejectedValue(new Error("Network Error"));
 
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
+    await renderPageByPath("@/app/trail-stop/page");
 
     await waitFor(() => {
       expect(screen.getAllByText("Trail Stop Orders")[0]).toBeInTheDocument();

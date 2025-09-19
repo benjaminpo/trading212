@@ -30,7 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
-import { setSession } from "@/test/test-utils";
+import { setSession, renderPageByPath, fixtures } from "@/test/test-utils";
 
 describe("Analytics Page", () => {
   beforeEach(() => {
@@ -45,8 +45,7 @@ describe("Analytics Page", () => {
   it("redirects unauthenticated users to signin", async () => {
     setSession("unauthenticated", null);
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/auth/signin");
@@ -62,8 +61,7 @@ describe("Analytics Page", () => {
     // Mock fetch to return pending promise
     (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     expect(
       screen.getByText("", { selector: ".animate-spin" }),
@@ -79,20 +77,7 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        {
-          ticker: "AAPL",
-          quantity: 100,
-          averagePrice: 150,
-          currentPrice: 160,
-          ppl: 1000,
-          pplPercent: 6.67,
-          marketValue: 16000,
-          maxBuy: 200,
-          maxSell: 100,
-          accountName: "Test Account",
-          accountId: "1",
-          isPractice: true,
-        },
+        { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150, accountName: "Test Account", accountId: "1", isPractice: true },
       ],
       totalValue: 16000,
       totalPnL: 1000,
@@ -119,8 +104,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -150,8 +134,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -180,8 +163,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -209,8 +191,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -339,20 +320,7 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        {
-          ticker: "AAPL",
-          quantity: 100,
-          averagePrice: 150,
-          currentPrice: 160,
-          ppl: 1000,
-          pplPercent: 6.67,
-          marketValue: 16000,
-          maxBuy: 200,
-          maxSell: 100,
-          accountName: "Test Account",
-          accountId: "1",
-          isPractice: true,
-        },
+        { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150, accountName: "Test Account", accountId: "1", isPractice: true },
       ],
       totalValue: 16000,
       totalPnL: 1000,
@@ -369,8 +337,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -430,20 +397,7 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        {
-          ticker: "RRl_EQ",
-          quantity: 100,
-          averagePrice: 11,
-          currentPrice: 11.5,
-          ppl: 50,
-          pplPercent: 4.55,
-          marketValue: 1150,
-          maxBuy: 200,
-          maxSell: 100,
-          accountName: "UK Account",
-          accountId: "1",
-          isPractice: true,
-        },
+        { ...fixtures.position({ ticker: "RRl_EQ", quantity: 100, currentPrice: 11.5 }), averagePrice: 11, accountName: "UK Account", accountId: "1", isPractice: true },
       ],
       totalValue: 1150,
       totalPnL: 50,
@@ -460,8 +414,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -490,8 +443,7 @@ describe("Analytics Page", () => {
         status: 429,
       });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -518,8 +470,7 @@ describe("Analytics Page", () => {
         json: async () => ({ error: "Server error" }),
       });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -540,8 +491,7 @@ describe("Analytics Page", () => {
       }),
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -564,8 +514,7 @@ describe("Analytics Page", () => {
       })
       .mockRejectedValueOnce(new Error("Network error"));
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -610,8 +559,7 @@ describe("Analytics Page", () => {
         }),
       });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -700,9 +648,9 @@ describe("Analytics Page", () => {
     });
 
     const mockAccounts = [
-      { id: "account1", name: "Account 1", isActive: true, isPractice: false },
-      { id: "account2", name: "Account 2", isActive: true, isPractice: true },
-      { id: "account3", name: "Account 3", isActive: false, isPractice: false },
+      fixtures.account({ id: "account1", name: "Account 1", isPractice: false }),
+      fixtures.account({ id: "account2", name: "Account 2", isPractice: true }),
+      fixtures.account({ id: "account3", name: "Account 3" }),
     ];
 
     (global.fetch as jest.Mock)
@@ -715,17 +663,7 @@ describe("Analytics Page", () => {
         json: async () => ({
           connected: true,
           positions: [
-            {
-              ticker: "AAPL",
-              quantity: 100,
-              averagePrice: 150,
-              currentPrice: 160,
-              ppl: 1000,
-              pplPercent: 6.67,
-              marketValue: 16000,
-              maxBuy: 200,
-              maxSell: 100,
-            },
+            { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150 },
           ],
           totalValue: 16000,
           totalPnL: 1000,
@@ -738,8 +676,7 @@ describe("Analytics Page", () => {
         json: async () => ({ error: "Account 2 failed" }),
       });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -756,8 +693,8 @@ describe("Analytics Page", () => {
     });
 
     const mockAccounts = [
-      { id: "account1", name: "Account 1", isActive: false, isPractice: false },
-      { id: "account2", name: "Account 2", isActive: false, isPractice: true },
+      fixtures.account({ id: "account1", name: "Account 1" }),
+      fixtures.account({ id: "account2", name: "Account 2", isPractice: true }),
     ];
 
     (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -765,8 +702,7 @@ describe("Analytics Page", () => {
       json: async () => ({ accounts: mockAccounts }),
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -786,8 +722,7 @@ describe("Analytics Page", () => {
       json: async () => ({ accounts: [] }),
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -807,8 +742,7 @@ describe("Analytics Page", () => {
       json: async () => ({ accounts: undefined }),
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -855,13 +789,8 @@ describe("Analytics Page", () => {
     });
 
     const mockAccounts = [
-      {
-        id: "account1",
-        name: "USD Account",
-        isActive: true,
-        isPractice: false,
-      },
-      { id: "account2", name: "EUR Account", isActive: true, isPractice: true },
+      fixtures.account({ id: "account1", name: "USD Account" }),
+      fixtures.account({ id: "account2", name: "EUR Account", isPractice: true }),
     ];
 
     (global.fetch as jest.Mock)
@@ -874,17 +803,7 @@ describe("Analytics Page", () => {
         json: async () => ({
           connected: true,
           positions: [
-            {
-              ticker: "AAPL",
-              quantity: 100,
-              averagePrice: 150,
-              currentPrice: 160,
-              ppl: 1000,
-              pplPercent: 6.67,
-              marketValue: 16000,
-              maxBuy: 200,
-              maxSell: 100,
-            },
+            { ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150 },
           ],
           totalValue: 16000,
           totalPnL: 1000,
@@ -897,17 +816,7 @@ describe("Analytics Page", () => {
         json: async () => ({
           connected: true,
           positions: [
-            {
-              ticker: "ASML",
-              quantity: 50,
-              averagePrice: 300,
-              currentPrice: 320,
-              ppl: 1000,
-              pplPercent: 6.67,
-              marketValue: 16000,
-              maxBuy: 400,
-              maxSell: 200,
-            },
+            { ...fixtures.position({ ticker: "ASML", quantity: 50, currentPrice: 320 }), averagePrice: 300 },
           ],
           totalValue: 16000,
           totalPnL: 1000,
@@ -916,8 +825,7 @@ describe("Analytics Page", () => {
         }),
       });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -935,19 +843,7 @@ describe("Analytics Page", () => {
 
     const mockAnalyticsData = {
       connected: true,
-      positions: [
-        {
-          ticker: "AAPL",
-          quantity: 100,
-          averagePrice: 150,
-          currentPrice: 160,
-          ppl: 1000,
-          pplPercent: 6.67,
-          marketValue: 16000,
-          maxBuy: 200,
-          maxSell: 100,
-        },
-      ],
+      positions: [{ ...fixtures.position({ ticker: "AAPL", quantity: 100 }), averagePrice: 150 }],
       totalValue: 16000,
       totalPnL: 1000,
       totalPnLPercent: 6.25,
@@ -959,8 +855,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -976,8 +871,7 @@ describe("Analytics Page", () => {
       status: "loading",
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     expect(
       screen.getByText("", { selector: ".animate-spin" }),
@@ -1027,34 +921,8 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        {
-          ticker: "LOSER1",
-          quantity: 100,
-          averagePrice: 150,
-          currentPrice: 140,
-          ppl: -1000, // Negative P/L
-          pplPercent: -6.67,
-          marketValue: 14000,
-          maxBuy: 200,
-          maxSell: 100,
-          accountName: "Test Account",
-          accountId: "1",
-          isPractice: true,
-        },
-        {
-          ticker: "LOSER2",
-          quantity: 50,
-          averagePrice: 200,
-          currentPrice: 180,
-          ppl: -1000, // Negative P/L
-          pplPercent: -10,
-          marketValue: 9000,
-          maxBuy: 250,
-          maxSell: 100,
-          accountName: "Test Account",
-          accountId: "1",
-          isPractice: true,
-        },
+        { ...fixtures.position({ ticker: "LOSER1", quantity: 100, currentPrice: 140 }), averagePrice: 150, ppl: -1000, pplPercent: -6.67, accountName: "Test Account", accountId: "1", isPractice: true },
+        { ...fixtures.position({ ticker: "LOSER2", quantity: 50, currentPrice: 180 }), averagePrice: 200, ppl: -1000, pplPercent: -10, accountName: "Test Account", accountId: "1", isPractice: true },
       ],
       totalValue: 23000,
       totalPnL: -2000,
@@ -1067,8 +935,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();
@@ -1087,20 +954,7 @@ describe("Analytics Page", () => {
     const mockAnalyticsData = {
       connected: true,
       positions: [
-        {
-          ticker: "WINNER",
-          quantity: 100,
-          averagePrice: 150,
-          currentPrice: 160,
-          ppl: 1000, // Only positive P/L positions
-          pplPercent: 6.67,
-          marketValue: 16000,
-          maxBuy: 200,
-          maxSell: 100,
-          accountName: "Test Account",
-          accountId: "1",
-          isPractice: true,
-        },
+        { ...fixtures.position({ ticker: "WINNER", quantity: 100, currentPrice: 160 }), averagePrice: 150, ppl: 1000, pplPercent: 6.67, accountName: "Test Account", accountId: "1", isPractice: true },
       ],
       totalValue: 16000,
       totalPnL: 1000,
@@ -1113,8 +967,7 @@ describe("Analytics Page", () => {
       json: async () => mockAnalyticsData,
     });
 
-    const AnalyticsPage = (await import("@/app/analytics/page")).default;
-    render(React.createElement(AnalyticsPage));
+    await renderPageByPath("@/app/analytics/page");
 
     await waitFor(() => {
       expect(screen.getByText("P/L Analysis")).toBeInTheDocument();

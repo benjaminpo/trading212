@@ -30,7 +30,7 @@ jest.mock("next/link", () => {
 
 // Mock fetch
 global.fetch = jest.fn();
-import { setSession } from "@/test/test-utils";
+import { setSession, renderPageByPath, fixtures } from "@/test/test-utils";
 
 // Mock window.alert and window.confirm
 global.alert = jest.fn();
@@ -51,8 +51,7 @@ describe("Settings Page", () => {
   it("redirects unauthenticated users to signin", async () => {
     setSession("unauthenticated", null);
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/auth/signin");
@@ -68,8 +67,7 @@ describe("Settings Page", () => {
     // Mock fetch to return pending promise
     (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     expect(
       screen.getByText("", { selector: ".animate-spin" }),
@@ -82,28 +80,14 @@ describe("Settings Page", () => {
       status: "authenticated",
     });
 
-    const mockAccounts = [
-      {
-        id: "1",
-        name: "Test Account",
-        isPractice: false,
-        isActive: true,
-        isDefault: true,
-        currency: "USD",
-        cash: 1000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account" })];
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ accounts: mockAccounts }),
     });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Test Account")).toBeInTheDocument();
@@ -120,8 +104,7 @@ describe("Settings Page", () => {
       json: async () => ({ accounts: [] }),
     });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -145,8 +128,7 @@ describe("Settings Page", () => {
       json: async () => ({ accounts: [] }),
     });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -242,30 +224,8 @@ describe("Settings Page", () => {
     });
 
     const mockAccounts = [
-      {
-        id: "1",
-        name: "Live Account",
-        isPractice: false,
-        isActive: true,
-        isDefault: true,
-        currency: "USD",
-        cash: 1000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-      {
-        id: "2",
-        name: "Demo Account",
-        isPractice: true,
-        isActive: false,
-        isDefault: false,
-        currency: "USD",
-        cash: 10000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
+      fixtures.account({ id: "1", name: "Live Account" }),
+      fixtures.account({ id: "2", name: "Demo Account", isPractice: true, isActive: false, isDefault: false, cash: 10000 }),
     ];
 
     (global.fetch as jest.Mock).mockResolvedValue({
@@ -273,8 +233,7 @@ describe("Settings Page", () => {
       json: async () => ({ accounts: mockAccounts }),
     });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Live Account")).toBeInTheDocument();
@@ -293,8 +252,7 @@ describe("Settings Page", () => {
     });
     (global.fetch as jest.Mock).mockRejectedValue(new Error("API Error"));
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -313,20 +271,7 @@ describe("Settings Page", () => {
     // Mock window.confirm to return true
     window.confirm = jest.fn(() => true);
 
-    const mockAccounts = [
-      {
-        id: "1",
-        name: "Test Account",
-        isPractice: false,
-        isActive: true,
-        isDefault: true,
-        currency: "USD",
-        cash: 1000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account" })];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -342,8 +287,7 @@ describe("Settings Page", () => {
         json: async () => ({ accounts: [] }),
       });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -362,28 +306,14 @@ describe("Settings Page", () => {
     // Mock window.confirm to return false
     window.confirm = jest.fn(() => false);
 
-    const mockAccounts = [
-      {
-        id: "1",
-        name: "Test Account",
-        isPractice: false,
-        isActive: true,
-        isDefault: true,
-        currency: "USD",
-        cash: 1000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account" })];
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ accounts: mockAccounts }),
     });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -445,20 +375,7 @@ describe("Settings Page", () => {
       status: "authenticated",
     });
 
-    const mockAccounts = [
-      {
-        id: "1",
-        name: "Test Account",
-        isPractice: false,
-        isActive: true,
-        isDefault: false,
-        currency: "USD",
-        cash: 1000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account", isDefault: false })];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -476,8 +393,7 @@ describe("Settings Page", () => {
         }),
       });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -493,20 +409,7 @@ describe("Settings Page", () => {
       status: "authenticated",
     });
 
-    const mockAccounts = [
-      {
-        id: "1",
-        name: "Test Account",
-        isPractice: false,
-        isActive: true,
-        isDefault: false,
-        currency: "USD",
-        cash: 1000,
-        lastConnected: "2024-01-01T00:00:00Z",
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-01-01T00:00:00Z",
-      },
-    ];
+    const mockAccounts = [fixtures.account({ id: "1", name: "Test Account", isDefault: false })];
 
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
@@ -519,8 +422,7 @@ describe("Settings Page", () => {
         json: async () => ({ error: "Server error" }),
       });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Trading212 Accounts")).toBeInTheDocument();
@@ -540,8 +442,7 @@ describe("Settings Page", () => {
       json: async () => ({ accounts: [] }),
     });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Add Account")).toBeInTheDocument();
@@ -567,8 +468,7 @@ describe("Settings Page", () => {
         json: async () => ({ error: "Invalid API key" }),
       });
 
-    const Settings = (await import("@/app/settings/page")).default;
-    render(React.createElement(Settings));
+    await renderPageByPath("@/app/settings/page");
 
     await waitFor(() => {
       expect(screen.getByText("Add Account")).toBeInTheDocument();
