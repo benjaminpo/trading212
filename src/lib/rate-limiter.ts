@@ -15,35 +15,36 @@ export class RateLimiter {
     // Handle edge cases for rate limit parameter
     if (rateLimit !== undefined) {
       // Handle invalid rate limits
-      if (typeof rateLimit !== 'number') {
-        throw new Error('Rate limit must be a valid number');
+      if (typeof rateLimit !== "number") {
+        throw new Error("Rate limit must be a valid number");
       }
-      
+
       if (isNaN(rateLimit)) {
         return false;
       }
-      
+
       if (rateLimit <= 0) {
         return false;
       }
-      
+
       if (rateLimit === Infinity) {
         return true;
       }
-      
+
       if (rateLimit === Number.MIN_SAFE_INTEGER) {
         return false;
       }
     }
 
     // Handle invalid key types
-    if (typeof key !== 'string') {
-      throw new Error('Key must be a string');
+    if (typeof key !== "string") {
+      throw new Error("Key must be a string");
     }
 
     const now = this.getCurrentTime();
     const requests = this.requests.get(key) || [];
-    const effectiveRateLimit = rateLimit !== undefined ? rateLimit : this.maxRequests;
+    const effectiveRateLimit =
+      rateLimit !== undefined ? rateLimit : this.maxRequests;
 
     // Remove old requests outside the window
     const validRequests = requests.filter(
@@ -66,7 +67,8 @@ export class RateLimiter {
     if (requests.length === 0) return 0;
 
     const oldestRequest = Math.min(...requests);
-    const timeUntilReset = this.windowMs - (this.getCurrentTime() - oldestRequest);
+    const timeUntilReset =
+      this.windowMs - (this.getCurrentTime() - oldestRequest);
 
     return Math.max(0, timeUntilReset);
   }

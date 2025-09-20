@@ -14,7 +14,7 @@ describe("API Batcher Simple Edge Cases", () => {
   describe("calculateStats edge cases", () => {
     it("should handle empty portfolio", () => {
       const stats = (apiBatcher as any).calculateStats([]);
-      
+
       expect(stats).toEqual({
         activePositions: 0,
         totalPnL: 0,
@@ -28,9 +28,9 @@ describe("API Batcher Simple Edge Cases", () => {
         { quantity: 0, currentPrice: 100, ppl: 0 },
         { quantity: 0, currentPrice: 200, ppl: 0 },
       ];
-      
+
       const stats = (apiBatcher as any).calculateStats(portfolio);
-      
+
       expect(stats.totalPnLPercent).toBe(0);
     });
 
@@ -39,9 +39,9 @@ describe("API Batcher Simple Edge Cases", () => {
         { quantity: undefined, currentPrice: undefined, ppl: undefined },
         { quantity: null, currentPrice: null, ppl: null },
       ];
-      
+
       const stats = (apiBatcher as any).calculateStats(portfolio);
-      
+
       expect(stats).toEqual({
         activePositions: 2,
         totalPnL: 0,
@@ -56,9 +56,9 @@ describe("API Batcher Simple Edge Cases", () => {
         { quantity: undefined, currentPrice: 200, ppl: undefined },
         { quantity: 5, currentPrice: undefined, ppl: -25 },
       ];
-      
+
       const stats = (apiBatcher as any).calculateStats(portfolio);
-      
+
       expect(stats.activePositions).toBe(3);
       expect(stats.totalPnL).toBe(25); // 50 + 0 + (-25)
       expect(stats.totalValue).toBe(1000); // 10 * 100 + 0 + 0
@@ -68,9 +68,9 @@ describe("API Batcher Simple Edge Cases", () => {
       const portfolio = [
         { quantity: 1000000, currentPrice: 1000000, ppl: 1000000 },
       ];
-      
+
       const stats = (apiBatcher as any).calculateStats(portfolio);
-      
+
       expect(stats.activePositions).toBe(1);
       expect(stats.totalPnL).toBe(1000000);
       expect(stats.totalValue).toBe(1000000000000);
@@ -78,12 +78,10 @@ describe("API Batcher Simple Edge Cases", () => {
     });
 
     it("should handle negative quantities", () => {
-      const portfolio = [
-        { quantity: -10, currentPrice: 100, ppl: -50 },
-      ];
-      
+      const portfolio = [{ quantity: -10, currentPrice: 100, ppl: -50 }];
+
       const stats = (apiBatcher as any).calculateStats(portfolio);
-      
+
       expect(stats.totalValue).toBe(-1000); // -10 * 100
       expect(stats.totalPnL).toBe(-50);
     });
@@ -91,7 +89,8 @@ describe("API Batcher Simple Edge Cases", () => {
 
   describe("fetchAccountData edge cases", () => {
     it("should handle includeOrders false", async () => {
-      const mockRequest = jest.fn()
+      const mockRequest = jest
+        .fn()
         .mockResolvedValueOnce({ account: "data" })
         .mockResolvedValueOnce([{ position: "data" }]);
 
@@ -102,7 +101,7 @@ describe("API Batcher Simple Edge Cases", () => {
         "acc1",
         "key1",
         false,
-        false
+        false,
       );
 
       expect(result).toEqual({
@@ -114,7 +113,8 @@ describe("API Batcher Simple Edge Cases", () => {
     });
 
     it("should handle includeOrders true", async () => {
-      const mockRequest = jest.fn()
+      const mockRequest = jest
+        .fn()
         .mockResolvedValueOnce({ account: "data" })
         .mockResolvedValueOnce([{ position: "data" }])
         .mockResolvedValueOnce([{ order: "data" }]);
@@ -126,7 +126,7 @@ describe("API Batcher Simple Edge Cases", () => {
         "acc1",
         "key1",
         false,
-        true
+        true,
       );
 
       expect(result).toEqual({
@@ -138,7 +138,8 @@ describe("API Batcher Simple Edge Cases", () => {
     });
 
     it("should handle rejected promises in fetchAccountData", async () => {
-      const mockRequest = jest.fn()
+      const mockRequest = jest
+        .fn()
         .mockRejectedValueOnce(new Error("Account failed"))
         .mockRejectedValueOnce(new Error("Portfolio failed"))
         .mockRejectedValueOnce(new Error("Orders failed"));
@@ -150,7 +151,7 @@ describe("API Batcher Simple Edge Cases", () => {
         "acc1",
         "key1",
         false,
-        true
+        true,
       );
 
       expect(result).toEqual({
@@ -162,7 +163,8 @@ describe("API Batcher Simple Edge Cases", () => {
     });
 
     it("should handle mixed success and failure", async () => {
-      const mockRequest = jest.fn()
+      const mockRequest = jest
+        .fn()
         .mockResolvedValueOnce({ account: "data" })
         .mockRejectedValueOnce(new Error("Portfolio failed"))
         .mockResolvedValueOnce([{ order: "data" }]);
@@ -174,7 +176,7 @@ describe("API Batcher Simple Edge Cases", () => {
         "acc1",
         "key1",
         false,
-        true
+        true,
       );
 
       expect(result).toEqual({

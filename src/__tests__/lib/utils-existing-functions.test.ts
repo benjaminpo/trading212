@@ -2,7 +2,13 @@
  * Tests for existing utility functions to improve branch coverage
  */
 
-import { cn, formatCurrency, formatPercent, formatDate, dedupeLatestBy } from "@/lib/utils";
+import {
+  cn,
+  formatCurrency,
+  formatPercent,
+  formatDate,
+  dedupeLatestBy,
+} from "@/lib/utils";
 
 describe("Utils Existing Functions", () => {
   describe("cn function", () => {
@@ -19,7 +25,9 @@ describe("Utils Existing Functions", () => {
     });
 
     it("should handle conditional classes", () => {
-      expect(cn("base", false && "hidden", true && "visible")).toBe("base visible");
+      expect(cn("base", false && "hidden", true && "visible")).toBe(
+        "base visible",
+      );
     });
 
     it("should handle null and undefined", () => {
@@ -115,13 +123,21 @@ describe("Utils Existing Functions", () => {
 
   describe("dedupeLatestBy", () => {
     it("should handle empty array", () => {
-      const result = dedupeLatestBy([], (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        [],
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result).toEqual([]);
     });
 
     it("should handle single item", () => {
       const items = [{ id: "1", createdAt: "2024-01-01" }];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result).toEqual(items);
     });
 
@@ -130,8 +146,14 @@ describe("Utils Existing Functions", () => {
         { id: "1", createdAt: "2024-01-01", value: "old" },
         { id: "1", createdAt: "2024-01-02", value: "new" },
       ];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
-      expect(result).toEqual([{ id: "1", createdAt: "2024-01-02", value: "new" }]);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
+      expect(result).toEqual([
+        { id: "1", createdAt: "2024-01-02", value: "new" },
+      ]);
     });
 
     it("should handle multiple unique items", () => {
@@ -139,7 +161,11 @@ describe("Utils Existing Functions", () => {
         { id: "1", createdAt: "2024-01-01" },
         { id: "2", createdAt: "2024-01-02" },
       ];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result).toHaveLength(2);
     });
 
@@ -148,7 +174,11 @@ describe("Utils Existing Functions", () => {
         { id: "1", createdAt: new Date("2024-01-01") },
         { id: "1", createdAt: new Date("2024-01-02") },
       ];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result).toEqual([{ id: "1", createdAt: new Date("2024-01-02") }]);
     });
 
@@ -157,7 +187,11 @@ describe("Utils Existing Functions", () => {
         { id: "1", createdAt: 1704067200000 }, // 2024-01-01
         { id: "1", createdAt: 1704153600000 }, // 2024-01-02
       ];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result).toEqual([{ id: "1", createdAt: 1704067200000 }]); // Earlier date comes first due to sorting
     });
 
@@ -167,7 +201,11 @@ describe("Utils Existing Functions", () => {
         { id: "2", createdAt: "2024-01-03" },
         { id: "3", createdAt: "2024-01-02" },
       ];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result[0].id).toBe("2"); // Latest first
       expect(result[1].id).toBe("3");
       expect(result[2].id).toBe("1");
@@ -179,7 +217,11 @@ describe("Utils Existing Functions", () => {
         { id: "1", createdAt: new Date("2024-01-02") },
         { id: "1", createdAt: 1704153600000 }, // 2024-01-02 as number
       ];
-      const result = dedupeLatestBy(items, (item) => item.id, (item) => item.createdAt);
+      const result = dedupeLatestBy(
+        items,
+        (item) => item.id,
+        (item) => item.createdAt,
+      );
       expect(result).toHaveLength(1);
       expect(result[0].createdAt).toBeInstanceOf(Date); // Should return the Date object
     });

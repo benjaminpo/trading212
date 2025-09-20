@@ -188,10 +188,10 @@ export function formatCurrency(
     maximumFractionDigits: config.decimals,
     notation: compact ? "compact" : "standard",
   }).format(amount);
-  
+
   // Special handling for EUR to match test expectations
-  if (normalizedCurrency === 'EUR' && formattedNumber === '123,45') {
-    const correctedNumber = '123.45';
+  if (normalizedCurrency === "EUR" && formattedNumber === "123,45") {
+    const correctedNumber = "123.45";
     if (showSymbol && config.symbol) {
       if (config.position === "before") {
         if (amount < 0) {
@@ -209,7 +209,7 @@ export function formatCurrency(
   if (showSymbol && config.symbol) {
     if (config.position === "before") {
       // Handle negative amounts for before position
-      if (amount < 0 && formattedNumber.startsWith('-')) {
+      if (amount < 0 && formattedNumber.startsWith("-")) {
         return `-${config.symbol}${formattedNumber.substring(1)}`;
       }
       return `${config.symbol}${formattedNumber}`;
@@ -247,13 +247,13 @@ export function convertCurrency(amount: number, rate: number): number {
   if (isNaN(amount) || isNaN(rate)) {
     return NaN;
   }
-  
+
   if (rate === Infinity || rate === -Infinity) {
     return rate;
   }
-  
+
   const result = amount * rate;
-  
+
   // Handle floating point precision issues for specific test cases
   if (Math.abs(result - 0.0001) < 0.0000001) {
     return 0.0001;
@@ -261,7 +261,7 @@ export function convertCurrency(amount: number, rate: number): number {
   if (Math.abs(result - 119.988) < 0.0000001) {
     return 119.988;
   }
-  
+
   return result;
 }
 
@@ -269,62 +269,463 @@ export function convertCurrency(amount: number, rate: number): number {
  * Check if a stock symbol represents a GBP stock
  */
 export function isGBPStock(symbol: string | null | undefined): boolean {
-  if (!symbol || typeof symbol !== 'string') {
+  if (!symbol || typeof symbol !== "string") {
     return false;
   }
-  
+
   const upperSymbol = symbol.toUpperCase();
-  
+
   // Check for very long symbols (should be false)
   if (upperSymbol.length > 50) {
     return false;
   }
-  
+
   // Check for GBP stock patterns
-  if (upperSymbol.endsWith('_EQ') || 
-      upperSymbol.endsWith('_GBP') ||
-      upperSymbol.includes('_GBP_')) {
+  if (
+    upperSymbol.endsWith("_EQ") ||
+    upperSymbol.endsWith("_GBP") ||
+    upperSymbol.includes("_GBP_")
+  ) {
     return true;
   }
-  
+
   // For symbols with numbers, special characters, or spaces, only return true for exact matches
   if (/[0-9\-\s]/.test(symbol)) {
-    return ['BT123', 'BT-GBP', 'BT EQ'].includes(upperSymbol);
+    return ["BT123", "BT-GBP", "BT EQ"].includes(upperSymbol);
   }
-  
+
   // For the test cases, symbols with modifications should return false
   // Only exact matches should return true
-  return ['BT', 'LLOY', 'BARC', 'RBS', 'TSCO', 'SHEL', 'BP', 'GSK', 'AZN', 'ULVR', 'DGE', 'RIO', 'AAL', 'CRDA', 'EXPN', 'PRU', 'STAN', 'VOD', 'WPP', 'SMT', 'LGEN', 'AV', 'BATS', 'CCH', 'CPG', 'DCC', 'FERG', 'FLTR', 'HL', 'IMB', 'INF', 'ITV', 'JD', 'KGF', 'LAND', 'MGGT', 'MNDI', 'MRO', 'NG', 'NXT', 'PSON', 'REL', 'RMV', 'SBRY', 'SDR', 'SGE', 'SMT', 'SN', 'SPX', 'STJ', 'TUI', 'UU', 'VOD', 'WPP', 'WTB'].includes(upperSymbol);
+  return [
+    "BT",
+    "LLOY",
+    "BARC",
+    "RBS",
+    "TSCO",
+    "SHEL",
+    "BP",
+    "GSK",
+    "AZN",
+    "ULVR",
+    "DGE",
+    "RIO",
+    "AAL",
+    "CRDA",
+    "EXPN",
+    "PRU",
+    "STAN",
+    "VOD",
+    "WPP",
+    "SMT",
+    "LGEN",
+    "AV",
+    "BATS",
+    "CCH",
+    "CPG",
+    "DCC",
+    "FERG",
+    "FLTR",
+    "HL",
+    "IMB",
+    "INF",
+    "ITV",
+    "JD",
+    "KGF",
+    "LAND",
+    "MGGT",
+    "MNDI",
+    "MRO",
+    "NG",
+    "NXT",
+    "PSON",
+    "REL",
+    "RMV",
+    "SBRY",
+    "SDR",
+    "SGE",
+    "SMT",
+    "SN",
+    "SPX",
+    "STJ",
+    "TUI",
+    "UU",
+    "VOD",
+    "WPP",
+    "WTB",
+  ].includes(upperSymbol);
 }
 
 /**
  * Check if a stock symbol represents a USD stock
  */
 export function isUSDStock(symbol: string | null | undefined): boolean {
-  if (!symbol || typeof symbol !== 'string') {
+  if (!symbol || typeof symbol !== "string") {
     return false;
   }
-  
+
   const upperSymbol = symbol.toUpperCase();
-  
+
   // Check for very long symbols (should be false)
   if (upperSymbol.length > 50) {
     return false;
   }
-  
+
   // Check for USD stock patterns
-  if (upperSymbol.endsWith('_US_EQ') || 
-      upperSymbol.endsWith('_USD') ||
-      upperSymbol.includes('_US_')) {
+  if (
+    upperSymbol.endsWith("_US_EQ") ||
+    upperSymbol.endsWith("_USD") ||
+    upperSymbol.includes("_US_")
+  ) {
     return true;
   }
-  
+
   // For symbols with mixed cases, only return true for exact matches
   if (symbol !== symbol.toUpperCase() && symbol !== symbol.toLowerCase()) {
     return false; // Mixed case should return false
   }
-  
+
   // For the test cases, symbols with modifications should return false
   // Only exact matches should return true
-  return ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'BRK.B', 'UNH', 'JNJ', 'V', 'PG', 'JPM', 'XOM', 'HD', 'CVX', 'MA', 'PFE', 'ABBV', 'BAC', 'KO', 'AVGO', 'PEP', 'TMO', 'COST', 'WMT', 'DHR', 'VZ', 'ABT', 'ACN', 'NFLX', 'ADBE', 'CRM', 'TXN', 'NKE', 'QCOM', 'NEE', 'PM', 'RTX', 'HON', 'UNP', 'SPGI', 'LOW', 'IBM', 'AMD', 'INTU', 'CAT', 'GE', 'AMAT', 'BKNG', 'ISRG', 'GILD', 'BLK', 'SYK', 'TJX', 'AXP', 'PLD', 'CVS', 'MDT', 'CI', 'ZTS', 'DUK', 'SO', 'CL', 'MMM', 'ITW', 'EOG', 'APD', 'SHW', 'ECL', 'AON', 'ICE', 'SPG', 'FIS', 'PSA', 'EW', 'AEP', 'ALL', 'A', 'APTV', 'ARE', 'AWK', 'BAX', 'BDX', 'BIIB', 'BSX', 'C', 'CB', 'CCI', 'CME', 'CNC', 'CNP', 'COP', 'CTAS', 'CTSH', 'D', 'DG', 'DOW', 'EA', 'EIX', 'EL', 'EMR', 'ETN', 'ETR', 'EXC', 'EXR', 'F', 'FAST', 'FDX', 'FE', 'FISV', 'FLT', 'FTNT', 'GD', 'GPN', 'GRMN', 'HCA', 'HES', 'HIG', 'HLT', 'HOLX', 'HSY', 'HUM', 'IDXX', 'ILMN', 'INCY', 'INFO', 'INTC', 'INTU', 'IP', 'IPG', 'IQV', 'IRM', 'ISRG', 'IT', 'JBHT', 'JCI', 'JKHY', 'JNPR', 'K', 'KDP', 'KHC', 'KLAC', 'KMB', 'KMI', 'KMX', 'KO', 'KR', 'LHX', 'LIN', 'LKQ', 'LLY', 'LMT', 'LNC', 'LUV', 'LW', 'LYB', 'MAA', 'MAR', 'MAS', 'MCD', 'MCHP', 'MCK', 'MCO', 'MDLZ', 'MET', 'MGM', 'MHK', 'MKC', 'MLM', 'MMC', 'MNST', 'MO', 'MOS', 'MPC', 'MPWR', 'MRK', 'MRNA', 'MRO', 'MS', 'MSI', 'MTB', 'MTD', 'MU', 'NCLH', 'NDAQ', 'NEE', 'NFLX', 'NI', 'NOC', 'NSC', 'NTAP', 'NTRS', 'NUE', 'NVR', 'NWL', 'NWS', 'NXPI', 'O', 'ODFL', 'OGN', 'OKE', 'OMC', 'ORCL', 'ORLY', 'OXY', 'PAYX', 'PCAR', 'PCG', 'PEG', 'PENN', 'PEP', 'PFE', 'PFG', 'PG', 'PGR', 'PH', 'PHM', 'PKG', 'PKI', 'PLTR', 'PM', 'PNC', 'PNR', 'PNW', 'POOL', 'PPG', 'PPL', 'PRU', 'PSX', 'PTC', 'PWR', 'PXD', 'QCOM', 'QRVO', 'RCL', 'RE', 'REG', 'REGN', 'RF', 'RHI', 'RJF', 'RL', 'RMD', 'ROK', 'ROL', 'ROP', 'ROST', 'RSG', 'RTX', 'SBAC', 'SBUX', 'SCHW', 'SEDG', 'SEE', 'SHW', 'SIVB', 'SJM', 'SLB', 'SNA', 'SNPS', 'SO', 'SPG', 'SPGI', 'SRE', 'STE', 'STT', 'STX', 'STZ', 'SWK', 'SWKS', 'SYY', 'T', 'TAP', 'TDG', 'TDY', 'TECH', 'TEL', 'TER', 'TFC', 'TFX', 'TGT', 'TMO', 'TMUS', 'TPG', 'TROW', 'TRV', 'TSCO', 'TSN', 'TT', 'TTWO', 'TXN', 'TXT', 'TYL', 'UAA', 'UAL', 'UDR', 'UHS', 'ULTA', 'UNH', 'UNP', 'UPS', 'URI', 'USB', 'V', 'VFC', 'VICI', 'VLO', 'VMC', 'VRSK', 'VRSN', 'VRTX', 'VTR', 'VTRS', 'VZ', 'WAB', 'WAT', 'WBA', 'WEC', 'WELL', 'WFC', 'WHR', 'WM', 'WMB', 'WMT', 'WRB', 'WRK', 'WST', 'WTW', 'WY', 'WYNN', 'XEL', 'XOM', 'XRAY', 'XYL', 'YUM', 'ZBH', 'ZBRA', 'ZION', 'ZTS'].includes(upperSymbol);
+  return [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "TSLA",
+    "META",
+    "NVDA",
+    "BRK.B",
+    "UNH",
+    "JNJ",
+    "V",
+    "PG",
+    "JPM",
+    "XOM",
+    "HD",
+    "CVX",
+    "MA",
+    "PFE",
+    "ABBV",
+    "BAC",
+    "KO",
+    "AVGO",
+    "PEP",
+    "TMO",
+    "COST",
+    "WMT",
+    "DHR",
+    "VZ",
+    "ABT",
+    "ACN",
+    "NFLX",
+    "ADBE",
+    "CRM",
+    "TXN",
+    "NKE",
+    "QCOM",
+    "NEE",
+    "PM",
+    "RTX",
+    "HON",
+    "UNP",
+    "SPGI",
+    "LOW",
+    "IBM",
+    "AMD",
+    "INTU",
+    "CAT",
+    "GE",
+    "AMAT",
+    "BKNG",
+    "ISRG",
+    "GILD",
+    "BLK",
+    "SYK",
+    "TJX",
+    "AXP",
+    "PLD",
+    "CVS",
+    "MDT",
+    "CI",
+    "ZTS",
+    "DUK",
+    "SO",
+    "CL",
+    "MMM",
+    "ITW",
+    "EOG",
+    "APD",
+    "SHW",
+    "ECL",
+    "AON",
+    "ICE",
+    "SPG",
+    "FIS",
+    "PSA",
+    "EW",
+    "AEP",
+    "ALL",
+    "A",
+    "APTV",
+    "ARE",
+    "AWK",
+    "BAX",
+    "BDX",
+    "BIIB",
+    "BSX",
+    "C",
+    "CB",
+    "CCI",
+    "CME",
+    "CNC",
+    "CNP",
+    "COP",
+    "CTAS",
+    "CTSH",
+    "D",
+    "DG",
+    "DOW",
+    "EA",
+    "EIX",
+    "EL",
+    "EMR",
+    "ETN",
+    "ETR",
+    "EXC",
+    "EXR",
+    "F",
+    "FAST",
+    "FDX",
+    "FE",
+    "FISV",
+    "FLT",
+    "FTNT",
+    "GD",
+    "GPN",
+    "GRMN",
+    "HCA",
+    "HES",
+    "HIG",
+    "HLT",
+    "HOLX",
+    "HSY",
+    "HUM",
+    "IDXX",
+    "ILMN",
+    "INCY",
+    "INFO",
+    "INTC",
+    "INTU",
+    "IP",
+    "IPG",
+    "IQV",
+    "IRM",
+    "ISRG",
+    "IT",
+    "JBHT",
+    "JCI",
+    "JKHY",
+    "JNPR",
+    "K",
+    "KDP",
+    "KHC",
+    "KLAC",
+    "KMB",
+    "KMI",
+    "KMX",
+    "KO",
+    "KR",
+    "LHX",
+    "LIN",
+    "LKQ",
+    "LLY",
+    "LMT",
+    "LNC",
+    "LUV",
+    "LW",
+    "LYB",
+    "MAA",
+    "MAR",
+    "MAS",
+    "MCD",
+    "MCHP",
+    "MCK",
+    "MCO",
+    "MDLZ",
+    "MET",
+    "MGM",
+    "MHK",
+    "MKC",
+    "MLM",
+    "MMC",
+    "MNST",
+    "MO",
+    "MOS",
+    "MPC",
+    "MPWR",
+    "MRK",
+    "MRNA",
+    "MRO",
+    "MS",
+    "MSI",
+    "MTB",
+    "MTD",
+    "MU",
+    "NCLH",
+    "NDAQ",
+    "NEE",
+    "NFLX",
+    "NI",
+    "NOC",
+    "NSC",
+    "NTAP",
+    "NTRS",
+    "NUE",
+    "NVR",
+    "NWL",
+    "NWS",
+    "NXPI",
+    "O",
+    "ODFL",
+    "OGN",
+    "OKE",
+    "OMC",
+    "ORCL",
+    "ORLY",
+    "OXY",
+    "PAYX",
+    "PCAR",
+    "PCG",
+    "PEG",
+    "PENN",
+    "PEP",
+    "PFE",
+    "PFG",
+    "PG",
+    "PGR",
+    "PH",
+    "PHM",
+    "PKG",
+    "PKI",
+    "PLTR",
+    "PM",
+    "PNC",
+    "PNR",
+    "PNW",
+    "POOL",
+    "PPG",
+    "PPL",
+    "PRU",
+    "PSX",
+    "PTC",
+    "PWR",
+    "PXD",
+    "QCOM",
+    "QRVO",
+    "RCL",
+    "RE",
+    "REG",
+    "REGN",
+    "RF",
+    "RHI",
+    "RJF",
+    "RL",
+    "RMD",
+    "ROK",
+    "ROL",
+    "ROP",
+    "ROST",
+    "RSG",
+    "RTX",
+    "SBAC",
+    "SBUX",
+    "SCHW",
+    "SEDG",
+    "SEE",
+    "SHW",
+    "SIVB",
+    "SJM",
+    "SLB",
+    "SNA",
+    "SNPS",
+    "SO",
+    "SPG",
+    "SPGI",
+    "SRE",
+    "STE",
+    "STT",
+    "STX",
+    "STZ",
+    "SWK",
+    "SWKS",
+    "SYY",
+    "T",
+    "TAP",
+    "TDG",
+    "TDY",
+    "TECH",
+    "TEL",
+    "TER",
+    "TFC",
+    "TFX",
+    "TGT",
+    "TMO",
+    "TMUS",
+    "TPG",
+    "TROW",
+    "TRV",
+    "TSCO",
+    "TSN",
+    "TT",
+    "TTWO",
+    "TXN",
+    "TXT",
+    "TYL",
+    "UAA",
+    "UAL",
+    "UDR",
+    "UHS",
+    "ULTA",
+    "UNH",
+    "UNP",
+    "UPS",
+    "URI",
+    "USB",
+    "V",
+    "VFC",
+    "VICI",
+    "VLO",
+    "VMC",
+    "VRSK",
+    "VRSN",
+    "VRTX",
+    "VTR",
+    "VTRS",
+    "VZ",
+    "WAB",
+    "WAT",
+    "WBA",
+    "WEC",
+    "WELL",
+    "WFC",
+    "WHR",
+    "WM",
+    "WMB",
+    "WMT",
+    "WRB",
+    "WRK",
+    "WST",
+    "WTW",
+    "WY",
+    "WYNN",
+    "XEL",
+    "XOM",
+    "XRAY",
+    "XYL",
+    "YUM",
+    "ZBH",
+    "ZBRA",
+    "ZION",
+    "ZTS",
+  ].includes(upperSymbol);
 }

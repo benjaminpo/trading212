@@ -32,9 +32,12 @@ describe("Trail Stop quantity input precision", () => {
     render(React.createElement(TrailStopPage));
 
     // Wait for page to load and data to be fetched
-    await waitFor(() => {
-      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+      },
+      { timeout: 5000 },
+    );
 
     // Wait for Create Order button to appear
     const createButton = await screen.findByText("Create Order");
@@ -58,9 +61,12 @@ describe("Trail Stop quantity input precision", () => {
     render(React.createElement(TrailStopPage));
 
     // Wait for page to load and data to be fetched
-    await waitFor(() => {
-      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+      },
+      { timeout: 5000 },
+    );
 
     const createButton = await screen.findByText("Create Order");
     fireEvent.click(createButton);

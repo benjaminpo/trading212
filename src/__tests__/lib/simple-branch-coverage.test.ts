@@ -6,7 +6,7 @@ describe("Simple Branch Coverage", () => {
   describe("Conditional logic edge cases", () => {
     it("should handle truthy values", () => {
       const values = [true, 1, "test", {}, []];
-      values.forEach(value => {
+      values.forEach((value) => {
         if (value) {
           expect(value).toBeTruthy();
         }
@@ -15,7 +15,7 @@ describe("Simple Branch Coverage", () => {
 
     it("should handle falsy values", () => {
       const values = [false, 0, "", null, undefined];
-      values.forEach(value => {
+      values.forEach((value) => {
         if (!value) {
           expect(value).toBeFalsy();
         }
@@ -27,7 +27,7 @@ describe("Simple Branch Coverage", () => {
       const result2 = false ? "yes" : "no";
       const result3 = null ? "yes" : "no";
       const result4 = undefined ? "yes" : "no";
-      
+
       expect(result1).toBe("yes");
       expect(result2).toBe("no");
       expect(result3).toBe("no");
@@ -39,7 +39,7 @@ describe("Simple Branch Coverage", () => {
       const result2 = false && "value";
       const result3 = null && "value";
       const result4 = undefined && "value";
-      
+
       expect(result1).toBe("value");
       expect(result2).toBe(false);
       expect(result3).toBe(null);
@@ -51,7 +51,7 @@ describe("Simple Branch Coverage", () => {
       const result2 = false || "default";
       const result3 = null || "default";
       const result4 = undefined || "default";
-      
+
       expect(result1).toBe(true);
       expect(result2).toBe("default");
       expect(result3).toBe("default");
@@ -77,7 +77,7 @@ describe("Simple Branch Coverage", () => {
       expect(typeof [] === "object").toBe(true);
       expect(typeof null === "object").toBe(true);
       expect(typeof undefined === "undefined").toBe(true);
-      expect(typeof function(){} === "function").toBe(true);
+      expect(typeof function () {} === "function").toBe(true);
     });
 
     it("should handle instanceof checks", () => {
