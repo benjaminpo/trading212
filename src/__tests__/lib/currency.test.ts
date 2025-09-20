@@ -23,8 +23,8 @@ describe("Currency utilities", () => {
     });
 
     it("handles negative values", () => {
-      expect(formatCurrency(-1234.56, "USD")).toBe("$-1,234.56");
-      expect(formatCurrency(-0.01, "USD")).toBe("$-0.01");
+      expect(formatCurrency(-1234.56, "USD")).toBe("-$1,234.56");
+      expect(formatCurrency(-0.01, "USD")).toBe("-$0.01");
     });
 
     it("handles very small values", () => {
@@ -178,7 +178,7 @@ describe("Currency utilities", () => {
 
     it("handles infinity values", () => {
       expect(formatCurrency(Infinity, "USD")).toBe("$∞");
-      expect(formatCurrency(-Infinity, "USD")).toBe("$-∞");
+      expect(formatCurrency(-Infinity, "USD")).toBe("-$∞");
     });
 
     it("handles NaN values", () => {

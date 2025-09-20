@@ -44,11 +44,11 @@ describe("currency utils edge cases", () => {
   });
 
   it("handles negative edge case amounts", () => {
-    expect(formatCurrency(-0.0001, "USD")).toBe("$-0.00");
-    expect(formatCurrency(-0.0009, "USD")).toBe("$-0.00");
-    expect(formatCurrency(-0.001, "USD")).toBe("$-0.00");
-    expect(formatCurrency(-0.004, "USD")).toBe("$-0.00");
-    expect(formatCurrency(-0.005, "USD")).toBe("$-0.01");
+    expect(formatCurrency(-0.0001, "USD")).toBe("-$0.00");
+    expect(formatCurrency(-0.0009, "USD")).toBe("-$0.00");
+    expect(formatCurrency(-0.001, "USD")).toBe("-$0.00");
+    expect(formatCurrency(-0.004, "USD")).toBe("-$0.00");
+    expect(formatCurrency(-0.005, "USD")).toBe("-$0.01");
   });
 
   it("handles very large numbers", () => {

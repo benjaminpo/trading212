@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 // Mock next-auth and next/navigation
 jest.mock("next-auth/react", () => ({
@@ -31,11 +31,13 @@ describe("Trail Stop quantity input precision", () => {
     const TrailStopPage = (await import("@/app/trail-stop/page")).default;
     render(React.createElement(TrailStopPage));
 
-    // Wait for page to load
-    await screen.findByText("Create Order");
+    // Wait for page to load and data to be fetched
+    await waitFor(() => {
+      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+    }, { timeout: 5000 });
 
-    // Click create button to open form
-    const createButton = screen.getByText("Create Order");
+    // Wait for Create Order button to appear
+    const createButton = await screen.findByText("Create Order");
     fireEvent.click(createButton);
 
     // Find quantity input
@@ -55,8 +57,12 @@ describe("Trail Stop quantity input precision", () => {
     const TrailStopPage = (await import("@/app/trail-stop/page")).default;
     render(React.createElement(TrailStopPage));
 
-    await screen.findByText("Create Order");
-    const createButton = screen.getByText("Create Order");
+    // Wait for page to load and data to be fetched
+    await waitFor(() => {
+      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+    }, { timeout: 5000 });
+
+    const createButton = await screen.findByText("Create Order");
     fireEvent.click(createButton);
 
     const quantityInput =

@@ -105,7 +105,7 @@ describe("DailyPnLChart - Branch Coverage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("2")).toBeInTheDocument(); // Days tracked
-      expect(screen.getByText("$-100.00")).toBeInTheDocument(); // Total change
+      expect(screen.getByText("-$100.00")).toBeInTheDocument(); // Total change
       expect(screen.getAllByText("$200.00")[0]).toBeInTheDocument(); // Best day (first occurrence)
       expect(screen.getAllByText("$100.00")[0]).toBeInTheDocument(); // Worst day (first occurrence)
     });
@@ -453,7 +453,7 @@ describe("DailyPnLChart - Branch Coverage", () => {
 
     await waitFor(() => {
       expect(screen.getByText("2")).toBeInTheDocument(); // Days tracked (shows 2 from mockSummary)
-      expect(screen.getByText("$-100.00")).toBeInTheDocument(); // Total change (from mockSummary)
+      expect(screen.getByText("-$100.00")).toBeInTheDocument(); // Total change (from mockSummary)
     });
   });
 

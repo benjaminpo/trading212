@@ -9,6 +9,8 @@ describe("RateLimiter", () => {
   beforeEach(() => {
     rateLimiter = new RateLimiter(windowMs, maxRequests);
     jest.useFakeTimers();
+    // Override the getCurrentTime method to use fake timers
+    (rateLimiter as any).getCurrentTime = () => Date.now();
   });
 
   afterEach(() => {
