@@ -34,6 +34,8 @@ import NotificationBell from "@/components/notification-bell";
 import MobileNav from "@/components/mobile-nav";
 import DailyPnLChart from "@/components/daily-pnl-chart";
 import { formatCurrency } from "@/lib/currency";
+import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardStats {
   totalPnL: number;
@@ -79,6 +81,7 @@ export default function Dashboard() {
     connected: false,
   });
   const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
     null,
@@ -130,6 +133,7 @@ export default function Dashboard() {
   );
 
   const loadSingleAccountData = useCallback(async () => {
+    setDataLoading(true);
     const accountUrl = `/api/trading212/optimized/account?accountId=${selectedAccountId}`;
     const accountResponse = await fetchWithRetry(accountUrl);
     let accountData = null;
@@ -192,10 +196,11 @@ export default function Dashboard() {
       });
       setConnectionStatus({ connected: false });
     }
-    setLoading(false);
+    setDataLoading(false);
   }, [selectedAccountId, fetchWithRetry]);
 
   const loadAggregatedAccountData = useCallback(async () => {
+    setDataLoading(true);
     // Load all accounts first
     const accountsResponse = await fetchWithRetry(
       "/api/trading212/optimized/accounts",
@@ -229,7 +234,7 @@ export default function Dashboard() {
       setConnectionStatus({
         connected: false,
       });
-      setLoading(false);
+      setDataLoading(false);
       return;
     }
 
@@ -344,14 +349,15 @@ export default function Dashboard() {
       currency: null,
     });
 
-    setLoading(false);
+    setDataLoading(false);
   }, [fetchWithRetry]);
 
   // Load dashboard data when authenticated and component is mounted
   useEffect(() => {
     if (!mounted || status !== "authenticated") return;
 
-    setLoading(true);
+    // Set initial loading to false once we're ready to show UI
+    setLoading(false);
     if (selectedAccountId) {
       void loadSingleAccountData();
     } else {
@@ -368,10 +374,10 @@ export default function Dashboard() {
   // Note: Removed window focus event listener to avoid unnecessary data refreshes
   // when users switch back from other windows
 
-  if (!mounted || status === "loading" || loading) {
+  if (!mounted || status === "loading") {
     return (
       <div className="min-h-screen pt-safe pb-safe flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <Spinner size="3xl" variant="primary" />
       </div>
     );
   }
@@ -393,7 +399,17 @@ export default function Dashboard() {
                   <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-50">
                     Dashboard
                   </h1>
-                  {connectionStatus.connected ? (
+                  {dataLoading ? (
+                    <Badge
+                      variant="secondary"
+                      className="w-fit bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                    >
+                      <Spinner size="sm" variant="muted" className="mr-1.5" />
+                      <span className="truncate max-w-[200px] sm:max-w-none">
+                        Loading...
+                      </span>
+                    </Badge>
+                  ) : connectionStatus.connected ? (
                     <Badge
                       className={`w-fit ${
                         connectionStatus.mode === "AGGREGATED"
@@ -431,10 +447,14 @@ export default function Dashboard() {
 
                 {/* Welcome message and cash info */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+                  <div className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
                     Welcome back, {session.user?.name}
-                    {connectionStatus.connected &&
-                      connectionStatus.cash !== undefined && (
+                    {dataLoading ? (
+                      <span className="block sm:inline sm:ml-2 text-xs sm:text-sm">
+                        • <Skeleton className="inline-block h-4 w-24" />
+                      </span>
+                    ) : connectionStatus.connected &&
+                      connectionStatus.cash !== undefined ? (
                         <span className="block sm:inline sm:ml-2 text-xs sm:text-sm">
                           • Available Cash:{" "}
                           {formatCurrency(
@@ -442,8 +462,8 @@ export default function Dashboard() {
                             connectionStatus.currency || "USD",
                           )}
                         </span>
-                      )}
-                  </p>
+                      ) : null}
+                  </div>
 
                   {/* Account selector and notification - mobile optimized */}
                   <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-4">
@@ -496,23 +516,35 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
-                <div
-                  className={`text-lg sm:text-3xl font-bold mb-1 ${stats.totalPnL >= 0 ? "profit" : "loss"}`}
-                >
-                  {formatCurrency(stats.totalPnL, stats.currency || "USD")}
-                </div>
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <Badge
-                    variant={stats.totalPnLPercent >= 0 ? "success" : "error"}
-                    className="text-xs"
-                  >
-                    {stats.totalPnLPercent >= 0 ? "+" : ""}
-                    {stats.totalPnLPercent.toFixed(2)}%
-                  </Badge>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
-                    from start
-                  </span>
-                </div>
+                {dataLoading ? (
+                  <>
+                    <Skeleton className="h-8 sm:h-10 w-24 sm:w-32 mb-2" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-4 w-16 hidden sm:block" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className={`text-lg sm:text-3xl font-bold mb-1 ${stats.totalPnL >= 0 ? "profit" : "loss"}`}
+                    >
+                      {formatCurrency(stats.totalPnL, stats.currency || "USD")}
+                    </div>
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <Badge
+                        variant={stats.totalPnLPercent >= 0 ? "success" : "error"}
+                        className="text-xs"
+                      >
+                        {stats.totalPnLPercent >= 0 ? "+" : ""}
+                        {stats.totalPnLPercent.toFixed(2)}%
+                      </Badge>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
+                        from start
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -532,23 +564,35 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
-                <div
-                  className={`text-lg sm:text-3xl font-bold mb-1 ${stats.todayPnL >= 0 ? "profit" : "loss"}`}
-                >
-                  {formatCurrency(stats.todayPnL, stats.currency || "USD")}
-                </div>
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <Badge
-                    variant={stats.todayPnLPercent >= 0 ? "success" : "error"}
-                    className="text-xs"
-                  >
-                    {stats.todayPnLPercent >= 0 ? "+" : ""}
-                    {stats.todayPnLPercent.toFixed(2)}%
-                  </Badge>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
-                    today
-                  </span>
-                </div>
+                {dataLoading ? (
+                  <>
+                    <Skeleton className="h-8 sm:h-10 w-24 sm:w-32 mb-2" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-4 w-16 hidden sm:block" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className={`text-lg sm:text-3xl font-bold mb-1 ${stats.todayPnL >= 0 ? "profit" : "loss"}`}
+                    >
+                      {formatCurrency(stats.todayPnL, stats.currency || "USD")}
+                    </div>
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <Badge
+                        variant={stats.todayPnLPercent >= 0 ? "success" : "error"}
+                        className="text-xs"
+                      >
+                        {stats.todayPnLPercent >= 0 ? "+" : ""}
+                        {stats.todayPnLPercent.toFixed(2)}%
+                      </Badge>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
+                        today
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -562,20 +606,32 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
-                <div className="text-lg sm:text-3xl font-bold mb-1 text-purple-700 dark:text-purple-300">
-                  {stats.activePositions}
-                </div>
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <Badge
-                    variant="secondary"
-                    className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
-                  >
-                    Active
-                  </Badge>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
-                    positions
-                  </span>
-                </div>
+                {dataLoading ? (
+                  <>
+                    <Skeleton className="h-8 sm:h-10 w-12 sm:w-16 mb-2" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="h-5 w-12" />
+                      <Skeleton className="h-4 w-16 hidden sm:block" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-lg sm:text-3xl font-bold mb-1 text-purple-700 dark:text-purple-300">
+                      {stats.activePositions}
+                    </div>
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                      >
+                        Active
+                      </Badge>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
+                        positions
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -589,18 +645,30 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="pt-2">
-                <div className="text-lg sm:text-3xl font-bold mb-1 text-orange-700 dark:text-orange-300">
-                  {stats.aiRecommendations}
-                </div>
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <Badge className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border-0">
-                    <Zap className="w-3 h-3 mr-1" />
-                    New
-                  </Badge>
-                  <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
-                    suggestions
-                  </span>
-                </div>
+                {dataLoading ? (
+                  <>
+                    <Skeleton className="h-8 sm:h-10 w-12 sm:w-16 mb-2" />
+                    <div className="flex items-center space-x-2">
+                      <Skeleton className="h-5 w-12" />
+                      <Skeleton className="h-4 w-16 hidden sm:block" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-lg sm:text-3xl font-bold mb-1 text-orange-700 dark:text-orange-300">
+                      {stats.aiRecommendations}
+                    </div>
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      <Badge className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border-0">
+                        <Zap className="w-3 h-3 mr-1" />
+                        New
+                      </Badge>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 hidden sm:inline">
+                        suggestions
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -702,11 +770,22 @@ export default function Dashboard() {
 
           {/* Daily P/L Chart */}
           <div className="mt-8">
-            <DailyPnLChart selectedAccountId={selectedAccountId || undefined} />
+            {dataLoading ? (
+              <Card className="p-6">
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Spinner size="xl" variant="primary" />
+                    <p className="text-sm text-muted-foreground">Loading chart data...</p>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <DailyPnLChart selectedAccountId={selectedAccountId || undefined} />
+            )}
           </div>
 
           {/* AI Recommendations Preview */}
-          {stats.aiRecommendations > 0 && (
+          {!dataLoading && stats.aiRecommendations > 0 && (
             <Card className="mt-8 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
               <CardHeader>
                 <CardTitle className="flex items-center text-blue-900 dark:text-blue-100">
