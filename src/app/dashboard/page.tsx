@@ -454,14 +454,14 @@ export default function Dashboard() {
                       </span>
                     ) : connectionStatus.connected &&
                       connectionStatus.cash !== undefined ? (
-                        <span className="block sm:inline sm:ml-2 text-xs sm:text-sm">
-                          • Available Cash:{" "}
-                          {formatCurrency(
-                            connectionStatus.cash || 0,
-                            connectionStatus.currency || "USD",
-                          )}
-                        </span>
-                      ) : null}
+                      <span className="block sm:inline sm:ml-2 text-xs sm:text-sm">
+                        • Available Cash:{" "}
+                        {formatCurrency(
+                          connectionStatus.cash || 0,
+                          connectionStatus.currency || "USD",
+                        )}
+                      </span>
+                    ) : null}
                   </div>
 
                   {/* Account selector and notification - mobile optimized */}
@@ -532,7 +532,9 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center space-x-1 sm:space-x-2">
                       <Badge
-                        variant={stats.totalPnLPercent >= 0 ? "success" : "error"}
+                        variant={
+                          stats.totalPnLPercent >= 0 ? "success" : "error"
+                        }
                         className="text-xs"
                       >
                         {stats.totalPnLPercent >= 0 ? "+" : ""}
@@ -580,7 +582,9 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center space-x-1 sm:space-x-2">
                       <Badge
-                        variant={stats.todayPnLPercent >= 0 ? "success" : "error"}
+                        variant={
+                          stats.todayPnLPercent >= 0 ? "success" : "error"
+                        }
                         className="text-xs"
                       >
                         {stats.todayPnLPercent >= 0 ? "+" : ""}
@@ -774,12 +778,16 @@ export default function Dashboard() {
                 <div className="flex items-center justify-center h-64">
                   <div className="flex flex-col items-center space-y-4">
                     <Spinner size="xl" variant="primary" />
-                    <p className="text-sm text-muted-foreground">Loading chart data...</p>
+                    <p className="text-sm text-muted-foreground">
+                      Loading chart data...
+                    </p>
                   </div>
                 </div>
               </Card>
             ) : (
-              <DailyPnLChart selectedAccountId={selectedAccountId || undefined} />
+              <DailyPnLChart
+                selectedAccountId={selectedAccountId || undefined}
+              />
             )}
           </div>
 
