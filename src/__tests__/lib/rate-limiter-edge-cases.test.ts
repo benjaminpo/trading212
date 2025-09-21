@@ -290,7 +290,7 @@ describe("RateLimiter - Edge Cases", () => {
       // Invalid inputs (should throw)
       try {
         rateLimiter.canMakeRequest(null as any, 10);
-      } catch (e) {
+      } catch {
         invalidResults.push("threw");
       }
 

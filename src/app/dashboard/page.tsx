@@ -80,7 +80,6 @@ export default function Dashboard() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     connected: false,
   });
-  const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
@@ -356,8 +355,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (!mounted || status !== "authenticated") return;
 
-    // Set initial loading to false once we're ready to show UI
-    setLoading(false);
+    // Set initial data loading to false once we're ready to show UI
+    setDataLoading(false);
     if (selectedAccountId) {
       void loadSingleAccountData();
     } else {
