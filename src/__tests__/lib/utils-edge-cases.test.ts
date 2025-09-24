@@ -119,7 +119,7 @@ describe("Utils - Edge Cases", () => {
       const start = Date.now();
       await sleep(0);
       const end = Date.now();
-      expect(end - start).toBeLessThan(10);
+      expect(end - start).toBeLessThan(50); // More lenient timing for CI environments
     });
 
     it("should handle negative delay", async () => {

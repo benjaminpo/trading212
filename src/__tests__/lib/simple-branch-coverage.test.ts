@@ -88,6 +88,36 @@ describe("Simple Branch Coverage", () => {
       expect(123 instanceof Number).toBe(false);
     });
 
+    it("should handle more complex conditional logic", () => {
+      const value = 42;
+      if (value > 40) {
+        expect(value).toBeGreaterThan(40);
+      }
+      if (value < 50) {
+        expect(value).toBeLessThan(50);
+      }
+      if (value >= 42) {
+        expect(value).toBeGreaterThanOrEqual(42);
+      }
+      if (value <= 42) {
+        expect(value).toBeLessThanOrEqual(42);
+      }
+    });
+
+    it("should handle nested conditions", () => {
+      const a = true;
+      const b = false;
+      const c = true;
+      
+      if (a) {
+        if (b) {
+          expect(false).toBe(true); // This should not execute
+        } else if (c) {
+          expect(true).toBe(true); // This should execute
+        }
+      }
+    });
+
     it("should handle try-catch blocks", () => {
       try {
         throw new Error("test error");

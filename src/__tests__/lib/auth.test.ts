@@ -280,5 +280,121 @@ describe("Auth Configuration", () => {
       expect(credentialsProvider.authorize).toBeDefined();
       expect(typeof credentialsProvider.authorize).toBe("function");
     });
+
+    it("should return null for missing email", async () => {
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize({
+        password: "password123",
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for missing password", async () => {
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize({
+        email: "test@example.com",
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for user not found", async () => {
+      mockedPrisma.user.findUnique.mockResolvedValue(null);
+
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize({
+        email: "nonexistent@example.com",
+        password: "password123",
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for user without password", async () => {
+      const mockUser = {
+        id: "user1",
+        email: "test@example.com",
+        password: null,
+        name: "Test User",
+        image: null,
+      };
+
+      mockedPrisma.user.findUnique.mockResolvedValue(mockUser);
+
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize({
+        email: "test@example.com",
+        password: "password123",
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for invalid password", async () => {
+      const mockUser = {
+        id: "user1",
+        email: "test@example.com",
+        password: "hashedpassword",
+        name: "Test User",
+        image: null,
+      };
+
+      mockedPrisma.user.findUnique.mockResolvedValue(mockUser);
+      (_bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize({
+        email: "test@example.com",
+        password: "wrongpassword",
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for empty credentials object", async () => {
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize({});
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for null credentials", async () => {
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize(null);
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for undefined credentials", async () => {
+      const credentialsProvider = authOptions.providers.find(
+        (provider) => provider.id === "credentials"
+      ) as any;
+
+      const result = await credentialsProvider.authorize(undefined);
+
+      expect(result).toBeNull();
+    });
   });
 });

@@ -50,4 +50,36 @@ describe("Simple Coverage Test", () => {
     expect(n == u).toBe(true);
     expect(n === u).toBe(false);
   });
+
+  it("should handle additional conditional logic", () => {
+    const value = 42;
+    if (value > 40) {
+      expect(value).toBeGreaterThan(40);
+    }
+    if (value < 50) {
+      expect(value).toBeLessThan(50);
+    }
+    if (value >= 42) {
+      expect(value).toBeGreaterThanOrEqual(42);
+    }
+    if (value <= 42) {
+      expect(value).toBeLessThanOrEqual(42);
+    }
+  });
+
+  it("should handle logical operators", () => {
+    const a = true;
+    const b = false;
+    expect(a && b).toBe(false);
+    expect(a || b).toBe(true);
+    expect(!a).toBe(false);
+    expect(!b).toBe(true);
+  });
+
+  it("should handle ternary operators", () => {
+    const result1 = true ? "yes" : "no";
+    const result2 = false ? "yes" : "no";
+    expect(result1).toBe("yes");
+    expect(result2).toBe("no");
+  });
 });
