@@ -52,6 +52,7 @@ export class Trading212API {
 
     this.api = axios.create({
       baseURL,
+      timeout: 5000, // 5 second timeout
       headers: {
         Authorization: `${apiKey}`,
         "Content-Type": "application/json",
@@ -78,7 +79,7 @@ export class Trading212API {
 
   private async makeRequestWithRetry<T>(
     requestFn: () => Promise<T>,
-    maxRetries: number = 3,
+    maxRetries: number = 2,
   ): Promise<T> {
     let lastError: Error = new Error("Unknown error");
 
@@ -98,7 +99,7 @@ export class Trading212API {
             const retryAfter = axiosError.response.headers?.["retry-after"];
             const waitTime = retryAfter
               ? parseInt(retryAfter) * 1000
-              : Math.pow(2, attempt) * 1000;
+              : Math.min(Math.pow(2, attempt) * 500, 3000); // Max 3 seconds
 
             logger.info(
               `🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`,

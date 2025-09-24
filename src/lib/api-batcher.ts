@@ -28,8 +28,8 @@ export class APIBatcher {
   private static instance: APIBatcher;
   private batches: Map<string, BatchedRequest<unknown>[]> = new Map();
   private batchTimeout: NodeJS.Timeout | null = null;
-  private readonly BATCH_DELAY = 100; // 100ms batching window
-  private readonly MAX_BATCH_SIZE = 10;
+  private readonly BATCH_DELAY = 50; // 50ms batching window for faster response
+  private readonly MAX_BATCH_SIZE = 20;
 
   private constructor() {}
 

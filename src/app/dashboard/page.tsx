@@ -133,86 +133,95 @@ export default function Dashboard() {
 
   const loadSingleAccountData = useCallback(async () => {
     setDataLoading(true);
-    const accountUrl = `/api/trading212/optimized/account?accountId=${selectedAccountId}`;
-    const accountResponse = await fetchWithRetry(accountUrl);
-    let accountData = null;
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-    if (accountResponse && accountResponse.ok) {
-      accountData = await accountResponse.json();
-    } else if (accountResponse && accountResponse.status === 429) {
-      logger.info("Trading212 API rate limited, using cached data");
-    }
+    try {
+      const accountUrl = `/api/trading212/optimized/account?accountId=${selectedAccountId}`;
+      const [accountResponse, aiResponse] = await Promise.all([
+        fetchWithRetry(accountUrl, { signal }),
+        fetchWithRetry("/api/ai/optimized-analyze", { signal }),
+      ]);
 
-    const aiResponse = await fetchWithRetry("/api/ai/optimized-analyze");
-    let aiCount = 0;
-    if (aiResponse && aiResponse.ok) {
-      const aiData = await aiResponse.json();
-      aiCount = aiData.recommendations?.length || 0;
-    }
+      let aiCount = 0;
+      if (aiResponse && aiResponse.ok) {
+        const aiData = await aiResponse.json();
+        aiCount = aiData.recommendations?.length || 0;
+      }
 
-    // If the request failed (including 429), show demo data
-    if (!accountResponse || !accountResponse.ok) {
-      setStats({
-        totalPnL: 0,
-        totalPnLPercent: 0,
-        todayPnL: 0,
-        todayPnLPercent: 0,
-        activePositions: 0,
-        trailStopOrders: 0,
-        aiRecommendations: aiCount,
-      });
-      setConnectionStatus({ connected: false });
-    } else if (accountData && accountData.connected && !accountData.error) {
-      setStats({
-        totalPnL: accountData.stats.totalPnL || 0,
-        totalPnLPercent: accountData.stats.totalPnLPercent || 0,
-        todayPnL: accountData.stats.todayPnL || 0,
-        todayPnLPercent: accountData.stats.todayPnLPercent || 0,
-        activePositions: accountData.stats.activePositions || 0,
-        trailStopOrders: accountData.stats.trailStopOrders || 0,
-        aiRecommendations: aiCount,
-        currency: accountData.account?.currency || "USD",
-      });
-      setConnectionStatus({
-        connected: true,
-        accountId: accountData.account?.id,
-        accountName: accountData.account?.name,
-        mode: accountData.account?.isPractice ? "DEMO" : "LIVE",
-        cash: accountData.account?.cash,
-        currency: accountData.account?.currency,
-      });
-    } else if (accountResponse && accountResponse.ok) {
-      const reason = accountData?.error || "Trading212 not connected";
-      logger.info(`${reason}, using demo data`);
-      setStats({
-        totalPnL: 0,
-        totalPnLPercent: 0,
-        todayPnL: 0,
-        todayPnLPercent: 0,
-        activePositions: 0,
-        trailStopOrders: 0,
-        aiRecommendations: aiCount,
-      });
-      setConnectionStatus({ connected: false });
+      let accountData = null;
+      if (accountResponse && accountResponse.ok) {
+        accountData = await accountResponse.json();
+      } else if (accountResponse && accountResponse.status === 429) {
+        logger.info("Trading212 API rate limited, using cached data");
+      }
+
+      if (!accountResponse || !accountResponse.ok) {
+        setStats({
+          totalPnL: 0,
+          totalPnLPercent: 0,
+          todayPnL: 0,
+          todayPnLPercent: 0,
+          activePositions: 0,
+          trailStopOrders: 0,
+          aiRecommendations: aiCount,
+        });
+        setConnectionStatus({ connected: false });
+      } else if (accountData && accountData.connected && !accountData.error) {
+        setStats({
+          totalPnL: accountData.stats.totalPnL || 0,
+          totalPnLPercent: accountData.stats.totalPnLPercent || 0,
+          todayPnL: accountData.stats.todayPnL || 0,
+          todayPnLPercent: accountData.stats.todayPnLPercent || 0,
+          activePositions: accountData.stats.activePositions || 0,
+          trailStopOrders: accountData.stats.trailStopOrders || 0,
+          aiRecommendations: aiCount,
+          currency: accountData.account?.currency || "USD",
+        });
+        setConnectionStatus({
+          connected: true,
+          accountId: accountData.account?.id,
+          accountName: accountData.account?.name,
+          mode: accountData.account?.isPractice ? "DEMO" : "LIVE",
+          cash: accountData.account?.cash,
+          currency: accountData.account?.currency,
+        });
+      } else if (accountResponse && accountResponse.ok) {
+        const reason = accountData?.error || "Trading212 not connected";
+        logger.info(`${reason}, using demo data`);
+        setStats({
+          totalPnL: 0,
+          totalPnLPercent: 0,
+          todayPnL: 0,
+          todayPnLPercent: 0,
+          activePositions: 0,
+          trailStopOrders: 0,
+          aiRecommendations: aiCount,
+        });
+        setConnectionStatus({ connected: false });
+      }
+    } catch {
+      // ignore abort errors
+    } finally {
+      setDataLoading(false);
     }
-    setDataLoading(false);
   }, [selectedAccountId, fetchWithRetry]);
 
   const loadAggregatedAccountData = useCallback(async () => {
     setDataLoading(true);
-    // Load all accounts first
-    const accountsResponse = await fetchWithRetry(
-      "/api/trading212/optimized/accounts",
-    );
-    let accounts = [];
+    const controller = new AbortController();
+    const signal = controller.signal;
 
+    // Load accounts and AI in parallel
+    const [accountsResponse, aiResponse] = await Promise.all([
+      fetchWithRetry("/api/trading212/optimized/accounts", { signal }),
+      fetchWithRetry("/api/ai/optimized-analyze", { signal }),
+    ]);
+    let accounts = [] as Trading212Account[];
     if (accountsResponse && accountsResponse.ok) {
       const accountsData = await accountsResponse.json();
       accounts = accountsData.accounts || [];
     }
-
-    // Load AI recommendations count
-    const aiResponse = await fetchWithRetry("/api/ai/optimized-analyze");
     let aiCount = 0;
     if (aiResponse && aiResponse.ok) {
       const aiData = await aiResponse.json();

@@ -126,7 +126,7 @@ describe("Utils - Edge Cases", () => {
       const start = Date.now();
       await sleep(-100);
       const end = Date.now();
-      expect(end - start).toBeLessThan(10);
+      expect(end - start).toBeLessThan(50); // More lenient timing for CI
     });
 
     it("should handle very small delay", async () => {

@@ -1,33 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma, retryDatabaseOperation } from "@/lib/prisma";
 import { optimizedTrading212Service } from "@/lib/optimized-trading212";
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    // Fast auth check with timeout
+    const session = await Promise.race([
+      getServerSession(authOptions),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auth timeout')), 2000)
+      )
+    ]);
+    
+    if (!(session as Session)?.user?.id) {
+      console.log(`🚫 Auth fail: ${Date.now() - startTime}ms`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    
+    const userId = (session as Session).user.id;
 
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get("accountId");
     const includeOrders = searchParams.get("includeOrders") === "true";
     const forceRefresh = searchParams.get("forceRefresh") === "true";
 
-    // Get user with Trading212 accounts
-    const user = await retryDatabaseOperation(() =>
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        include: {
-          trading212Accounts: {
-            where: accountId ? { id: accountId } : { isActive: true },
-            orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+    // Validate accountId format early to avoid unnecessary DB queries
+    if (accountId && !/^[a-zA-Z0-9]{20,}$/.test(accountId)) {
+      console.log(`🚫 Invalid accountId format: ${Date.now() - startTime}ms`);
+      return NextResponse.json({ error: "Invalid account ID format" }, { status: 400 });
+    }
+
+    // Fast database query with timeout
+    const user = await Promise.race([
+      retryDatabaseOperation(() =>
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            trading212Accounts: {
+              where: accountId ? { id: accountId } : { isActive: true },
+              select: {
+                id: true,
+                name: true,
+                apiKey: true,
+                isPractice: true,
+                isDefault: true,
+                isActive: true,
+              },
+              orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+            },
           },
-        },
-      }),
-    );
+        }),
+      ),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 3000)
+      )
+    ]);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -35,8 +67,9 @@ export async function GET(request: NextRequest) {
 
     // Get the target account
     let targetAccount = null;
+    const userWithAccounts = user as { trading212Accounts: Array<{ id: string; isDefault: boolean; isActive: boolean }> };
     if (accountId) {
-      targetAccount = user.trading212Accounts.find(
+      targetAccount = userWithAccounts.trading212Accounts.find(
         (acc) => acc.id === accountId,
       );
       if (!targetAccount) {
@@ -47,8 +80,8 @@ export async function GET(request: NextRequest) {
       }
     } else {
       targetAccount =
-        user.trading212Accounts.find((acc) => acc.isDefault) ||
-        user.trading212Accounts.find((acc) => acc.isActive);
+        userWithAccounts.trading212Accounts.find((acc) => acc.isDefault) ||
+        userWithAccounts.trading212Accounts.find((acc) => acc.isActive);
     }
 
     if (!targetAccount) {
@@ -61,50 +94,80 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check rate limiting
+    // Fast rate limiting check
+    const rateLimitStart = Date.now();
     if (
       !optimizedTrading212Service.canMakeRequest(
-        session.user.id,
+        userId,
         targetAccount.id,
       )
     ) {
       const timeUntilReset = optimizedTrading212Service.getTimeUntilReset(
-        session.user.id,
+        userId,
         targetAccount.id,
       );
+      console.log(`🚫 Rate limited: ${Date.now() - startTime}ms (rate check: ${Date.now() - rateLimitStart}ms)`);
       return NextResponse.json(
         {
           error: "Rate limit exceeded",
           retryAfter: Math.ceil(timeUntilReset / 1000),
           connected: true,
+          accountInfo: {
+            id: targetAccount.id,
+            name: targetAccount.name,
+            isPractice: targetAccount.isPractice,
+            isDefault: targetAccount.isDefault,
+          },
         },
         { status: 429 },
       );
     }
 
-    // Get optimized account data
+    // Get optimized account data with timeout
+    const dataFetchStart = Date.now();
     let accountData;
-    if (forceRefresh) {
-      accountData = await optimizedTrading212Service.forceRefreshAccountData(
-        session.user.id,
-        targetAccount.id,
-        targetAccount.apiKey,
-        targetAccount.isPractice,
-        includeOrders,
-      );
-    } else {
-      accountData = await optimizedTrading212Service.getAccountData(
-        session.user.id,
-        targetAccount.id,
-        targetAccount.apiKey,
-        targetAccount.isPractice,
-        includeOrders,
+    
+    try {
+      if (forceRefresh) {
+        accountData = await Promise.race([
+          optimizedTrading212Service.forceRefreshAccountData(
+            userId,
+            targetAccount.id,
+            targetAccount.apiKey,
+            targetAccount.isPractice,
+            includeOrders,
+          ),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Data fetch timeout')), 5000)
+          )
+        ]);
+      } else {
+        accountData = await Promise.race([
+          optimizedTrading212Service.getAccountData(
+            userId,
+            targetAccount.id,
+            targetAccount.apiKey,
+            targetAccount.isPractice,
+            includeOrders,
+          ),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Data fetch timeout')), 5000)
+          )
+        ]);
+      }
+    } catch (error) {
+      console.log(`❌ Data fetch failed: ${Date.now() - startTime}ms (fetch: ${Date.now() - dataFetchStart}ms)`, error);
+      return NextResponse.json(
+        { error: "Failed to fetch account data", timeout: true },
+        { status: 504 },
       );
     }
 
-    // Add account metadata
+    // Add account metadata and performance info
+    const totalTime = Date.now() - startTime;
+    const accountDataTyped = accountData as Record<string, unknown>;
     const response = {
-      ...accountData,
+      ...accountDataTyped,
       accountInfo: {
         id: targetAccount.id,
         name: targetAccount.name,
@@ -113,11 +176,17 @@ export async function GET(request: NextRequest) {
       },
       connected: true,
       cacheStats: {
-        cacheHit: accountData.cacheHit,
-        lastUpdated: accountData.lastUpdated,
+        cacheHit: accountDataTyped.cacheHit,
+        lastUpdated: accountDataTyped.lastUpdated,
+      },
+      performance: {
+        totalTime,
+        dataFetchTime: Date.now() - dataFetchStart,
+        rateLimitTime: Date.now() - rateLimitStart,
       },
     };
 
+    console.log(`✅ Success: ${totalTime}ms (auth: ${Date.now() - startTime}ms, data: ${Date.now() - dataFetchStart}ms, cache: ${accountDataTyped.cacheHit ? 'HIT' : 'MISS'})`);
     return NextResponse.json(response);
   } catch (error) {
     console.error("Optimized account data error:", error);

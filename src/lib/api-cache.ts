@@ -29,10 +29,10 @@ export interface CachedAccountData {
 
 // Cache configuration
 const CACHE_TTL = {
-  portfolio: 2 * 60 * 1000, // 2 minutes for portfolio data
-  account: 5 * 60 * 1000, // 5 minutes for account data
-  orders: 1 * 60 * 1000, // 1 minute for orders
-  positions: 2 * 60 * 1000, // 2 minutes for positions
+  portfolio: 5 * 60 * 1000, // 5 minutes for portfolio data
+  account: 10 * 60 * 1000, // 10 minutes for account data
+  orders: 2 * 60 * 1000, // 2 minutes for orders
+  positions: 5 * 60 * 1000, // 5 minutes for positions
 } as const;
 
 export class APICache {
@@ -105,6 +105,19 @@ export class APICache {
     }
 
     logger.info(`🎯 Cache HIT for ${dataType} (${accountId}): ${key}`);
+    return entry.data as T;
+  }
+
+  // Get even if expired (stale-while-revalidate use case)
+  async getStale<T>(
+    userId: string,
+    accountId: string,
+    dataType: keyof typeof CACHE_TTL,
+    params?: Record<string, unknown>,
+  ): Promise<T | null> {
+    const key = this.generateKey(userId, accountId, dataType, params);
+    const entry = this.memoryCache.get(key);
+    if (!entry) return null;
     return entry.data as T;
   }
 

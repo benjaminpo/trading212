@@ -75,5 +75,5 @@ export class RateLimiter {
 }
 
 // Global rate limiter instance
-// More lenient for development - 15 requests per minute
-export const trading212RateLimiter = new RateLimiter(60000, 15);
+// More lenient for development - 30 requests per minute
+export const trading212RateLimiter = new RateLimiter(60000, 30);

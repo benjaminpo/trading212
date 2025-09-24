@@ -206,12 +206,12 @@ describe("RateLimiter", () => {
     it("should have reasonable default limits", () => {
       const key = "test-user";
 
-      // Should allow multiple requests (testing the 15 request limit)
-      for (let i = 0; i < 15; i++) {
+      // Should allow multiple requests (testing the 30 request limit)
+      for (let i = 0; i < 30; i++) {
         expect(trading212RateLimiter.canMakeRequest(key)).toBe(true);
       }
 
-      // 16th request should be rejected
+      // 31st request should be rejected
       expect(trading212RateLimiter.canMakeRequest(key)).toBe(false);
     });
   });

@@ -44,6 +44,9 @@ export interface MultiAccountResult {
 
 export class OptimizedTrading212Service {
   private static instance: OptimizedTrading212Service;
+  private pendingFetches: Map<string, Promise<OptimizedAccountData>> = new Map();
+  private circuitBreaker: Map<string, { openUntil: number; failures: number }> =
+    new Map();
 
   private constructor() {}
 
@@ -77,54 +80,84 @@ export class OptimizedTrading212Service {
       };
     }
 
-    // Use batcher for API calls
-    const batchedData = await apiBatcher.fetchAccountData(
-      userId,
-      accountId,
-      apiKey,
-      isPractice,
-      includeOrders,
-    );
-
-    // Transform to optimized format
-    const optimizedData: OptimizedAccountData = {
-      account: batchedData.account as Trading212Account | null,
-      portfolio: batchedData.portfolio as Trading212Position[],
-      orders: (batchedData.orders || []) as Trading212Order[],
-      stats: {
-        activePositions: 0,
-        totalPnL: 0,
-        totalPnLPercent: 0,
-        totalValue: 0,
-        todayPnL: 0,
-        todayPnLPercent: 0,
-        ...(batchedData.stats as Record<string, unknown>),
-      },
-      currency:
-        (batchedData.account as { currencyCode?: string })?.currencyCode ||
-        "USD",
-      lastUpdated: new Date().toISOString(),
-      cacheHit: false,
-    };
-
-    // Derive today's P/L from account summary if available
-    const accountSummary = batchedData.account as Trading212Account | null;
-    if (accountSummary) {
-      const todayPnL =
-        typeof accountSummary.result === "number" ? accountSummary.result : 0;
-      const totalValue =
-        typeof optimizedData.stats.totalValue === "number"
-          ? optimizedData.stats.totalValue
-          : 0;
-      optimizedData.stats.todayPnL = todayPnL;
-      optimizedData.stats.todayPnLPercent =
-        totalValue > 0 ? (todayPnL / (totalValue - todayPnL)) * 100 : 0;
+    // Circuit breaker check
+    const cbKey = `${userId}:${accountId}`;
+    const now = Date.now();
+    const cbState = this.circuitBreaker.get(cbKey);
+    if (cbState && cbState.openUntil > now) {
+      const stale = await apiCache.getStale<OptimizedAccountData>(
+        userId,
+        accountId,
+        "account",
+      );
+      if (stale) {
+        logger.info(
+          `⚡ Serving STALE (circuit open) for account ${accountId} until ${new Date(cbState.openUntil).toISOString()}`,
+        );
+        return { ...stale, cacheHit: true };
+      }
+      throw new Error("Upstream temporarily unavailable (circuit open)");
     }
 
-    // Cache the result
-    await apiCache.set(userId, accountId, "account", optimizedData);
+    // Check if we're already fetching this data to avoid duplicate requests
+    const fetchKey = `${userId}:${accountId}:account`;
+    if (this.pendingFetches.has(fetchKey)) {
+      logger.info(`🎯 Waiting for pending fetch for account ${accountId}`);
+      return this.pendingFetches.get(fetchKey)!;
+    }
 
-    return optimizedData;
+    // Create a promise for this fetch
+    const fetchPromise = (async () => {
+      try {
+        const result = await this.performAccountDataFetch(
+          userId,
+          accountId,
+          apiKey,
+          isPractice,
+          includeOrders,
+        );
+
+        // success: reset circuit breaker
+        this.circuitBreaker.delete(cbKey);
+        return result;
+      } catch (error) {
+        // update circuit breaker failures
+        const current = this.circuitBreaker.get(cbKey) || {
+          failures: 0,
+          openUntil: 0,
+        };
+        current.failures += 1;
+        if (current.failures >= 3) {
+          current.openUntil = Date.now() + 60_000; // 60s
+        }
+        this.circuitBreaker.set(cbKey, current);
+
+        // Try serving stale
+        const stale = await apiCache.getStale<OptimizedAccountData>(
+          userId,
+          accountId,
+          "account",
+        );
+        if (stale) {
+          logger.info(
+            `⚡ Serving STALE after error for account ${accountId} (failures=${current.failures})`,
+          );
+          return { ...stale, cacheHit: true };
+        }
+        throw error;
+      }
+    })();
+
+    // Store the promise to prevent duplicate requests
+    this.pendingFetches.set(fetchKey, fetchPromise);
+
+    try {
+      const result = await fetchPromise;
+      return result;
+    } finally {
+      // Clean up the pending fetch
+      this.pendingFetches.delete(fetchKey);
+    }
   }
 
   async getPortfolioData(
@@ -362,6 +395,101 @@ export class OptimizedTrading212Service {
     } catch (error) {
       console.error("❌ Background sync failed:", error);
     }
+  }
+
+  // Helper method to perform the actual data fetch
+  private async performAccountDataFetch(
+    userId: string,
+    accountId: string,
+    apiKey: string,
+    isPractice: boolean,
+    includeOrders: boolean,
+  ): Promise<OptimizedAccountData> {
+    // Use batcher for API calls
+    let batchedData: OptimizedAccountData;
+    try {
+      batchedData = await apiBatcher.fetchAccountData(
+        userId,
+        accountId,
+        apiKey,
+        isPractice,
+        includeOrders,
+      );
+    } catch (err) {
+      // Compose from stale pieces if available
+      const staleAccount = await apiCache.getStale<Trading212Account | null>(
+        userId,
+        accountId,
+        "account",
+      );
+      const stalePortfolio = await apiCache.getStale<Trading212Position[]>(
+        userId,
+        accountId,
+        "portfolio",
+      );
+      const staleOrders = includeOrders
+        ? await apiCache.getStale<Trading212Order[]>(userId, accountId, "orders")
+        : null;
+      if (staleAccount || stalePortfolio || staleOrders) {
+        batchedData = {
+          account: staleAccount?.account ?? null,
+          portfolio: stalePortfolio?.positions ?? [],
+          orders: staleOrders ?? [],
+          stats: stalePortfolio
+            ? {
+                totalValue: stalePortfolio.totalValue,
+                totalPnL: stalePortfolio.totalPnL,
+                totalPnLPercent: stalePortfolio.totalPnLPercent,
+                activePositions: Array.isArray(stalePortfolio.positions)
+                  ? stalePortfolio.positions.length
+                  : 0,
+              }
+            : {},
+        };
+      } else {
+        throw err;
+      }
+    }
+
+    // Transform to optimized format
+    const optimizedData: OptimizedAccountData = {
+      account: batchedData.account as Trading212Account | null,
+      portfolio: batchedData.portfolio as Trading212Position[],
+      orders: (batchedData.orders || []) as Trading212Order[],
+      stats: {
+        activePositions: 0,
+        totalPnL: 0,
+        totalPnLPercent: 0,
+        totalValue: 0,
+        todayPnL: 0,
+        todayPnLPercent: 0,
+        ...(batchedData.stats as Record<string, unknown>),
+      },
+      currency:
+        (batchedData.account as { currencyCode?: string })?.currencyCode ||
+        "USD",
+      lastUpdated: new Date().toISOString(),
+      cacheHit: false,
+    };
+
+    // Derive today's P/L from account summary if available
+    const accountSummary = batchedData.account as Trading212Account | null;
+    if (accountSummary) {
+      const todayPnL =
+        typeof accountSummary.result === "number" ? accountSummary.result : 0;
+      const totalValue =
+        typeof optimizedData.stats.totalValue === "number"
+          ? optimizedData.stats.totalValue
+          : 0;
+      optimizedData.stats.todayPnL = todayPnL;
+      optimizedData.stats.todayPnLPercent =
+        totalValue > 0 ? (todayPnL / (totalValue - todayPnL)) * 100 : 0;
+    }
+
+    // Cache the result
+    await apiCache.set(userId, accountId, "account", optimizedData);
+
+    return optimizedData;
   }
 
   // Health check
