@@ -44,7 +44,8 @@ export interface MultiAccountResult {
 
 export class OptimizedTrading212Service {
   private static instance: OptimizedTrading212Service;
-  private pendingFetches: Map<string, Promise<OptimizedAccountData>> = new Map();
+  private pendingFetches: Map<string, Promise<OptimizedAccountData>> =
+    new Map();
   private circuitBreaker: Map<string, { openUntil: number; failures: number }> =
     new Map();
 
@@ -432,13 +433,13 @@ export class OptimizedTrading212Service {
         totalValue: number;
         totalPnL: number;
         totalPnLPercent: number;
-      }>(
-        userId,
-        accountId,
-        "portfolio",
-      );
+      }>(userId, accountId, "portfolio");
       const staleOrders = includeOrders
-        ? await apiCache.getStale<Trading212Order[]>(userId, accountId, "orders")
+        ? await apiCache.getStale<Trading212Order[]>(
+            userId,
+            accountId,
+            "orders",
+          )
         : null;
       if (staleAccount || stalePortfolio || staleOrders) {
         batchedData = {

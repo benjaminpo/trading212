@@ -6,21 +6,21 @@ import { optimizedTrading212Service } from "@/lib/optimized-trading212";
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     // Fast auth check with timeout
     const session = await Promise.race([
       getServerSession(authOptions),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 2000)
-      )
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Auth timeout")), 2000),
+      ),
     ]);
-    
+
     if (!(session as Session)?.user?.id) {
       console.log(`🚫 Auth fail: ${Date.now() - startTime}ms`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
+
     const userId = (session as Session).user.id;
 
     const { searchParams } = new URL(request.url);
@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     // Validate accountId format early to avoid unnecessary DB queries
     if (accountId && !/^[a-zA-Z0-9]{20,}$/.test(accountId)) {
       console.log(`🚫 Invalid accountId format: ${Date.now() - startTime}ms`);
-      return NextResponse.json({ error: "Invalid account ID format" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID format" },
+        { status: 400 },
+      );
     }
 
     // Fast database query with timeout
@@ -56,9 +59,9 @@ export async function GET(request: NextRequest) {
           },
         }),
       ),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 3000)
-      )
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 3000),
+      ),
     ]);
 
     if (!user) {
@@ -104,17 +107,14 @@ export async function GET(request: NextRequest) {
 
     // Fast rate limiting check
     const rateLimitStart = Date.now();
-    if (
-      !optimizedTrading212Service.canMakeRequest(
-        userId,
-        targetAccount.id,
-      )
-    ) {
+    if (!optimizedTrading212Service.canMakeRequest(userId, targetAccount.id)) {
       const timeUntilReset = optimizedTrading212Service.getTimeUntilReset(
         userId,
         targetAccount.id,
       );
-      console.log(`🚫 Rate limited: ${Date.now() - startTime}ms (rate check: ${Date.now() - rateLimitStart}ms)`);
+      console.log(
+        `🚫 Rate limited: ${Date.now() - startTime}ms (rate check: ${Date.now() - rateLimitStart}ms)`,
+      );
       return NextResponse.json(
         {
           error: "Rate limit exceeded",
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
     // Get optimized account data with timeout
     const dataFetchStart = Date.now();
     let accountData;
-    
+
     try {
       if (forceRefresh) {
         accountData = await Promise.race([
@@ -146,8 +146,8 @@ export async function GET(request: NextRequest) {
             includeOrders,
           ),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Data fetch timeout')), 5000)
-          )
+            setTimeout(() => reject(new Error("Data fetch timeout")), 5000),
+          ),
         ]);
       } else {
         accountData = await Promise.race([
@@ -159,12 +159,15 @@ export async function GET(request: NextRequest) {
             includeOrders,
           ),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Data fetch timeout')), 5000)
-          )
+            setTimeout(() => reject(new Error("Data fetch timeout")), 5000),
+          ),
         ]);
       }
     } catch (error) {
-      console.log(`❌ Data fetch failed: ${Date.now() - startTime}ms (fetch: ${Date.now() - dataFetchStart}ms)`, error);
+      console.log(
+        `❌ Data fetch failed: ${Date.now() - startTime}ms (fetch: ${Date.now() - dataFetchStart}ms)`,
+        error,
+      );
       return NextResponse.json(
         { error: "Failed to fetch account data", timeout: true },
         { status: 504 },
@@ -194,7 +197,9 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    console.log(`✅ Success: ${totalTime}ms (auth: ${Date.now() - startTime}ms, data: ${Date.now() - dataFetchStart}ms, cache: ${accountDataTyped.cacheHit ? 'HIT' : 'MISS'})`);
+    console.log(
+      `✅ Success: ${totalTime}ms (auth: ${Date.now() - startTime}ms, data: ${Date.now() - dataFetchStart}ms, cache: ${accountDataTyped.cacheHit ? "HIT" : "MISS"})`,
+    );
     return NextResponse.json(response);
   } catch (error) {
     console.error("Optimized account data error:", error);

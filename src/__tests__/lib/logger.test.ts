@@ -23,7 +23,7 @@ describe("Logger", () => {
       // Mock development environment
       process.env.NODE_ENV = "development";
       process.env.CI = "false";
-      
+
       // Re-import logger to get fresh instance
       jest.resetModules();
     });
@@ -46,7 +46,7 @@ describe("Logger", () => {
       // Mock production environment
       process.env.NODE_ENV = "production";
       process.env.CI = "false";
-      
+
       // Re-import logger to get fresh instance
       jest.resetModules();
     });
@@ -69,7 +69,7 @@ describe("Logger", () => {
       // Mock CI environment
       process.env.NODE_ENV = "development";
       process.env.CI = "true";
-      
+
       // Re-import logger to get fresh instance
       jest.resetModules();
     });
@@ -100,7 +100,12 @@ describe("Logger", () => {
 
     it("should handle multiple arguments", () => {
       logger.warn("warning", "with", "multiple", "args");
-      expect(mockConsoleWarn).toHaveBeenCalledWith("warning", "with", "multiple", "args");
+      expect(mockConsoleWarn).toHaveBeenCalledWith(
+        "warning",
+        "with",
+        "multiple",
+        "args",
+      );
     });
 
     it("should handle objects and arrays", () => {

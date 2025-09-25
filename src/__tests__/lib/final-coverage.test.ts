@@ -23,7 +23,7 @@ describe("Final Coverage Test", () => {
     const value = 10;
     const result = value > 5 ? "greater" : "lesser";
     expect(result).toBe("greater");
-    
+
     const result2 = value < 5 ? "greater" : "lesser";
     expect(result2).toBe("lesser");
   });
@@ -48,9 +48,10 @@ describe("Final Coverage Test", () => {
 
   it("should handle more complex conditional logic", () => {
     const value = 15;
-    const result = value > 10 ? (value < 20 ? "between" : "too-high") : "too-low";
+    const result =
+      value > 10 ? (value < 20 ? "between" : "too-high") : "too-low";
     expect(result).toBe("between");
-    
+
     const result2 = value > 20 ? "high" : value > 5 ? "medium" : "low";
     expect(result2).toBe("medium");
   });
@@ -68,7 +69,7 @@ describe("Final Coverage Test", () => {
           return "unknown";
       }
     };
-    
+
     expect(getStatus(200)).toBe("success");
     expect(getStatus(404)).toBe("not-found");
     expect(getStatus(500)).toBe("error");
@@ -86,7 +87,7 @@ describe("Final Coverage Test", () => {
         return "caught";
       }
     };
-    
+
     expect(testFunction(false)).toBe("success");
     expect(testFunction(true)).toBe("caught");
   });

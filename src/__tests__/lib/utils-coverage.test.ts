@@ -23,34 +23,36 @@ describe("Utils Coverage Tests", () => {
     });
 
     it("should handle mixed truthy and falsy values", () => {
-      expect(cn("class1", false && "class2", true && "class3", 0 && "class4")).toBe("class1 class3");
+      expect(
+        cn("class1", false && "class2", true && "class3", 0 && "class4"),
+      ).toBe("class1 class3");
     });
 
     it("should handle complex conditional logic", () => {
       const isActive = true;
       const isDisabled = false;
       const hasError = false;
-      
+
       const result = cn(
         "base-class",
         isActive && "active",
         isDisabled && "disabled",
         hasError && "error",
-        !isActive && "inactive"
+        !isActive && "inactive",
       );
-      
+
       expect(result).toBe("base-class active");
     });
 
     it("should handle nested conditional expressions", () => {
       const condition1 = true;
       const condition2 = false;
-      
+
       const result = cn(
         "base",
-        condition1 ? (condition2 ? "both-true" : "first-true") : "first-false"
+        condition1 ? (condition2 ? "both-true" : "first-true") : "first-false",
       );
-      
+
       expect(result).toBe("base first-true");
     });
 

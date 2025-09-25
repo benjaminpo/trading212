@@ -108,7 +108,7 @@ describe("Simple Branch Coverage", () => {
       const a = true;
       const b = false;
       const c = true;
-      
+
       if (a) {
         if (b) {
           expect(false).toBe(true); // This should not execute

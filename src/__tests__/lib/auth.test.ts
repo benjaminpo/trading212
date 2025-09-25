@@ -283,7 +283,7 @@ describe("Auth Configuration", () => {
 
     it("should return null for missing email", async () => {
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize({
@@ -295,7 +295,7 @@ describe("Auth Configuration", () => {
 
     it("should return null for missing password", async () => {
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize({
@@ -309,7 +309,7 @@ describe("Auth Configuration", () => {
       mockedPrisma.user.findUnique.mockResolvedValue(null);
 
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize({
@@ -332,7 +332,7 @@ describe("Auth Configuration", () => {
       mockedPrisma.user.findUnique.mockResolvedValue(mockUser);
 
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize({
@@ -356,7 +356,7 @@ describe("Auth Configuration", () => {
       (_bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize({
@@ -369,7 +369,7 @@ describe("Auth Configuration", () => {
 
     it("should return null for empty credentials object", async () => {
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize({});
@@ -379,7 +379,7 @@ describe("Auth Configuration", () => {
 
     it("should return null for null credentials", async () => {
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize(null);
@@ -389,7 +389,7 @@ describe("Auth Configuration", () => {
 
     it("should return null for undefined credentials", async () => {
       const credentialsProvider = authOptions.providers.find(
-        (provider) => provider.id === "credentials"
+        (provider) => provider.id === "credentials",
       ) as any;
 
       const result = await credentialsProvider.authorize(undefined);
