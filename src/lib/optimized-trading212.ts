@@ -406,7 +406,12 @@ export class OptimizedTrading212Service {
     includeOrders: boolean,
   ): Promise<OptimizedAccountData> {
     // Use batcher for API calls
-    let batchedData: OptimizedAccountData;
+    let batchedData: {
+      account: unknown;
+      portfolio: unknown[];
+      orders?: unknown[];
+      stats: unknown;
+    };
     try {
       batchedData = await apiBatcher.fetchAccountData(
         userId,
@@ -417,12 +422,17 @@ export class OptimizedTrading212Service {
       );
     } catch (err) {
       // Compose from stale pieces if available
-      const staleAccount = await apiCache.getStale<Trading212Account | null>(
+      const staleAccount = await apiCache.getStale<OptimizedAccountData | null>(
         userId,
         accountId,
         "account",
       );
-      const stalePortfolio = await apiCache.getStale<Trading212Position[]>(
+      const stalePortfolio = await apiCache.getStale<{
+        positions: Trading212Position[];
+        totalValue: number;
+        totalPnL: number;
+        totalPnLPercent: number;
+      }>(
         userId,
         accountId,
         "portfolio",

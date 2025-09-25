@@ -66,8 +66,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the target account
-    let targetAccount = null;
-    const userWithAccounts = user as { trading212Accounts: Array<{ id: string; isDefault: boolean; isActive: boolean }> };
+    type Account = {
+      id: string;
+      name: string;
+      apiKey: string;
+      isPractice: boolean;
+      isDefault: boolean;
+      isActive: boolean;
+    };
+    let targetAccount: Account | undefined = undefined;
+    const userWithAccounts = user as { trading212Accounts: Array<Account> };
     if (accountId) {
       targetAccount = userWithAccounts.trading212Accounts.find(
         (acc) => acc.id === accountId,
