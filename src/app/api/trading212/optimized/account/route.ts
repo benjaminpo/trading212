@@ -131,11 +131,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get optimized account data with timeout
+    // Get optimized account data with improved timeout handling
     const dataFetchStart = Date.now();
     let accountData;
 
     try {
+      // Increase timeout to 8 seconds to allow for slower API responses
+      const timeoutMs = 8000;
+
       if (forceRefresh) {
         accountData = await Promise.race([
           optimizedTrading212Service.forceRefreshAccountData(
@@ -146,7 +149,10 @@ export async function GET(request: NextRequest) {
             includeOrders,
           ),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Data fetch timeout")), 5000),
+            setTimeout(
+              () => reject(new Error("Data fetch timeout")),
+              timeoutMs,
+            ),
           ),
         ]);
       } else {
@@ -159,7 +165,10 @@ export async function GET(request: NextRequest) {
             includeOrders,
           ),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Data fetch timeout")), 5000),
+            setTimeout(
+              () => reject(new Error("Data fetch timeout")),
+              timeoutMs,
+            ),
           ),
         ]);
       }
@@ -168,10 +177,40 @@ export async function GET(request: NextRequest) {
         `❌ Data fetch failed: ${Date.now() - startTime}ms (fetch: ${Date.now() - dataFetchStart}ms)`,
         error,
       );
-      return NextResponse.json(
-        { error: "Failed to fetch account data", timeout: true },
-        { status: 504 },
-      );
+
+      // Try to serve stale data if available
+      try {
+        const staleData = await optimizedTrading212Service.getAccountData(
+          userId,
+          targetAccount.id,
+          targetAccount.apiKey,
+          targetAccount.isPractice,
+          includeOrders,
+        );
+
+        if (staleData) {
+          console.log(
+            `⚡ Serving stale data after timeout for account ${targetAccount.id}`,
+          );
+          accountData = {
+            ...staleData,
+            cacheHit: true,
+            stale: true,
+            lastUpdated: new Date(staleData.lastUpdated).toISOString(),
+          };
+        } else {
+          throw error;
+        }
+      } catch (staleError) {
+        return NextResponse.json(
+          {
+            error: "Failed to fetch account data",
+            timeout: true,
+            retryAfter: 30, // Suggest retry after 30 seconds
+          },
+          { status: 504 },
+        );
+      }
     }
 
     // Add account metadata and performance info

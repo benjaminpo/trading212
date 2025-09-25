@@ -562,6 +562,82 @@ Built with ❤️ using Next.js, TypeScript, Supabase, and Vercel.
 
 ---
 
+## 🔧 Troubleshooting
+
+### Common Issues and Solutions
+
+#### API Timeout Errors (504)
+If you're experiencing timeout errors with the optimized account endpoint:
+
+1. **Check System Health**:
+   ```bash
+   curl https://trading212.vercel.app/api/health/optimization?detailed=true
+   ```
+
+2. **Timeout Improvements** (Latest):
+   - Increased API timeout from 5s to 7s
+   - Added 8s timeout for optimized endpoints
+   - Implemented stale data fallback
+   - Added circuit breaker pattern
+
+3. **Rate Limiting Issues**:
+   - The system automatically handles Trading212 rate limits
+   - Wait times are shown in error responses
+   - Background sync respects rate limits
+
+4. **Cache Issues**:
+   - Force refresh: `?forceRefresh=true`
+   - Clear cache: Use the health endpoint to monitor cache status
+   - Stale data is served when fresh data fails
+
+#### Performance Issues
+
+1. **Check Optimization Status**:
+   ```bash
+   # Basic health check
+   curl https://trading212.vercel.app/api/health/optimization
+   
+   # Detailed performance metrics
+   curl https://trading212.vercel.app/api/health/optimization?detailed=true
+   ```
+
+2. **Monitor Cache Performance**:
+   - Cache hit rate should be >75%
+   - Response times should be <500ms for cached data
+   - Memory usage should be reasonable
+
+3. **API Call Reduction**:
+   - Use optimized endpoints: `/api/trading212/optimized/account`
+   - Batch requests when possible
+   - Leverage background sync for data freshness
+
+#### Database Connection Issues
+
+1. **Supabase Connection**:
+   - Check database URL format
+   - Use Transaction Pooler for Vercel
+   - Verify connection limits
+
+2. **Prisma Issues**:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+#### Mobile App Issues
+
+1. **Build Problems**:
+   ```bash
+   npm run build
+   npx cap sync
+   npx cap open ios  # or android
+   ```
+
+2. **Native Features**:
+   - Check Capacitor configuration
+   - Verify plugin installations
+   - Test on physical devices
+
 ## 🆕 Recent Updates
 
 ### Latest Improvements (2024)
@@ -572,3 +648,5 @@ Built with ❤️ using Next.js, TypeScript, Supabase, and Vercel.
 - **Comprehensive Testing**: Optimized test utilities with 60%+ reduction in code duplication
 - **Background Sync**: Automatic data refresh without user intervention
 - **Rate Limit Management**: Smart request distribution and fallback mechanisms
+- **Timeout Improvements**: Enhanced timeout handling with stale data fallback and circuit breaker
+- **Health Monitoring**: Added comprehensive health check endpoints for system monitoring

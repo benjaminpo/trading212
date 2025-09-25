@@ -48,7 +48,10 @@ export async function POST() {
         );
 
         // Get current positions to find the symbol
-        const positions = await trading212.getPositions();
+        const positionsResponse = await trading212.getPositions();
+        const positions = Array.isArray(positionsResponse)
+          ? positionsResponse
+          : [];
         const position = positions.find((p) => p.ticker === order.symbol);
 
         if (!position) {

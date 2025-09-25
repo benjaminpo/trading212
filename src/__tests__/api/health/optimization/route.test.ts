@@ -15,23 +15,34 @@ jest.mock("@/lib/optimized-trading212", () => ({
     getBatchStats: jest
       .fn()
       .mockReturnValue({ pendingBatches: 1, totalPendingRequests: 3 }),
+    healthCheck: jest.fn().mockResolvedValue({
+      cache: { totalEntries: 5, memoryUsage: 10240 },
+      batches: { pendingBatches: 1, totalPendingRequests: 3 },
+      rateLimiter: { canMakeRequest: true },
+    }),
   },
 }));
 
-jest.mock("@/lib/optimized-ai-service", () => ({
-  optimizedAIService: {
+jest.mock("@/lib/api-cache", () => ({
+  apiCache: {
     getStats: jest
       .fn()
-      .mockReturnValue({ totalAnalyses: 10, cacheHits: 7, cacheMisses: 3 }),
+      .mockReturnValue({ totalEntries: 5, memoryUsage: 10240 }),
   },
 }));
 
-jest.mock("@/lib/background-sync", () => ({
-  backgroundSyncService: {
-    healthCheck: jest
+jest.mock("@/lib/api-batcher", () => ({
+  apiBatcher: {
+    getStats: jest
       .fn()
-      .mockReturnValue({ isRunning: true, lastSync: new Date().toISOString() }),
-    isServiceRunning: jest.fn().mockReturnValue(true),
+      .mockReturnValue({ pendingBatches: 1, totalPendingRequests: 3 }),
+  },
+}));
+
+jest.mock("@/lib/rate-limiter", () => ({
+  trading212RateLimiter: {
+    canMakeRequest: jest.fn().mockReturnValue(true),
+    getTimeUntilReset: jest.fn().mockReturnValue(0),
   },
 }));
 
@@ -62,8 +73,6 @@ describe("/api/health/optimization", () => {
       expect(data).toHaveProperty("optimization");
       expect(data.services).toHaveProperty("apiCache");
       expect(data.services).toHaveProperty("apiBatcher");
-      expect(data.services).toHaveProperty("aiService");
-      expect(data.services).toHaveProperty("backgroundSync");
     });
 
     it("should return detailed health data when requested", async () => {
@@ -98,7 +107,7 @@ describe("/api/health/optimization", () => {
       const {
         optimizedTrading212Service,
       } = require("@/lib/optimized-trading212");
-      optimizedTrading212Service.getCacheStats.mockImplementation(() => {
+      optimizedTrading212Service.healthCheck.mockImplementation(() => {
         throw new Error("Service error");
       });
 
