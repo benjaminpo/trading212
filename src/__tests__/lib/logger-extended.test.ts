@@ -1,7 +1,8 @@
-import logger from "@/lib/logger";
+let logger: typeof import("@/lib/logger").default;
 
 // Mock console methods
 const originalConsole = { ...console };
+const originalEnv = { ...process.env };
 const mockConsole = {
   log: jest.fn(),
   error: jest.fn(),
@@ -12,12 +13,20 @@ const mockConsole = {
 
 describe("Logger Extended Tests", () => {
   beforeEach(() => {
+    // Ensure logger is not in CI/production noop mode
+    process.env.CI = "false";
+    process.env.NODE_ENV = "test";
+    jest.resetModules();
+    // Re-require logger after setting env flags
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    logger = require("@/lib/logger").default;
     jest.clearAllMocks();
     Object.assign(console, mockConsole);
   });
 
   afterEach(() => {
     Object.assign(console, originalConsole);
+    process.env = { ...originalEnv };
   });
 
   describe("Logging Methods", () => {
