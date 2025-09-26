@@ -201,7 +201,8 @@ export async function GET(request: NextRequest) {
         } else {
           throw error;
         }
-      } catch (staleError) {
+      } catch (_staleError) {
+        void _staleError; // explicit ignore
         return NextResponse.json(
           {
             error: "Failed to fetch account data",

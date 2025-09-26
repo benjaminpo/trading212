@@ -27,15 +27,20 @@ const eslintConfig = [
       "@typescript-eslint/no-require-imports": "off",
     },
   },
+  // Ignore generated coverage artifacts
+  {
+    ignores: ["coverage/**"],
+  },
   // Relax strict TypeScript rules in test files to reduce noise from mocks
   {
-    files: [
-      "src/__tests__/**/*.{js,jsx,ts,tsx}",
-    ],
+    files: ["src/__tests__/**/*.{js,jsx,ts,tsx}"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
 ];

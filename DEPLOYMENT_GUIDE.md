@@ -3,6 +3,7 @@
 ## ✅ Database Setup Complete
 
 Your Supabase database is now set up with all the required tables:
+
 - ✅ User authentication tables (User, Account, Session)
 - ✅ Trading212 account management (Trading212Account)
 - ✅ Trail stop orders (TrailStopLossOrder)
@@ -76,6 +77,7 @@ OPENAI_API_KEY="your_openai_api_key_here"
 ## 🎯 Connection Details
 
 **Best Connection for Vercel**: Transaction Pooler
+
 - URL: `postgresql://postgres.rykxihpwkgvhojwesssy:nM9nJRm25qLZzXux@aws-1-eu-west-2.pooler.supabase.com:6543/postgres`
 - Why: Optimized for serverless functions, handles high concurrency
 

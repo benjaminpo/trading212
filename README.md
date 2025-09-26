@@ -11,22 +11,26 @@ A comprehensive trading analytics and portfolio management application built for
 ## Features
 
 ### 📊 Portfolio Analytics
+
 - **Real-time Portfolio Tracking**: Connect multiple Trading212 accounts (both practice and live)
 - **P/L Analysis**: Detailed profit/loss analysis with percentage calculations
 - **Top/Worst Performers**: Identify your best and worst performing positions
 - **Multi-Account Support**: Manage and analyze multiple Trading212 accounts simultaneously
 
 ### 🤖 AI-Powered Insights
+
 - **Daily Analysis**: Automated daily portfolio analysis and recommendations
 - **Position Analysis**: AI-powered insights on individual positions
 - **Risk Assessment**: Personalized risk analysis based on your portfolio
 
 ### 🛡️ Risk Management
+
 - **Trail Stop Orders**: Set up automated trail stop loss orders
 - **Notifications**: Get notified when trail stops are triggered
 - **Account Monitoring**: Monitor multiple accounts with centralized dashboard
 
 ### 🎨 Modern UI/UX
+
 - **Dark/Light Mode**: Beautiful theme switching
 - **Responsive Design**: Works seamlessly on desktop and mobile
 - **Real-time Updates**: Live data updates with rate limiting protection
@@ -34,7 +38,8 @@ A comprehensive trading analytics and portfolio management application built for
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - Trading212 account with API access enabled
 - Supabase account (for database)
 - OpenAI API key (for AI features)
@@ -42,12 +47,14 @@ A comprehensive trading analytics and portfolio management application built for
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/benjaminpo/trading212.git
 cd trading212
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
@@ -58,11 +65,13 @@ npm install
    - Use the **Transaction Pooler** connection for best performance
 
 4. Set up environment variables:
+
 ```bash
 cp .env.local.example .env.local
 ```
 
 Edit `.env.local` with your configuration:
+
 ```env
 # Supabase Database (Transaction Pooler - Recommended)
 DATABASE_URL="postgresql://postgres.your-project:your-password@aws-1-eu-west-2.pooler.supabase.com:6543/postgres"
@@ -80,6 +89,7 @@ OPENAI_API_KEY="your_openai_api_key"
 ```
 
 5. Set up the database:
+
 ```bash
 # Generate Prisma client
 npx prisma generate
@@ -89,6 +99,7 @@ npx prisma generate
 ```
 
 6. Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -120,11 +131,13 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/signin` - User sign in
 - `GET /api/auth/session` - Get current session
 
 ### Trading212 Integration
+
 - `POST /api/trading212/connect` - Connect Trading212 account
 - `DELETE /api/trading212/connect` - Disconnect account
 - `GET /api/trading212/optimized/accounts` - List user accounts
@@ -132,15 +145,18 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 - `GET /api/trading212/optimized/account` - Get account information
 
 ### Analytics & AI
+
 - `GET /api/ai/daily-analysis` - Get daily analysis logs
 - `POST /api/ai/optimized-analyze` - Analyze positions with optimization
 
 ### Trail Stops
+
 - `GET /api/trail-stop/orders` - List trail stop orders
 - `POST /api/trail-stop/orders` - Create new trail stop order
 - `DELETE /api/trail-stop/orders/[id]` - Delete trail stop order
 
 ### Optimized Endpoints
+
 - `GET /api/trading212/optimized/account` - Get optimized account data with caching
 - `POST /api/ai/optimized-analyze` - Batch AI analysis with 80% fewer API calls
 - `GET /api/health/optimization` - Check system optimization status and metrics
@@ -148,25 +164,27 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ## 🚀 Performance Optimizations
 
 ### API Call Reduction
+
 The application implements comprehensive optimization strategies that reduce API calls by **60-80%**:
 
-| Operation | Before | After | Reduction |
-|-----------|--------|-------|-----------|
-| Multi-account Dashboard | 15 calls | 3 calls | 80% |
-| AI Analysis (10 positions) | 10 calls | 2 calls | 80% |
-| Portfolio Updates | 5 calls | 1 call | 80% |
-| Account Data Refresh | 3 calls | 1 call | 67% |
+| Operation                  | Before   | After   | Reduction |
+| -------------------------- | -------- | ------- | --------- |
+| Multi-account Dashboard    | 15 calls | 3 calls | 80%       |
+| AI Analysis (10 positions) | 10 calls | 2 calls | 80%       |
+| Portfolio Updates          | 5 calls  | 1 call  | 80%       |
+| Account Data Refresh       | 3 calls  | 1 call  | 67%       |
 
 ### Response Time Improvements
 
-| Data Type | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Portfolio Data | 2-3s | 200-500ms | 85% |
-| Account Stats | 1-2s | 100-300ms | 80% |
-| AI Recommendations | 10-15s | 2-5s | 70% |
-| Multi-account View | 5-8s | 1-2s | 75% |
+| Data Type          | Before | After     | Improvement |
+| ------------------ | ------ | --------- | ----------- |
+| Portfolio Data     | 2-3s   | 200-500ms | 85%         |
+| Account Stats      | 1-2s   | 100-300ms | 80%         |
+| AI Recommendations | 10-15s | 2-5s      | 70%         |
+| Multi-account View | 5-8s   | 1-2s      | 75%         |
 
 ### Optimization Features
+
 - **Intelligent Caching**: Multi-level caching with TTL-based expiration
 - **Request Batching**: Combines multiple API requests into efficient batches
 - **Background Sync**: Automatic data refresh without user intervention
@@ -223,6 +241,7 @@ The application is optimized for deployment on Vercel with Supabase as the datab
 #### Manual Deployment
 
 1. **Push to GitHub:**
+
    ```bash
    git add .
    git commit -m "Ready for deployment"
@@ -237,6 +256,7 @@ The application is optimized for deployment on Vercel with Supabase as the datab
    - **Name the project `trading212`** (to get trading212.vercel.app domain)
 
 3. **Set Environment Variables:**
+
    ```env
    DATABASE_URL="postgresql://postgres.your-project:your-password@aws-1-eu-west-2.pooler.supabase.com:6543/postgres"
    NEXTAUTH_URL="https://trading212.vercel.app"
@@ -247,6 +267,7 @@ The application is optimized for deployment on Vercel with Supabase as the datab
    ```
 
 4. **Generate NEXTAUTH_SECRET:**
+
    ```bash
    openssl rand -base64 32
    ```
@@ -259,6 +280,7 @@ The application is optimized for deployment on Vercel with Supabase as the datab
 ### 🗄️ Database Setup
 
 The application uses **Supabase PostgreSQL** with the following optimizations:
+
 - **Transaction Pooler** connection (recommended for Vercel)
 - Pre-configured schema with all required tables
 - Automatic connection pooling for serverless functions
@@ -273,6 +295,7 @@ The application uses **Supabase PostgreSQL** with the following optimizations:
 ### Other Platforms
 
 The application can also be deployed to:
+
 - **Railway** (with Supabase)
 - **Render** (with Supabase)
 - **AWS Amplify** (with RDS PostgreSQL)
@@ -329,6 +352,7 @@ This project includes comprehensive documentation for advanced features:
 ## 🔧 Development & CI/CD
 
 ### Local CI Testing
+
 Run the same checks as GitHub Actions locally:
 
 ```bash
@@ -343,6 +367,7 @@ npm run ci:security  # Run security audit
 ```
 
 ### CI/CD Pipeline
+
 This project uses GitHub Actions for automated CI/CD:
 
 - **Automated Testing**: Runs on every push and PR with comprehensive test coverage
@@ -360,10 +385,12 @@ This project uses comprehensive GitHub Actions workflows for CI/CD, testing, and
 ### Workflows Overview
 
 #### 1. CI/CD Pipeline (`ci.yml`)
+
 **Triggers:** Push to `main`/`develop`, Pull Requests
 **Purpose:** Main CI/CD pipeline with testing, building, and deployment
 
 **Jobs:**
+
 - **Test**: Runs unit tests with PostgreSQL service
 - **Build**: Builds the application with production environment variables
 - **Lint**: Runs ESLint and TypeScript checks
@@ -373,30 +400,36 @@ This project uses comprehensive GitHub Actions workflows for CI/CD, testing, and
 - **Database Migration**: Runs Prisma migrations on production
 
 #### 2. Dependency Updates (`dependency-update.yml`)
+
 **Triggers:** Weekly schedule (Mondays 9 AM UTC), Manual dispatch
 **Purpose:** Automated dependency updates and security scanning
 
 **Features:**
+
 - Updates npm dependencies to latest versions
 - Runs security audits
 - Creates pull requests for updates
 - Snyk security scanning
 
 #### 3. Code Quality (`code-quality.yml`)
+
 **Triggers:** Push to `main`/`develop`, Pull Requests
 **Purpose:** Code quality checks and performance monitoring
 
 **Jobs:**
+
 - **Code Quality**: ESLint, TypeScript, Prettier checks
 - **Performance**: Bundle analysis and large file detection
 - **Accessibility**: Pa11y accessibility testing
 - **Lighthouse**: Performance and SEO auditing
 
 #### 4. Database Management (`database.yml`)
+
 **Triggers:** Manual dispatch, Scheduled health checks
 **Purpose:** Database operations and health monitoring
 
 **Actions:**
+
 - Migrate database schema
 - Seed database with test data
 - Reset database
@@ -404,10 +437,12 @@ This project uses comprehensive GitHub Actions workflows for CI/CD, testing, and
 - Health checks
 
 #### 5. Release Management (`release.yml`)
+
 **Triggers:** Git tags, Manual dispatch
 **Purpose:** Automated release creation and version management
 
 **Features:**
+
 - Creates GitHub releases
 - Generates changelogs
 - Uploads build artifacts
@@ -418,6 +453,7 @@ This project uses comprehensive GitHub Actions workflows for CI/CD, testing, and
 Configure these secrets in your GitHub repository settings:
 
 #### Core Application Secrets
+
 ```
 DATABASE_URL              # PostgreSQL connection string
 NEXTAUTH_SECRET          # NextAuth.js secret key
@@ -428,6 +464,7 @@ OPENAI_API_KEY           # OpenAI API key for AI features
 ```
 
 #### Deployment Secrets
+
 ```
 VERCEL_TOKEN             # Vercel deployment token
 VERCEL_ORG_ID            # Vercel organization ID
@@ -435,6 +472,7 @@ VERCEL_PROJECT_ID        # Vercel project ID
 ```
 
 #### Optional Integration Secrets
+
 ```
 SNYK_TOKEN               # Snyk security scanning token
 SLACK_WEBHOOK_URL        # Slack webhook URL for notifications
@@ -444,12 +482,14 @@ GITHUB_TOKEN             # GitHub token (usually auto-provided)
 ### Workflow Usage
 
 #### Manual Database Operations
+
 1. Go to Actions tab in GitHub
 2. Select "Database Management" workflow
 3. Click "Run workflow"
 4. Choose action: migrate, seed, reset, backup, or restore
 
 #### Creating Releases
+
 1. Go to Actions tab in GitHub
 2. Select "Release Management" workflow
 3. Click "Run workflow"
@@ -457,6 +497,7 @@ GITHUB_TOKEN             # GitHub token (usually auto-provided)
 5. Workflow will create tag, release, and notify team
 
 #### Dependency Updates
+
 - Automatic: Runs every Monday at 9 AM UTC
 - Manual: Go to Actions → "Dependency Updates" → "Run workflow"
 
@@ -469,12 +510,14 @@ GITHUB_TOKEN             # GitHub token (usually auto-provided)
 ### Monitoring and Notifications
 
 #### Slack Integration
+
 - Deployment notifications
 - Release announcements
 - Database health alerts
 - Security vulnerability alerts
 
 #### GitHub Status Checks
+
 - All workflows must pass before merging
 - Required status checks configured in branch protection rules
 
@@ -507,12 +550,14 @@ GITHUB_TOKEN             # GitHub token (usually auto-provided)
 ### Customization
 
 #### Adding New Workflows
+
 1. Create new `.yml` file in `.github/workflows/`
 2. Define triggers and jobs
 3. Add required secrets to repository settings
 4. Test with manual dispatch first
 
 #### Modifying Existing Workflows
+
 1. Edit the workflow file
 2. Test changes in a feature branch
 3. Monitor workflow execution
@@ -535,6 +580,7 @@ GITHUB_TOKEN             # GitHub token (usually auto-provided)
 ## 🚀 Quick Start
 
 1. **Clone & Install**:
+
    ```bash
    git clone https://github.com/benjaminpo/trading212.git
    cd trading212
@@ -546,6 +592,7 @@ GITHUB_TOKEN             # GitHub token (usually auto-provided)
    - Copy Transaction Pooler connection string
 
 3. **Configure Environment**:
+
    ```bash
    cp .env.local.example .env.local
    # Edit .env.local with your credentials
@@ -567,9 +614,11 @@ Built with ❤️ using Next.js, TypeScript, Supabase, and Vercel.
 ### Common Issues and Solutions
 
 #### API Timeout Errors (504)
+
 If you're experiencing timeout errors with the optimized account endpoint:
 
 1. **Check System Health**:
+
    ```bash
    curl https://trading212.vercel.app/api/health/optimization?detailed=true
    ```
@@ -593,10 +642,11 @@ If you're experiencing timeout errors with the optimized account endpoint:
 #### Performance Issues
 
 1. **Check Optimization Status**:
+
    ```bash
    # Basic health check
    curl https://trading212.vercel.app/api/health/optimization
-   
+
    # Detailed performance metrics
    curl https://trading212.vercel.app/api/health/optimization?detailed=true
    ```
@@ -627,6 +677,7 @@ If you're experiencing timeout errors with the optimized account endpoint:
 #### Mobile App Issues
 
 1. **Build Problems**:
+
    ```bash
    npm run build
    npx cap sync
@@ -641,6 +692,7 @@ If you're experiencing timeout errors with the optimized account endpoint:
 ## 🆕 Recent Updates
 
 ### Latest Improvements (2024)
+
 - **API Optimization**: Implemented 60-80% reduction in API calls through intelligent caching and batching
 - **Performance Enhancements**: 85% improvement in response times with multi-level caching
 - **Advanced AI Features**: Batch AI analysis with 80% fewer API calls

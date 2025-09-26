@@ -1,17 +1,17 @@
-name: 'Setup Node.js with Prisma'
-description: 'Setup Node.js environment with Prisma support'
+name: "Setup Node.js with Prisma"
+description: "Setup Node.js environment with Prisma support"
 inputs:
   node-version:
-    description: 'Node.js version to use'
+    description: "Node.js version to use"
     required: false
-    default: '18'
+    default: "18"
   cache:
-    description: 'Cache strategy'
+    description: "Cache strategy"
     required: false
-    default: 'npm'
+    default: "npm"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -26,4 +26,3 @@ runs:
     - name: Generate Prisma client
       shell: bash
       run: npx prisma generate
-

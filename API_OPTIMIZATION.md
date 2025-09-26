@@ -31,11 +31,11 @@ The optimization system reduces API calls by **60-80%** through intelligent cach
 ```typescript
 // Memory cache with TTL
 const cache = {
-  portfolio: 2 * 60 * 1000,    // 2 minutes
-  account: 5 * 60 * 1000,      // 5 minutes
-  orders: 1 * 60 * 1000,       // 1 minute
-  positions: 2 * 60 * 1000     // 2 minutes
-}
+  portfolio: 2 * 60 * 1000, // 2 minutes
+  account: 5 * 60 * 1000, // 5 minutes
+  orders: 1 * 60 * 1000, // 1 minute
+  positions: 2 * 60 * 1000, // 2 minutes
+};
 ```
 
 ### Cache Strategy
@@ -61,13 +61,13 @@ The batching system combines multiple API requests into efficient batches:
 ```typescript
 // Multiple requests for the same account
 const requests = [
-  { type: 'portfolio', accountId: 'acc1' },
-  { type: 'account', accountId: 'acc1' },
-  { type: 'orders', accountId: 'acc1' }
-]
+  { type: "portfolio", accountId: "acc1" },
+  { type: "account", accountId: "acc1" },
+  { type: "orders", accountId: "acc1" },
+];
 
 // Batched into single API call
-const batchResult = await apiBatcher.executeBatch(requests)
+const batchResult = await apiBatcher.executeBatch(requests);
 ```
 
 ### Batch Optimization Features
@@ -91,8 +91,8 @@ const batchAnalysis = await optimizedAIService.analyzePositionsBatch({
   marketData: marketData,
   userId: userId,
   accountId: accountId,
-  riskProfile: 'MODERATE'
-})
+  riskProfile: "MODERATE",
+});
 ```
 
 ### AI Caching Strategy
@@ -106,21 +106,21 @@ const batchAnalysis = await optimizedAIService.analyzePositionsBatch({
 
 ### API Call Reduction
 
-| Operation | Before | After | Reduction |
-|-----------|--------|-------|-----------|
-| Multi-account Dashboard | 15 calls | 3 calls | 80% |
-| AI Analysis (10 positions) | 10 calls | 2 calls | 80% |
-| Portfolio Updates | 5 calls | 1 call | 80% |
-| Account Data Refresh | 3 calls | 1 call | 67% |
+| Operation                  | Before   | After   | Reduction |
+| -------------------------- | -------- | ------- | --------- |
+| Multi-account Dashboard    | 15 calls | 3 calls | 80%       |
+| AI Analysis (10 positions) | 10 calls | 2 calls | 80%       |
+| Portfolio Updates          | 5 calls  | 1 call  | 80%       |
+| Account Data Refresh       | 3 calls  | 1 call  | 67%       |
 
 ### Response Time Improvements
 
-| Data Type | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Portfolio Data | 2-3s | 200-500ms | 85% |
-| Account Stats | 1-2s | 100-300ms | 80% |
-| AI Recommendations | 10-15s | 2-5s | 70% |
-| Multi-account View | 5-8s | 1-2s | 75% |
+| Data Type          | Before | After     | Improvement |
+| ------------------ | ------ | --------- | ----------- |
+| Portfolio Data     | 2-3s   | 200-500ms | 85%         |
+| Account Stats      | 1-2s   | 100-300ms | 80%         |
+| AI Recommendations | 10-15s | 2-5s      | 70%         |
+| Multi-account View | 5-8s   | 1-2s      | 75%         |
 
 ## 🔧 Implementation Guide
 
@@ -129,33 +129,31 @@ const batchAnalysis = await optimizedAIService.analyzePositionsBatch({
 #### 1. Trading212 Data Fetching
 
 ```typescript
-import { optimizedTrading212Service } from '@/lib/optimized-trading212'
+import { optimizedTrading212Service } from "@/lib/optimized-trading212";
 
 // Single account data
 const accountData = await optimizedTrading212Service.getAccountData(
   userId,
   accountId,
   apiKey,
-  isPractice
-)
+  isPractice,
+);
 
 // Multi-account data
 const multiAccountData = await optimizedTrading212Service.getMultiAccountData(
   userId,
-  accounts
-)
+  accounts,
+);
 
 // Aggregated view
-const aggregatedData = await optimizedTrading212Service.getAggregatedAccountData(
-  userId,
-  accounts
-)
+const aggregatedData =
+  await optimizedTrading212Service.getAggregatedAccountData(userId, accounts);
 ```
 
 #### 2. AI Analysis
 
 ```typescript
-import { optimizedAIService } from '@/lib/optimized-ai-service'
+import { optimizedAIService } from "@/lib/optimized-ai-service";
 
 // Batch analysis
 const analysisResult = await optimizedAIService.analyzePositionsBatch({
@@ -163,33 +161,35 @@ const analysisResult = await optimizedAIService.analyzePositionsBatch({
   marketData: marketData,
   userId: userId,
   accountId: accountId,
-  riskProfile: 'MODERATE'
-})
+  riskProfile: "MODERATE",
+});
 ```
 
 #### 3. Cache Management
 
 ```typescript
-import { apiCache } from '@/lib/api-cache'
+import { apiCache } from "@/lib/api-cache";
 
 // Invalidate specific cache
-await apiCache.invalidate(userId, accountId, 'portfolio')
+await apiCache.invalidate(userId, accountId, "portfolio");
 
 // Clear all cache
-await apiCache.invalidateAll()
+await apiCache.invalidateAll();
 
 // Get cache statistics
-const stats = apiCache.getStats()
+const stats = apiCache.getStats();
 ```
 
 ### New API Endpoints
 
 #### Optimized Trading212 Account Data
+
 ```
 GET /api/trading212/optimized/account?accountId=123&includeOrders=true&forceRefresh=false
 ```
 
 #### Optimized AI Analysis
+
 ```
 POST /api/ai/optimized-analyze
 {
@@ -200,6 +200,7 @@ POST /api/ai/optimized-analyze
 ```
 
 #### Health Check
+
 ```
 GET /api/health/optimization?detailed=true
 ```
@@ -289,17 +290,17 @@ MAX_USERS_PER_SYNC=10         # Users per sync cycle
 ```typescript
 // Trading212 Rate Limits
 const rateLimits = {
-  windowMs: 60000,           // 1 minute
-  maxRequests: 15,           // 15 requests per minute
-  burstLimit: 5              // 5 requests per burst
-}
+  windowMs: 60000, // 1 minute
+  maxRequests: 15, // 15 requests per minute
+  burstLimit: 5, // 5 requests per burst
+};
 
 // OpenAI Rate Limits
 const aiRateLimits = {
-  requestsPerMinute: 60,     // 60 requests per minute
-  tokensPerMinute: 150000,   // 150k tokens per minute
-  batchSize: 5               // 5 positions per batch
-}
+  requestsPerMinute: 60, // 60 requests per minute
+  tokensPerMinute: 150000, // 150k tokens per minute
+  batchSize: 5, // 5 positions per batch
+};
 ```
 
 ## 🔍 Troubleshooting
@@ -307,31 +308,34 @@ const aiRateLimits = {
 ### Common Issues
 
 #### 1. High Cache Miss Rate
+
 ```typescript
 // Check cache configuration
-const stats = apiCache.getStats()
+const stats = apiCache.getStats();
 if (stats.totalEntries < 50) {
   // Cache might be too small
-  console.log('Consider increasing cache size')
+  console.log("Consider increasing cache size");
 }
 ```
 
 #### 2. Rate Limit Errors
+
 ```typescript
 // Check rate limit status
-const canMakeRequest = trading212RateLimiter.canMakeRequest(userId, accountId)
+const canMakeRequest = trading212RateLimiter.canMakeRequest(userId, accountId);
 if (!canMakeRequest) {
-  const waitTime = trading212RateLimiter.getTimeUntilReset(userId, accountId)
-  console.log(`Rate limited. Wait ${waitTime}ms`)
+  const waitTime = trading212RateLimiter.getTimeUntilReset(userId, accountId);
+  console.log(`Rate limited. Wait ${waitTime}ms`);
 }
 ```
 
 #### 3. Slow AI Analysis
+
 ```typescript
 // Check AI service status
-const aiStats = optimizedAIService.getStats()
+const aiStats = optimizedAIService.getStats();
 if (!aiStats.hasOpenAI) {
-  console.log('OpenAI not available, using fallback analysis')
+  console.log("OpenAI not available, using fallback analysis");
 }
 ```
 
@@ -341,7 +345,7 @@ Enable detailed logging:
 
 ```typescript
 // Set debug environment variable
-process.env.DEBUG_API_OPTIMIZATION = 'true'
+process.env.DEBUG_API_OPTIMIZATION = "true";
 
 // This will log:
 // - Cache hits/misses
@@ -353,21 +357,25 @@ process.env.DEBUG_API_OPTIMIZATION = 'true'
 ## 📚 Best Practices
 
 ### 1. Cache Management
+
 - **Use appropriate TTL**: Match cache duration to data volatility
 - **Invalidate selectively**: Clear only necessary cache entries
 - **Monitor hit rates**: Optimize cache size based on usage patterns
 
 ### 2. Request Batching
+
 - **Batch similar requests**: Group requests by account and type
 - **Respect rate limits**: Don't exceed API limits
 - **Handle failures gracefully**: Isolate failed requests
 
 ### 3. AI Optimization
+
 - **Batch position analysis**: Process multiple positions together
 - **Cache recommendations**: Store expensive AI results
 - **Use fallbacks**: Provide rule-based analysis when AI fails
 
 ### 4. Background Sync
+
 - **Sync during low usage**: Schedule during off-peak hours
 - **Prioritize active users**: Focus on frequently accessed accounts
 - **Monitor performance**: Track sync success rates

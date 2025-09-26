@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-env node */
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const ROOT = path.resolve(__dirname, '..');
-const SRC = path.join(ROOT, 'src');
+const ROOT = path.resolve(__dirname, "..");
+const SRC = path.join(ROOT, "src");
 
 function listFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files = [];
   for (const e of entries) {
-    if (e.name.startsWith('.')) continue;
+    if (e.name.startsWith(".")) continue;
     const full = path.join(dir, e.name);
     if (e.isDirectory()) {
       files.push(...listFiles(full));
@@ -25,7 +25,10 @@ function ensureLoggerImport(source) {
   if (!source.includes("@/lib/logger")) {
     const importRegex = /^(import\s.+\n)+/m;
     if (importRegex.test(source)) {
-      return source.replace(importRegex, (m) => m + 'import logger from "@/lib/logger";\n');
+      return source.replace(
+        importRegex,
+        (m) => m + 'import logger from "@/lib/logger";\n',
+      );
     }
     return 'import logger from "@/lib/logger";\n' + source;
   }
@@ -33,9 +36,9 @@ function ensureLoggerImport(source) {
 }
 
 function processFile(file) {
-  let src = fs.readFileSync(file, 'utf8');
-  if (!src.includes('console.log(')) return false;
-  src = src.replace(/\bconsole\.log\(/g, 'logger.info(');
+  let src = fs.readFileSync(file, "utf8");
+  if (!src.includes("console.log(")) return false;
+  src = src.replace(/\bconsole\.log\(/g, "logger.info(");
   src = ensureLoggerImport(src);
   fs.writeFileSync(file, src);
   return true;
@@ -47,4 +50,3 @@ for (const f of files) {
   if (processFile(f)) changed++;
 }
 console.log(`Updated ${changed} files.`);
-

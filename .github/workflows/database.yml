@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'Database action to perform'
+        description: "Database action to perform"
         required: true
-        default: 'migrate'
+        default: "migrate"
         type: choice
         options:
           - migrate
@@ -27,8 +27,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -80,8 +80,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -91,7 +91,7 @@ jobs:
           node -e "
           const { PrismaClient } = require('@prisma/client');
           const prisma = new PrismaClient();
-          
+
           async function checkConnection() {
             try {
               await prisma.\$queryRaw\`SELECT 1\`;
@@ -104,7 +104,7 @@ jobs:
               await prisma.\$disconnect();
             }
           }
-          
+
           checkConnection();
           "
         env:
@@ -121,8 +121,7 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: failure
-          channel: '#alerts'
+          channel: "#alerts"
           fields: repo,message,commit,author,action,eventName,ref,workflow
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
