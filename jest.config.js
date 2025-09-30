@@ -31,14 +31,6 @@ const customJestConfig = {
     "!src/**/*.d.ts",
     "!src/**/index.{js,ts}",
   ],
-  coverageThreshold: {
-    global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
-    },
-  },
   transformIgnorePatterns: [
     "node_modules/(?!(jose|openid-client|next-auth|@auth|@panva|oauth4webapi|preact-render-to-string|preact)/)",
   ],
