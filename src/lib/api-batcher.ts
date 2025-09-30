@@ -169,13 +169,13 @@ export class APIBatcher {
           }
         })();
 
-        // 20 second timeout per API call (giving some buffer under the 15s axios timeout)
+        // 4 second timeout per API call (aggressive for Hobby plan)
         return Promise.race([
           apiCallPromise,
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error(`Timeout fetching ${requestType}`)),
-              20000,
+              4000,
             ),
           ),
         ]);

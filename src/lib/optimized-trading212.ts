@@ -81,7 +81,7 @@ export class OptimizedTrading212Service {
       };
     }
 
-    // Circuit breaker check
+    // Aggressive circuit breaker check - fail fast for Hobby plan
     const cbKey = `${userId}:${accountId}`;
     const now = Date.now();
     const cbState = this.circuitBreaker.get(cbKey);
@@ -95,7 +95,7 @@ export class OptimizedTrading212Service {
         logger.info(
           `⚡ Serving STALE (circuit open) for account ${accountId} until ${new Date(cbState.openUntil).toISOString()}`,
         );
-        return { ...stale, cacheHit: true };
+        return { ...stale, cacheHit: true, stale: true };
       }
       throw new Error("Upstream temporarily unavailable (circuit open)");
     }
@@ -128,8 +128,9 @@ export class OptimizedTrading212Service {
           openUntil: 0,
         };
         current.failures += 1;
-        if (current.failures >= 3) {
-          current.openUntil = Date.now() + 60_000; // 60s
+        if (current.failures >= 2) {
+          // More aggressive - fail after 2 failures
+          current.openUntil = Date.now() + 30_000; // 30s circuit open
         }
         this.circuitBreaker.set(cbKey, current);
 

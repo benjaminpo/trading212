@@ -8,11 +8,11 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Fast auth check with timeout
+    // Fast auth check with timeout - aggressive for Hobby plan
     const session = await Promise.race([
       getServerSession(authOptions),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Auth timeout")), 2000),
+        setTimeout(() => reject(new Error("Auth timeout")), 1000),
       ),
     ]);
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fast database query with timeout
+    // Fast database query with timeout - aggressive for Hobby plan
     const user = await Promise.race([
       retryDatabaseOperation(() =>
         prisma.user.findUnique({
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         }),
       ),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Database timeout")), 3000),
+        setTimeout(() => reject(new Error("Database timeout")), 1500),
       ),
     ]);
 
@@ -136,9 +136,8 @@ export async function GET(request: NextRequest) {
     let accountData;
 
     try {
-      // Increase timeout to 50 seconds to allow for slow Trading212 API responses
-      // This is safe since Vercel function timeout is now 60 seconds
-      const timeoutMs = 50000;
+      // Conservative timeout for Hobby plan (10s max) - leave buffer for response processing
+      const timeoutMs = 8000;
 
       if (forceRefresh) {
         accountData = await Promise.race([
