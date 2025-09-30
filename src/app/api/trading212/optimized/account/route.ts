@@ -136,8 +136,9 @@ export async function GET(request: NextRequest) {
     let accountData;
 
     try {
-      // Increase timeout to 8 seconds to allow for slower API responses
-      const timeoutMs = 8000;
+      // Increase timeout to 50 seconds to allow for slow Trading212 API responses
+      // This is safe since Vercel function timeout is now 60 seconds
+      const timeoutMs = 50000;
 
       if (forceRefresh) {
         accountData = await Promise.race([
@@ -173,41 +174,75 @@ export async function GET(request: NextRequest) {
         ]);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.log(
         `❌ Data fetch failed: ${Date.now() - startTime}ms (fetch: ${Date.now() - dataFetchStart}ms)`,
-        error,
+        { error: errorMessage, accountId: targetAccount.id },
       );
 
-      // Try to serve stale data if available
+      // Try to serve stale data if available (even if cache is expired)
       try {
-        const staleData = await optimizedTrading212Service.getAccountData(
-          userId,
-          targetAccount.id,
-          targetAccount.apiKey,
-          targetAccount.isPractice,
-          includeOrders,
-        );
+        // Use the special getStale method from cache to get expired data
+        const { apiCache } = await import("@/lib/api-cache");
+        const staleData = await apiCache.getStale<{
+          lastUpdated: string | Date | number;
+          [key: string]: unknown;
+        }>(userId, targetAccount.id, "account");
 
         if (staleData) {
           console.log(
-            `⚡ Serving stale data after timeout for account ${targetAccount.id}`,
+            `⚡ Serving stale/expired cache data after timeout for account ${targetAccount.id}`,
           );
+          // Convert lastUpdated to string
+          let lastUpdatedStr = new Date().toISOString();
+          if (typeof staleData.lastUpdated === "string") {
+            lastUpdatedStr = staleData.lastUpdated;
+          } else if (staleData.lastUpdated instanceof Date) {
+            lastUpdatedStr = staleData.lastUpdated.toISOString();
+          } else if (typeof staleData.lastUpdated === "number") {
+            lastUpdatedStr = new Date(staleData.lastUpdated).toISOString();
+          }
+
           accountData = {
             ...staleData,
             cacheHit: true,
             stale: true,
-            lastUpdated: new Date(staleData.lastUpdated).toISOString(),
+            warning: "Data may be outdated due to API timeout",
+            lastUpdated: lastUpdatedStr,
           };
         } else {
-          throw error;
+          // No stale data available, return error
+          return NextResponse.json(
+            {
+              error: "Failed to fetch account data - Trading212 API timeout",
+              details: errorMessage,
+              timeout: true,
+              retryAfter: 30, // Suggest retry after 30 seconds
+              accountInfo: {
+                id: targetAccount.id,
+                name: targetAccount.name,
+                isPractice: targetAccount.isPractice,
+                isDefault: targetAccount.isDefault,
+              },
+            },
+            { status: 504 },
+          );
         }
       } catch (_staleError) {
         void _staleError; // explicit ignore
         return NextResponse.json(
           {
-            error: "Failed to fetch account data",
+            error: "Failed to fetch account data - no cached data available",
+            details: errorMessage,
             timeout: true,
-            retryAfter: 30, // Suggest retry after 30 seconds
+            retryAfter: 30,
+            accountInfo: {
+              id: targetAccount.id,
+              name: targetAccount.name,
+              isPractice: targetAccount.isPractice,
+              isDefault: targetAccount.isDefault,
+            },
           },
           { status: 504 },
         );

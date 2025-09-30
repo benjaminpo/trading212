@@ -39,7 +39,7 @@ describe("Trading212API", () => {
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: expectedLiveBaseURL,
-        timeout: 7000,
+        timeout: 15000,
         headers: {
           Authorization: mockApiKey,
           "Content-Type": "application/json",
@@ -52,7 +52,7 @@ describe("Trading212API", () => {
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: expectedDemoBaseURL,
-        timeout: 7000,
+        timeout: 15000,
         headers: {
           Authorization: mockApiKey,
           "Content-Type": "application/json",

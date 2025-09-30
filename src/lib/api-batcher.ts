@@ -145,20 +145,40 @@ export class APIBatcher {
     );
 
     try {
-      // Execute all API calls for this account in parallel
+      // Execute all API calls for this account in parallel with individual timeouts
       const apiPromises = requestTypes.map(async (requestType) => {
-        switch (requestType) {
-          case "portfolio":
-            return { type: "portfolio", data: await trading212.getPositions() };
-          case "account":
-            return { type: "account", data: await trading212.getAccount() };
-          case "orders":
-            return { type: "orders", data: await trading212.getOrders() };
-          case "positions":
-            return { type: "positions", data: await trading212.getPositions() };
-          default:
-            throw new Error(`Unknown request type: ${requestType}`);
-        }
+        // Add timeout wrapper for each individual API call
+        const apiCallPromise = (async () => {
+          switch (requestType) {
+            case "portfolio":
+              return {
+                type: "portfolio",
+                data: await trading212.getPositions(),
+              };
+            case "account":
+              return { type: "account", data: await trading212.getAccount() };
+            case "orders":
+              return { type: "orders", data: await trading212.getOrders() };
+            case "positions":
+              return {
+                type: "positions",
+                data: await trading212.getPositions(),
+              };
+            default:
+              throw new Error(`Unknown request type: ${requestType}`);
+          }
+        })();
+
+        // 20 second timeout per API call (giving some buffer under the 15s axios timeout)
+        return Promise.race([
+          apiCallPromise,
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`Timeout fetching ${requestType}`)),
+              20000,
+            ),
+          ),
+        ]);
       });
 
       const results = await Promise.allSettled(apiPromises);

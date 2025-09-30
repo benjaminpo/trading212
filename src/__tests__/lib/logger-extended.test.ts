@@ -18,7 +18,7 @@ describe("Logger Extended Tests", () => {
     process.env.NODE_ENV = "test";
     jest.resetModules();
     // Re-require logger after setting env flags
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     logger = require("@/lib/logger").default;
     jest.clearAllMocks();
     Object.assign(console, mockConsole);
