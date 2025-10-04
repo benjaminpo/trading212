@@ -23,6 +23,8 @@ export interface OptimizedAccountData {
   currency: string;
   lastUpdated: string;
   cacheHit: boolean;
+  stale?: boolean;
+  warning?: string;
 }
 
 export interface OptimizedPortfolioData {
