@@ -9,6 +9,7 @@ jest.mock("@/lib/api-batcher", () => ({
 jest.mock("@/lib/api-cache", () => ({
   apiCache: {
     get: jest.fn().mockResolvedValue(null),
+    getStale: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue(undefined),
   },
 }));
