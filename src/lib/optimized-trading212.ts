@@ -67,7 +67,7 @@ export class OptimizedTrading212Service {
   ): Promise<OptimizedAccountData> {
     logger.info(`🎯 Optimized fetch for account ${accountId}`);
 
-    // Check cache first
+    // Check cache first - prioritize stale cache for Hobby plan
     const cached = await apiCache.get<OptimizedAccountData>(
       userId,
       accountId,
@@ -78,6 +78,24 @@ export class OptimizedTrading212Service {
       return {
         ...cached,
         cacheHit: true,
+      };
+    }
+
+    // For Hobby plan: check stale cache immediately if no fresh cache
+    const staleCached = await apiCache.getStale<OptimizedAccountData>(
+      userId,
+      accountId,
+      "account",
+    );
+    if (staleCached) {
+      logger.info(
+        `⚡ Serving STALE cache immediately for account ${accountId} (Hobby plan optimization)`,
+      );
+      return {
+        ...staleCached,
+        cacheHit: true,
+        stale: true,
+        warning: "Serving cached data for faster response",
       };
     }
 
@@ -128,9 +146,9 @@ export class OptimizedTrading212Service {
           openUntil: 0,
         };
         current.failures += 1;
-        if (current.failures >= 2) {
-          // More aggressive - fail after 2 failures
-          current.openUntil = Date.now() + 30_000; // 30s circuit open
+        if (current.failures >= 1) {
+          // Ultra-aggressive - fail after 1 failure
+          current.openUntil = Date.now() + 15_000; // 15s circuit open
         }
         this.circuitBreaker.set(cbKey, current);
 

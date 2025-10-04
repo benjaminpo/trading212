@@ -52,7 +52,7 @@ export class Trading212API {
 
     this.api = axios.create({
       baseURL,
-      timeout: 5000, // 5 second timeout - aggressive for Hobby plan
+      timeout: 3000, // 3 second timeout - ultra-aggressive for Hobby plan
       headers: {
         Authorization: `${apiKey}`,
         "Content-Type": "application/json",

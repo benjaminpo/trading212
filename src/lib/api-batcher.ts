@@ -169,13 +169,13 @@ export class APIBatcher {
           }
         })();
 
-        // 4 second timeout per API call (aggressive for Hobby plan)
+        // 2 second timeout per API call (ultra-aggressive for Hobby plan)
         return Promise.race([
           apiCallPromise,
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error(`Timeout fetching ${requestType}`)),
-              4000,
+              2000,
             ),
           ),
         ]);

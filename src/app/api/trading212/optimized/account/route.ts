@@ -136,8 +136,8 @@ export async function GET(request: NextRequest) {
     let accountData;
 
     try {
-      // Conservative timeout for Hobby plan (10s max) - leave buffer for response processing
-      const timeoutMs = 8000;
+      // Ultra-aggressive timeout for Hobby plan - fail fast and serve stale
+      const timeoutMs = 3000;
 
       if (forceRefresh) {
         accountData = await Promise.race([
