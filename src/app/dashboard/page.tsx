@@ -43,7 +43,6 @@ interface DashboardStats {
   todayPnL: number;
   todayPnLPercent: number;
   activePositions: number;
-  trailStopOrders: number;
   aiRecommendations: number;
   currency?: string;
 }
@@ -74,7 +73,6 @@ export default function Dashboard() {
     todayPnL: 0,
     todayPnLPercent: 0,
     activePositions: 0,
-    trailStopOrders: 0,
     aiRecommendations: 0,
   });
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
@@ -163,7 +161,6 @@ export default function Dashboard() {
           todayPnL: 0,
           todayPnLPercent: 0,
           activePositions: 0,
-          trailStopOrders: 0,
           aiRecommendations: aiCount,
         });
         setConnectionStatus({ connected: false });
@@ -174,7 +171,6 @@ export default function Dashboard() {
           todayPnL: accountData.stats.todayPnL || 0,
           todayPnLPercent: accountData.stats.todayPnLPercent || 0,
           activePositions: accountData.stats.activePositions || 0,
-          trailStopOrders: accountData.stats.trailStopOrders || 0,
           aiRecommendations: aiCount,
           currency: accountData.account?.currency || "USD",
         });
@@ -195,7 +191,6 @@ export default function Dashboard() {
           todayPnL: 0,
           todayPnLPercent: 0,
           activePositions: 0,
-          trailStopOrders: 0,
           aiRecommendations: aiCount,
         });
         setConnectionStatus({ connected: false });
@@ -236,7 +231,6 @@ export default function Dashboard() {
         todayPnL: 0,
         todayPnLPercent: 0,
         activePositions: 0,
-        trailStopOrders: 0,
         aiRecommendations: aiCount,
       });
       setConnectionStatus({
@@ -277,7 +271,6 @@ export default function Dashboard() {
       todayPnL: 0,
       todayPnLPercent: 0,
       activePositions: 0,
-      trailStopOrders: 0,
       aiRecommendations: aiCount,
       currency: "USD", // Default currency for aggregated view
     };
@@ -301,7 +294,6 @@ export default function Dashboard() {
         aggregatedStats.totalPnL += data.stats.totalPnL || 0;
         aggregatedStats.todayPnL += data.stats.todayPnL || 0;
         aggregatedStats.activePositions += data.stats.activePositions || 0;
-        aggregatedStats.trailStopOrders += data.stats.trailStopOrders || 0;
 
         // Calculate current portfolio value from positions
         const accountCurrentValue =
@@ -686,7 +678,7 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <Card className="group hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 border border-blue-200/50 dark:border-blue-800/30 shadow-lg bg-gradient-to-br from-white via-blue-50/70 to-indigo-100/80 dark:from-slate-800/95 dark:via-blue-950/30 dark:to-indigo-950/40 backdrop-blur-sm hover:scale-105">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center text-slate-900 dark:text-slate-50 text-sm sm:text-base">
@@ -732,27 +724,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-xl hover:shadow-orange-500/20 transition-all duration-300 border border-orange-200/50 dark:border-orange-800/30 shadow-lg bg-gradient-to-br from-white via-orange-50/70 to-amber-100/80 dark:from-slate-800/95 dark:via-orange-950/30 dark:to-amber-950/40 backdrop-blur-sm hover:scale-105">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center text-slate-900 dark:text-slate-50 text-sm sm:text-base">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-600 to-amber-600 rounded-lg flex items-center justify-center mr-2 sm:mr-3 group-hover:from-orange-700 group-hover:to-amber-700 transition-all shadow-lg shadow-orange-500/20">
-                    <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-                  </div>
-                  <span className="truncate">Trail Stop Orders</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <CardDescription className="mb-3 sm:mb-4 text-slate-600 dark:text-slate-300 leading-relaxed text-xs sm:text-sm">
-                  Automated stop-loss orders that trail the market
-                </CardDescription>
-                <Link href="/trail-stop">
-                  <Button className="w-full text-xs sm:text-sm h-8 sm:h-10">
-                    <span className="hidden sm:inline">Manage Orders</span>
-                    <span className="sm:hidden">Trail Stops</span>
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
 
             <Card className="group hover:shadow-xl hover:shadow-slate-500/20 transition-all duration-300 border border-slate-200/50 dark:border-slate-700/30 shadow-lg bg-gradient-to-br from-white via-slate-50/70 to-gray-100/80 dark:from-slate-800/95 dark:via-slate-900/30 dark:to-slate-950/40 backdrop-blur-sm hover:scale-105">
               <CardHeader className="pb-3">

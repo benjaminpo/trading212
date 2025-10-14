@@ -39,7 +39,7 @@ describe("Trading212API", () => {
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: expectedLiveBaseURL,
-        timeout: 3000,
+        timeout: 20000,
         headers: {
           Authorization: mockApiKey,
           "Content-Type": "application/json",
@@ -52,7 +52,7 @@ describe("Trading212API", () => {
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
         baseURL: expectedDemoBaseURL,
-        timeout: 3000,
+        timeout: 20000,
         headers: {
           Authorization: mockApiKey,
           "Content-Type": "application/json",
@@ -235,77 +235,6 @@ describe("Trading212API", () => {
     });
   });
 
-  describe("createTrailingStopOrder", () => {
-    beforeEach(() => {
-      trading212API = new Trading212API(mockApiKey, true); // Practice mode
-    });
-
-    it("should create trailing stop order successfully", async () => {
-      const mockOrder = {
-        id: 123,
-        ticker: "AAPL",
-        quantity: 10,
-        type: "STOP",
-        status: "WORKING",
-      };
-      (trading212API as any).api.post.mockResolvedValue({ data: mockOrder });
-
-      const result = await trading212API.createTrailingStopOrder("AAPL", 10, 5);
-
-      expect(result).toEqual(mockOrder);
-      expect((trading212API as any).api.post).toHaveBeenCalledWith(
-        "/equity/orders",
-        {
-          ticker: "AAPL",
-          quantity: 10,
-          orderType: "STOP",
-          timeValidity: "GTC",
-          trailAmount: 5,
-        },
-      );
-    });
-
-    it("should create trailing stop order with trail percent", async () => {
-      const mockOrder = {
-        id: 123,
-        ticker: "AAPL",
-        quantity: 10,
-        type: "STOP",
-        status: "WORKING",
-      };
-      (trading212API as any).api.post.mockResolvedValue({ data: mockOrder });
-
-      const result = await trading212API.createTrailingStopOrder(
-        "AAPL",
-        10,
-        5,
-        2.5,
-      );
-
-      expect(result).toEqual(mockOrder);
-      expect((trading212API as any).api.post).toHaveBeenCalledWith(
-        "/equity/orders",
-        {
-          ticker: "AAPL",
-          quantity: 10,
-          orderType: "STOP",
-          timeValidity: "GTC",
-          trailAmount: 5,
-          trailPercent: 2.5,
-        },
-      );
-    });
-
-    it("should throw error when not in practice mode", async () => {
-      const liveAPI = new Trading212API(mockApiKey, false); // Live mode
-
-      await expect(
-        liveAPI.createTrailingStopOrder("AAPL", 10, 5),
-      ).rejects.toThrow(
-        "Trail stop orders are only available in practice mode due to API limitations",
-      );
-    });
-  });
 
   describe("cancelOrder", () => {
     beforeEach(() => {

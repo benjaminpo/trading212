@@ -41,9 +41,9 @@ describe("/api/notifications", () => {
     {
       id: "notif-1",
       userId: "test-user-id",
-      type: "trail_stop_triggered",
-      title: "🚨 Trail Stop Triggered - AAPL",
-      message: "Your trail stop order has been triggered",
+      type: "ai_recommendation",
+      title: "New AI Recommendation - AAPL",
+      message: "AI suggests selling AAPL position",
       data: null,
       isRead: false,
       createdAt: "2024-01-01T10:00:00.000Z",
@@ -69,7 +69,7 @@ describe("/api/notifications", () => {
   describe("GET /api/notifications", () => {
     it("should return notifications for authenticated user", async () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any);
-      mockedPrisma.notification.findMany.mockResolvedValue(mockNotifications);
+      global.mockDb.findNotificationsByUserId.mockResolvedValue(mockNotifications);
 
       const request = new NextRequest("http://localhost/api/notifications");
       const response = await GET(request);
@@ -77,18 +77,16 @@ describe("/api/notifications", () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual({ notifications: mockNotifications });
-      expect(mockedPrisma.notification.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: "test-user-id",
-        },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-      });
+      expect(global.mockDb.findNotificationsByUserId).toHaveBeenCalledWith(
+        "test-user-id",
+        false,
+        50
+      );
     });
 
     it("should filter unread notifications only when requested", async () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any);
-      mockedPrisma.notification.findMany.mockResolvedValue([
+      global.mockDb.findNotificationsByUserId.mockResolvedValue([
         mockNotifications[0],
       ]);
 
@@ -98,19 +96,16 @@ describe("/api/notifications", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      expect(mockedPrisma.notification.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: "test-user-id",
-          isRead: false,
-        },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-      });
+      expect(global.mockDb.findNotificationsByUserId).toHaveBeenCalledWith(
+        "test-user-id",
+        true,
+        50
+      );
     });
 
     it("should respect limit parameter", async () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any);
-      mockedPrisma.notification.findMany.mockResolvedValue([]);
+      global.mockDb.findNotificationsByUserId.mockResolvedValue([]);
 
       const request = new NextRequest(
         "http://localhost/api/notifications?limit=10",
@@ -118,13 +113,11 @@ describe("/api/notifications", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(200);
-      expect(mockedPrisma.notification.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: "test-user-id",
-        },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-      });
+      expect(global.mockDb.findNotificationsByUserId).toHaveBeenCalledWith(
+        "test-user-id",
+        false,
+        10
+      );
     });
 
     it("should return 401 for unauthenticated user", async () => {
@@ -140,7 +133,7 @@ describe("/api/notifications", () => {
 
     it("should handle database errors", async () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any);
-      mockedPrisma.notification.findMany.mockRejectedValue(
+      global.mockDb.findNotificationsByUserId.mockRejectedValue(
         new Error("Database error"),
       );
 
@@ -172,7 +165,7 @@ describe("/api/notifications", () => {
         createdAt: "2025-09-11T13:19:15.147Z",
         updatedAt: "2025-09-11T13:19:15.147Z",
       };
-      mockedPrisma.notification.create.mockResolvedValue(createdNotification);
+      global.mockDb.createNotification.mockResolvedValue(createdNotification);
 
       const request = new NextRequest("http://localhost/api/notifications", {
         method: "POST",
@@ -187,14 +180,12 @@ describe("/api/notifications", () => {
         notification: createdNotification,
         message: "Notification created successfully",
       });
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: {
-          userId: "test-user-id",
-          type: validNotificationData.type,
-          title: validNotificationData.title,
-          message: validNotificationData.message,
-          data: JSON.stringify(validNotificationData.data),
-        },
+      expect(global.mockDb.createNotification).toHaveBeenCalledWith({
+        userId: "test-user-id",
+        type: validNotificationData.type,
+        title: validNotificationData.title,
+        message: validNotificationData.message,
+        data: JSON.stringify(validNotificationData.data),
       });
     });
 
@@ -215,7 +206,7 @@ describe("/api/notifications", () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      mockedPrisma.notification.create.mockResolvedValue(createdNotification);
+      global.mockDb.createNotification.mockResolvedValue(createdNotification);
 
       const request = new NextRequest("http://localhost/api/notifications", {
         method: "POST",
@@ -225,14 +216,12 @@ describe("/api/notifications", () => {
       const response = await POST(request);
 
       expect(response.status).toBe(200);
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: {
-          userId: "test-user-id",
-          type: notificationWithoutData.type,
-          title: notificationWithoutData.title,
-          message: notificationWithoutData.message,
-          data: null,
-        },
+      expect(global.mockDb.createNotification).toHaveBeenCalledWith({
+        userId: "test-user-id",
+        type: notificationWithoutData.type,
+        title: notificationWithoutData.title,
+        message: notificationWithoutData.message,
+        data: undefined,
       });
     });
 
@@ -273,7 +262,7 @@ describe("/api/notifications", () => {
 
     it("should handle database errors", async () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any);
-      mockedPrisma.notification.create.mockRejectedValue(
+      global.mockDb.createNotification.mockRejectedValue(
         new Error("Database error"),
       );
 
@@ -290,130 +279,4 @@ describe("/api/notifications", () => {
     });
   });
 
-  describe("createTrailStopNotification", () => {
-    const mockOrderData = {
-      symbol: "AAPL",
-      quantity: 10,
-      stopPrice: 150.0,
-      trailAmount: 5.0,
-      trailPercent: undefined,
-      isPractice: false,
-    };
-
-    it("should create trail stop notification for production account", async () => {
-      const createdNotification = {
-        id: "trail-notif-id",
-        userId: "test-user-id",
-        type: "trail_stop_triggered",
-        title: "🚨 Trail Stop Triggered - AAPL",
-        message:
-          "Your trail stop order for 10 shares of AAPL has been triggered at $150.00. Please manually execute the sell order in Trading212.",
-        data: JSON.stringify({
-          symbol: "AAPL",
-          quantity: 10,
-          stopPrice: 150.0,
-          trailAmount: 5.0,
-          trailPercent: undefined,
-          isPractice: false,
-          action: "notification_only",
-        }),
-        isRead: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockedPrisma.notification.create.mockResolvedValue(createdNotification);
-
-      const result = await createTrailStopNotification(
-        "test-user-id",
-        mockOrderData,
-      );
-
-      expect(result).toEqual(createdNotification);
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: {
-          userId: "test-user-id",
-          type: "trail_stop_triggered",
-          title: "🚨 Trail Stop Triggered - AAPL",
-          message:
-            "Your trail stop order for 10 shares of AAPL has been triggered at $150.00. Please manually execute the sell order in Trading212.",
-          data: JSON.stringify({
-            symbol: "AAPL",
-            quantity: 10,
-            stopPrice: 150.0,
-            trailAmount: 5.0,
-            trailPercent: undefined,
-            isPractice: false,
-            action: "notification_only",
-          }),
-        },
-      });
-    });
-
-    it("should create trail stop notification for practice account", async () => {
-      const practiceOrderData = { ...mockOrderData, isPractice: true };
-
-      const createdNotification = {
-        id: "trail-notif-id",
-        userId: "test-user-id",
-        type: "trail_stop_triggered",
-        title: "🚨 Trail Stop Triggered - AAPL",
-        message:
-          "Your trail stop order for 10 shares of AAPL has been executed at $150.00.",
-        data: JSON.stringify({
-          ...practiceOrderData,
-          action: "executed",
-        }),
-        isRead: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockedPrisma.notification.create.mockResolvedValue(createdNotification);
-
-      const result = await createTrailStopNotification(
-        "test-user-id",
-        practiceOrderData,
-      );
-
-      expect(result).toEqual(createdNotification);
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          message:
-            "Your trail stop order for 10 shares of AAPL has been executed at $150.00.",
-        }),
-      });
-    });
-
-    it("should handle percentage-based trail stops", async () => {
-      const percentOrderData = {
-        ...mockOrderData,
-        trailAmount: undefined,
-        trailPercent: 3.5,
-      };
-
-      mockedPrisma.notification.create.mockResolvedValue({} as any);
-
-      await createTrailStopNotification("test-user-id", percentOrderData);
-
-      expect(mockedPrisma.notification.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          data: JSON.stringify({
-            ...percentOrderData,
-            action: "notification_only",
-          }),
-        }),
-      });
-    });
-
-    it("should handle database errors", async () => {
-      mockedPrisma.notification.create.mockRejectedValue(
-        new Error("Database error"),
-      );
-
-      await expect(
-        createTrailStopNotification("test-user-id", mockOrderData),
-      ).rejects.toThrow("Database error");
-    });
-  });
 });

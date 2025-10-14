@@ -10,7 +10,6 @@ import {
   Home,
   BarChart3,
   Brain,
-  TrendingDown,
   Settings,
   User,
 } from "lucide-react";
@@ -33,11 +32,6 @@ const navigation = [
     name: "AI Recommendations",
     href: "/ai-recommendations",
     icon: Brain,
-  },
-  {
-    name: "Trail Stop Orders",
-    href: "/trail-stop",
-    icon: TrendingDown,
   },
   {
     name: "Settings",

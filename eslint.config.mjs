@@ -20,6 +20,15 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  // Global rule to ignore unused variables that start with underscore
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
   // Allow CommonJS requires in config and seed scripts
   {
     files: ["jest.config.js", "prisma/seed.js"],

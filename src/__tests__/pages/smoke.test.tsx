@@ -43,12 +43,6 @@ beforeEach(() => {
         json: async () => ({ recommendations: [] }),
       } as any;
     }
-    if (url.includes("/api/trail-stop/orders")) {
-      return {
-        ok: true,
-        json: async () => ({ orders: [] }),
-      } as any;
-    }
     if (url.includes("/api/trading212/portfolio")) {
       return {
         ok: true,
@@ -77,12 +71,6 @@ describe("App pages smoke tests", () => {
     expect(document.body).toBeInTheDocument();
   });
 
-  it("renders Trail Stop page without crashing", async () => {
-    const TrailStopPage = (await import("@/app/trail-stop/page")).default;
-    render(React.createElement(TrailStopPage));
-    // Should at least render the wrapper container
-    expect(document.body).toBeInTheDocument();
-  });
 
   it("renders AI Recommendations page without crashing", async () => {
     const AIRecommendationsPage = (

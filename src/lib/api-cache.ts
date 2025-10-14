@@ -27,12 +27,20 @@ export interface CachedAccountData {
   lastUpdated: string;
 }
 
-// Cache configuration
+// Cache configuration with adaptive TTL
 const CACHE_TTL = {
   portfolio: 5 * 60 * 1000, // 5 minutes for portfolio data
   account: 10 * 60 * 1000, // 10 minutes for account data
   orders: 2 * 60 * 1000, // 2 minutes for orders
   positions: 5 * 60 * 1000, // 5 minutes for positions
+} as const;
+
+// Extended TTL when API is slow
+const EXTENDED_CACHE_TTL = {
+  portfolio: 15 * 60 * 1000, // 15 minutes when API is slow
+  account: 30 * 60 * 1000, // 30 minutes when API is slow
+  orders: 10 * 60 * 1000, // 10 minutes when API is slow
+  positions: 15 * 60 * 1000, // 15 minutes when API is slow
 } as const;
 
 export class APICache {
@@ -127,9 +135,10 @@ export class APICache {
     dataType: keyof typeof CACHE_TTL,
     data: T,
     params?: Record<string, unknown>,
+    useExtendedTTL: boolean = false,
   ): Promise<void> {
     const key = this.generateKey(userId, accountId, dataType, params);
-    const ttl = CACHE_TTL[dataType];
+    const ttl = useExtendedTTL ? EXTENDED_CACHE_TTL[dataType] : CACHE_TTL[dataType];
 
     const entry: CacheEntry<T> = {
       data,
@@ -144,7 +153,8 @@ export class APICache {
     this.cleanExpiredEntries();
     this.enforceMemoryLimit();
 
-    logger.info(`💾 Cache SET for ${dataType} (${accountId}): ${key}`);
+    const ttlMinutes = Math.round(ttl / (60 * 1000));
+    logger.info(`💾 Cache SET for ${dataType} (${accountId}): ${key} [TTL: ${ttlMinutes}m${useExtendedTTL ? ' extended' : ''}]`);
   }
 
   async invalidate(

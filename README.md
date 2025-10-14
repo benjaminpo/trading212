@@ -1,6 +1,6 @@
 # Trading212 Extra
 
-A comprehensive trading analytics and portfolio management application built for Trading212 users. This application provides advanced features for analyzing your Trading212 portfolio, managing trail stop orders, and getting AI-powered trading insights.
+A comprehensive trading analytics and portfolio management application built for Trading212 users. This application provides advanced features for analyzing your Trading212 portfolio and getting AI-powered trading insights.
 
 [![CI/CD Pipeline](https://github.com/benjaminpo/trading212/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/benjaminpo/trading212/actions)
 [![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-vercel-black?logo=vercel)](https://trading212.vercel.app)
@@ -25,8 +25,8 @@ A comprehensive trading analytics and portfolio management application built for
 
 ### 🛡️ Risk Management
 
-- **Trail Stop Orders**: Set up automated trail stop loss orders
-- **Notifications**: Get notified when trail stops are triggered
+- **Portfolio Monitoring**: Real-time portfolio tracking and analysis
+- **Notifications**: Get notified about important portfolio changes
 - **Account Monitoring**: Monitor multiple accounts with centralized dashboard
 
 ### 🎨 Modern UI/UX
@@ -121,12 +121,12 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 - View aggregated data across all accounts
 - Individual account analysis and management
 
-### Trail Stop Orders
+### Portfolio Management
 
-- Set up trail stop orders for your positions
-- Monitor trail stops from the dedicated page
-- Receive notifications when stops are triggered
-- Manual execution required for live accounts (API limitation)
+- Real-time position tracking and analysis
+- Multi-account portfolio aggregation
+- Performance analytics and insights
+- Risk assessment and monitoring
 
 ## API Endpoints
 
@@ -149,11 +149,11 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 - `GET /api/ai/daily-analysis` - Get daily analysis logs
 - `POST /api/ai/optimized-analyze` - Analyze positions with optimization
 
-### Trail Stops
+### Portfolio Management
 
-- `GET /api/trail-stop/orders` - List trail stop orders
-- `POST /api/trail-stop/orders` - Create new trail stop order
-- `DELETE /api/trail-stop/orders/[id]` - Delete trail stop order
+- `GET /api/daily-pnl` - Get daily P/L data
+- `GET /api/notifications` - Get user notifications
+- `POST /api/notifications` - Create notifications
 
 ### Optimized Endpoints
 
@@ -217,7 +217,7 @@ The project uses a well-structured testing approach with shared utilities to min
   - `withDefaultFetch()`: Standardized API mocking
 
 - **Test Coverage**: Comprehensive coverage across:
-  - Page components (analytics, trail-stop, settings, dashboard)
+  - Page components (analytics, settings, dashboard, AI recommendations)
   - API routes and endpoints
   - Authentication and authorization
   - Database operations and migrations

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma, retryDatabaseOperation } from "@/lib/prisma";
+import { db, dbRetry as retryDatabaseOperation } from "@/lib/database";
 import { optimizedTrading212Service } from "@/lib/optimized-trading212";
 
 export async function GET(request: NextRequest) {
@@ -39,26 +39,19 @@ export async function GET(request: NextRequest) {
 
     // Fast database query with timeout - aggressive for Hobby plan
     const user = await Promise.race([
-      retryDatabaseOperation(() =>
-        prisma.user.findUnique({
-          where: { id: userId },
-          select: {
-            id: true,
-            trading212Accounts: {
-              where: accountId ? { id: accountId } : { isActive: true },
-              select: {
-                id: true,
-                name: true,
-                apiKey: true,
-                isPractice: true,
-                isDefault: true,
-                isActive: true,
-              },
-              orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-            },
-          },
-        }),
-      ),
+      retryDatabaseOperation(async () => {
+        const userData = await db.findUserById(userId);
+        if (!userData) return null;
+        
+        const accounts = accountId 
+          ? [await db.findTradingAccountById(accountId)].filter(Boolean)
+          : await db.findTradingAccountsByUserId(userId, true);
+        
+        return {
+          id: userData.id,
+          trading212Accounts: accounts
+        };
+      }),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Database timeout")), 1500),
       ),
@@ -131,53 +124,82 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get optimized account data with improved timeout handling
+    // AGGRESSIVE CACHE-FIRST STRATEGY - Never make users wait!
     const dataFetchStart = Date.now();
     let accountData;
 
-    try {
-      // Ultra-aggressive timeout for Hobby plan - fail fast and serve stale
-      const timeoutMs = 3000;
+    // Always try to serve cached data first (even if stale)
+    const { apiCache } = await import("@/lib/api-cache");
+    const cachedData = await apiCache.getStale<{
+      lastUpdated: string | Date | number;
+      [key: string]: unknown;
+    }>(userId, targetAccount.id, "account");
 
-      if (forceRefresh) {
-        accountData = await Promise.race([
-          optimizedTrading212Service.forceRefreshAccountData(
-            userId,
-            targetAccount.id,
-            targetAccount.apiKey,
-            targetAccount.isPractice,
-            includeOrders,
-          ),
-          new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error("Data fetch timeout")),
-              timeoutMs,
-            ),
-          ),
-        ]);
-      } else {
-        accountData = await Promise.race([
+    // If we have ANY cached data (even expired), serve it immediately unless forceRefresh
+    if (cachedData && !forceRefresh) {
+      const cacheAge = Date.now() - new Date(cachedData.lastUpdated as string).getTime();
+      const thirtyMinutes = 30 * 60 * 1000;
+      
+      // Serve cached data if it's less than 30 minutes old
+      if (cacheAge < thirtyMinutes) {
+        console.log(`⚡ Serving cached data for account ${targetAccount.id} (age: ${Math.round(cacheAge/1000)}s)`);
+        
+        // Always start background refresh (don't await) - fire and forget
+        setImmediate(() => {
           optimizedTrading212Service.getAccountData(
             userId,
             targetAccount.id,
             targetAccount.apiKey,
             targetAccount.isPractice,
             includeOrders,
-          ),
-          new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error("Data fetch timeout")),
-              timeoutMs,
-            ),
-          ),
-        ]);
+          ).catch(error => {
+            console.log(`🔄 Background refresh failed for ${targetAccount.id}:`, error.message);
+          });
+        });
+
+        return NextResponse.json({
+          ...cachedData,
+          connected: true,
+          accountInfo: {
+            id: targetAccount.id,
+            name: targetAccount.name,
+            isPractice: targetAccount.isPractice,
+            isDefault: targetAccount.isDefault,
+          },
+          cacheHit: true,
+          stale: cacheAge > 5 * 60 * 1000, // Mark as stale if older than 5 minutes
+          warning: cacheAge > 5 * 60 * 1000 ? "Data may be outdated due to slow API" : undefined,
+        });
+      }
+    }
+
+    // If no cache or forceRefresh, try the API - let service handle all timeout logic
+    try {
+      if (forceRefresh) {
+        accountData = await optimizedTrading212Service.forceRefreshAccountData(
+          userId,
+          targetAccount.id,
+          targetAccount.apiKey,
+          targetAccount.isPractice,
+          includeOrders,
+        );
+      } else {
+        accountData = await optimizedTrading212Service.getAccountData(
+          userId,
+          targetAccount.id,
+          targetAccount.apiKey,
+          targetAccount.isPractice,
+          includeOrders,
+        );
       }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
+      const fetchTime = Date.now() - dataFetchStart;
+      const totalTime = Date.now() - startTime;
+      
       console.log(
-        `❌ Data fetch failed: ${Date.now() - startTime}ms (fetch: ${Date.now() - dataFetchStart}ms)`,
-        { error: errorMessage, accountId: targetAccount.id },
+        `❌ Data fetch failed: ${totalTime}ms (fetch: ${fetchTime}ms) { error: '${errorMessage}', accountId: '${targetAccount.id}', timeout: ${errorMessage.includes('timeout') ? 'YES' : 'NO'} }`,
       );
 
       // Try to serve stale data if available (even if cache is expired)
@@ -211,39 +233,75 @@ export async function GET(request: NextRequest) {
             lastUpdated: lastUpdatedStr,
           };
         } else {
-          // No stale data available, return error
+          // LAST RESORT: No stale data available - provide minimal response
+          console.log(`🚨 No cached data available for account ${targetAccount.id}, providing minimal response`);
           return NextResponse.json(
             {
-              error: "Failed to fetch account data - Trading212 API timeout",
+              error: "Trading212 API is temporarily unavailable",
               details: errorMessage,
               timeout: true,
-              retryAfter: 30, // Suggest retry after 30 seconds
+              retryAfter: 60, // Suggest retry after 1 minute
+              connected: false,
               accountInfo: {
                 id: targetAccount.id,
                 name: targetAccount.name,
                 isPractice: targetAccount.isPractice,
                 isDefault: targetAccount.isDefault,
               },
+              // Provide empty but valid structure so UI doesn't break
+              account: { cash: 0, currency: "USD" },
+              portfolio: [],
+              orders: [],
+              stats: {
+                activePositions: 0,
+                totalPnL: 0,
+                totalPnLPercent: 0,
+                totalValue: 0,
+                todayPnL: 0,
+                todayPnLPercent: 0,
+              },
+              currency: "USD",
+              lastUpdated: new Date().toISOString(),
+              cacheHit: false,
+              warning: "Unable to fetch current data - please try again later",
             },
-            { status: 504 },
+            { status: 503 }, // Service Unavailable instead of 504
           );
         }
       } catch (_staleError) {
         void _staleError; // explicit ignore
+        console.log(`🚨 Cache error for account ${targetAccount.id}, providing minimal response`);
         return NextResponse.json(
           {
-            error: "Failed to fetch account data - no cached data available",
+            error: "Trading212 service temporarily unavailable",
             details: errorMessage,
             timeout: true,
-            retryAfter: 30,
+            retryAfter: 60,
+            connected: false,
             accountInfo: {
               id: targetAccount.id,
               name: targetAccount.name,
               isPractice: targetAccount.isPractice,
               isDefault: targetAccount.isDefault,
             },
+            // Provide empty but valid structure
+            account: { cash: 0, currency: "USD" },
+            portfolio: [],
+            orders: [],
+            stats: {
+              activePositions: 0,
+              totalPnL: 0,
+              totalPnLPercent: 0,
+              totalValue: 0,
+              todayPnL: 0,
+              todayPnLPercent: 0,
+            },
+            currency: "USD",
+            lastUpdated: new Date().toISOString(),
+            cacheHit: false,
+            warning: "Service temporarily unavailable - please try again later",
           },
-          { status: 504 },
+          { status: 503 },
         );
       }
     }

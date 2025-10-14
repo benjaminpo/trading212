@@ -2,9 +2,35 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma, retryDatabaseOperation } from "@/lib/prisma";
+import { db, dbRetry as retryDatabaseOperation } from "@/lib/database";
 import { optimizedTrading212Service } from "@/lib/optimized-trading212";
-import { DailyPnL } from "@prisma/client";
+
+interface DailyPnLRecord {
+  id: string;
+  userId: string;
+  accountId: string;
+  date: Date;
+  totalPnL: number;
+  todayPnL: number;
+  totalValue: number;
+  cash?: number;
+  currency: string;
+  positions: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Trading212Account {
+  id: string;
+  userId: string;
+  name: string;
+  apiKey: string;
+  isPractice: boolean;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // GET /api/daily-pnl - Fetch daily P/L history
 export async function GET(request: NextRequest) {
@@ -50,15 +76,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if DailyPnL table exists, if not return empty data
-    let dailyPnL: DailyPnL[] = [];
+    let dailyPnL: DailyPnLRecord[] = [];
     try {
       dailyPnL = await retryDatabaseOperation(() =>
-        prisma.dailyPnL.findMany({
-          where,
-          orderBy: { date: "desc" },
-          take: days,
-        }),
-      );
+        db.findDailyPnLByUser(session.user.id, days)
+      ) as unknown as DailyPnLRecord[];
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -73,8 +95,8 @@ export async function GET(request: NextRequest) {
     // Calculate summary statistics
     const totalDays = dailyPnL.length;
     let totalPnLChange = 0;
-    let bestDay: DailyPnL | null = null;
-    let worstDay: DailyPnL | null = null;
+    let bestDay: DailyPnLRecord | null = null;
+    let worstDay: DailyPnLRecord | null = null;
 
     if (totalDays > 0) {
       if (totalDays > 1) {
@@ -134,19 +156,19 @@ export async function POST(request: NextRequest) {
     const { accountId, forceRefresh = false } = await request.json();
 
     // Get user's Trading212 accounts
-    const user = await retryDatabaseOperation(() =>
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        include: {
-          trading212Accounts: {
-            where: {
-              isActive: true,
-              ...(accountId ? { id: accountId } : {}),
-            },
-          },
-        },
-      }),
-    );
+    const user = await retryDatabaseOperation(async () => {
+      const userData = await db.findUserById(session.user.id);
+      if (!userData) return null;
+      
+      const accounts = accountId 
+        ? [await db.findTradingAccountById(accountId)].filter(Boolean)
+        : await db.findTradingAccountsByUserId(session.user.id, true);
+      
+      return {
+        ...userData,
+        trading212Accounts: accounts as unknown as Trading212Account[]
+      };
+    });
 
     if (!user?.trading212Accounts || user.trading212Accounts.length === 0) {
       return NextResponse.json(
@@ -197,92 +219,40 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Check if we already have data for today
-        let existingRecord = null;
+        // Upsert daily P/L data using our database function
         try {
-          existingRecord = await retryDatabaseOperation(() =>
-            prisma.dailyPnL.findUnique({
-              where: {
-                userId_accountId_date: {
-                  userId: session.user.id,
-                  accountId: account.id,
-                  date: today,
-                },
-              },
-            }),
+          const upserted = await retryDatabaseOperation(() =>
+            db.upsertDailyPnL({
+              userId: session.user.id,
+              accountId: account.id,
+              date: today,
+              totalPnL: accountData.stats.totalPnL || 0,
+              todayPnL: accountData.stats.todayPnL || 0,
+              totalValue: accountData.stats.totalValue || 0,
+              cash: accountData.account?.cash || undefined,
+              currency: accountData.account?.currencyCode || "USD",
+              positions: accountData.stats.activePositions || 0,
+            })
           );
+          
+          results.push({
+            accountId: account.id,
+            action: "upserted",
+            data: upserted,
+          });
         } catch (error: unknown) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error";
-          logger.info(
-            "DailyPnL table not found, will create new record:",
-            errorMessage,
-          );
-        }
-
-        const dailyPnLData = {
-          userId: session.user.id,
-          accountId: account.id,
-          date: today,
-          totalPnL: accountData.stats.totalPnL || 0,
-          todayPnL: accountData.stats.todayPnL || 0,
-          totalValue: accountData.stats.totalValue || 0,
-          cash: accountData.account?.cash || null,
-          currency: accountData.account?.currencyCode || "USD",
-          positions: accountData.stats.activePositions || 0,
-        };
-
-        if (existingRecord) {
-          // Update existing record
-          try {
-            const updated = await retryDatabaseOperation(() =>
-              prisma.dailyPnL.update({
-                where: { id: existingRecord.id },
-                data: dailyPnLData,
-              }),
-            );
-            results.push({
-              accountId: account.id,
-              action: "updated",
-              data: updated,
-            });
-          } catch (error: unknown) {
-            const errorMessage =
-              error instanceof Error ? error.message : "Unknown error";
-            logger.info("Failed to update daily P/L record:", errorMessage);
-            results.push({
-              accountId: account.id,
-              action: "error",
-              error: errorMessage,
-            });
-          }
-        } else {
-          // Create new record
-          try {
-            const created = await retryDatabaseOperation(() =>
-              prisma.dailyPnL.create({
-                data: dailyPnLData,
-              }),
-            );
-            results.push({
-              accountId: account.id,
-              action: "created",
-              data: created,
-            });
-          } catch (error: unknown) {
-            const errorMessage =
-              error instanceof Error ? error.message : "Unknown error";
-            logger.info("Failed to create daily P/L record:", errorMessage);
-            results.push({
-              accountId: account.id,
-              action: "error",
-              error: errorMessage,
-            });
-          }
+          logger.info("Failed to upsert daily P/L record:", errorMessage);
+          results.push({
+            accountId: account.id,
+            action: "error",
+            error: errorMessage,
+          });
         }
 
         logger.info(
-          `📊 Daily P/L captured for account ${account.name}: Total P/L: ${dailyPnLData.totalPnL}, Today P/L: ${dailyPnLData.todayPnL}`,
+          `📊 Daily P/L captured for account ${account.name}: Total P/L: ${accountData.stats.totalPnL || 0}, Today P/L: ${accountData.stats.todayPnL || 0}`,
         );
       } catch (error: unknown) {
         const errorMessage =

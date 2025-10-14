@@ -1,25 +1,10 @@
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/daily-pnl/route";
 import { getServerSession } from "next-auth";
-import { prisma, retryDatabaseOperation } from "@/lib/prisma";
 import { optimizedTrading212Service } from "@/lib/optimized-trading212";
 
 // Mock dependencies
 jest.mock("next-auth");
-jest.mock("@/lib/prisma", () => ({
-  prisma: {
-    dailyPnL: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-    },
-    user: {
-      findUnique: jest.fn(),
-    },
-  },
-  retryDatabaseOperation: jest.fn(),
-}));
 jest.mock("@/lib/optimized-trading212", () => ({
   optimizedTrading212Service: {
     canMakeRequest: jest.fn(),
@@ -31,9 +16,6 @@ jest.mock("@/lib/optimized-trading212", () => ({
 const mockGetServerSession = getServerSession as jest.MockedFunction<
   typeof getServerSession
 >;
-const mockRetryDatabaseOperation =
-  retryDatabaseOperation as jest.MockedFunction<typeof retryDatabaseOperation>;
-const mockPrisma = prisma as any;
 const mockOptimizedTrading212Service = optimizedTrading212Service as any;
 
 describe("/api/daily-pnl", () => {
@@ -98,8 +80,7 @@ describe("/api/daily-pnl", () => {
       ];
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.dailyPnL.findMany.mockResolvedValue(mockDailyPnL);
+      global.mockDb.findDailyPnLByUser.mockResolvedValue(mockDailyPnL);
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
@@ -118,8 +99,7 @@ describe("/api/daily-pnl", () => {
       const mockSession = { user: { id: "user1" } };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.dailyPnL.findMany.mockResolvedValue([]);
+      global.mockDb.findDailyPnLByUser.mockResolvedValue([]);
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
@@ -154,8 +134,7 @@ describe("/api/daily-pnl", () => {
       ];
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.dailyPnL.findMany.mockResolvedValue(mockDailyPnL);
+      global.mockDb.findDailyPnLByUser.mockResolvedValue(mockDailyPnL);
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
@@ -171,7 +150,7 @@ describe("/api/daily-pnl", () => {
       const mockSession = { user: { id: "user1" } };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockRejectedValue(new Error("Database error"));
+      global.mockDb.findDailyPnLByUser.mockRejectedValue(new Error("Database error"));
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
@@ -202,8 +181,7 @@ describe("/api/daily-pnl", () => {
       ];
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.dailyPnL.findMany.mockResolvedValue(mockDailyPnL);
+      global.mockDb.findDailyPnLByUser.mockResolvedValue(mockDailyPnL);
 
       const request = new NextRequest(
         "http://localhost:3000/api/daily-pnl?accountId=acc1&days=7&startDate=2024-01-01&endDate=2024-01-07",
@@ -212,18 +190,7 @@ describe("/api/daily-pnl", () => {
       const _data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(mockPrisma.dailyPnL.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: "user1",
-          date: {
-            gte: new Date("2024-01-01"),
-            lte: new Date("2024-01-07"),
-          },
-          accountId: "acc1",
-        },
-        orderBy: { date: "desc" },
-        take: 7,
-      });
+      expect(global.mockDb.findDailyPnLByUser).toHaveBeenCalledWith("user1", 7);
     });
 
     it("should handle unexpected errors", async () => {
@@ -257,8 +224,7 @@ describe("/api/daily-pnl", () => {
       const mockSession = { user: { id: "user1" } };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.user.findUnique.mockResolvedValue({
+      global.mockDb.findUserById.mockResolvedValue({
         id: "user1",
         trading212Accounts: [],
       } as any);
@@ -293,17 +259,16 @@ describe("/api/daily-pnl", () => {
       };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.user.findUnique.mockResolvedValue({
+      global.mockDb.findUserById.mockResolvedValue({
         id: "user1",
-        trading212Accounts: [mockAccount],
       } as any);
+      global.mockDb.findTradingAccountById.mockResolvedValue(mockAccount);
       mockOptimizedTrading212Service.canMakeRequest.mockReturnValue(true);
       mockOptimizedTrading212Service.getAccountData.mockResolvedValue(
         mockAccountData,
       );
-      mockPrisma.dailyPnL.findUnique.mockResolvedValue(null);
-      mockPrisma.dailyPnL.create.mockResolvedValue({
+      global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(null);
+      global.mockDb.upsertDailyPnL.mockResolvedValue({
         id: "1",
         userId: "user1",
         accountId: "acc1",
@@ -326,7 +291,7 @@ describe("/api/daily-pnl", () => {
       expect(response.status).toBe(200);
       expect(data.message).toBe("Daily P/L snapshots captured");
       expect(data.results).toHaveLength(1);
-      expect(data.results[0].action).toBe("created");
+      expect(data.results[0].action).toBe("upserted");
     });
 
     it("should update existing daily P/L record", async () => {
@@ -360,17 +325,16 @@ describe("/api/daily-pnl", () => {
       };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.user.findUnique.mockResolvedValue({
+      global.mockDb.findUserById.mockResolvedValue({
         id: "user1",
-        trading212Accounts: [mockAccount],
       } as any);
+      global.mockDb.findTradingAccountById.mockResolvedValue(mockAccount);
       mockOptimizedTrading212Service.canMakeRequest.mockReturnValue(true);
       mockOptimizedTrading212Service.getAccountData.mockResolvedValue(
         mockAccountData,
       );
-      mockPrisma.dailyPnL.findUnique.mockResolvedValue(mockExistingRecord);
-      mockPrisma.dailyPnL.update.mockResolvedValue({
+      global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(mockExistingRecord);
+      global.mockDb.upsertDailyPnL.mockResolvedValue({
         ...mockExistingRecord,
         totalPnL: 1000,
         todayPnL: 100,
@@ -385,7 +349,7 @@ describe("/api/daily-pnl", () => {
 
       expect(response.status).toBe(200);
       expect(data.results).toHaveLength(1);
-      expect(data.results[0].action).toBe("updated");
+      expect(data.results[0].action).toBe("upserted");
     });
 
     it("should skip rate limited accounts", async () => {
@@ -398,10 +362,8 @@ describe("/api/daily-pnl", () => {
       };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.user.findUnique.mockResolvedValue({
+      global.mockDb.findUserById.mockResolvedValue({
         id: "user1",
-        trading212Accounts: [mockAccount],
       } as any);
       mockOptimizedTrading212Service.canMakeRequest.mockReturnValue(false);
 
@@ -435,17 +397,16 @@ describe("/api/daily-pnl", () => {
       };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.user.findUnique.mockResolvedValue({
+      global.mockDb.findUserById.mockResolvedValue({
         id: "user1",
-        trading212Accounts: [mockAccount],
       } as any);
+      global.mockDb.findTradingAccountById.mockResolvedValue(mockAccount);
       mockOptimizedTrading212Service.canMakeRequest.mockReturnValue(true);
       mockOptimizedTrading212Service.forceRefreshAccountData.mockResolvedValue(
         mockAccountData,
       );
-      mockPrisma.dailyPnL.findUnique.mockResolvedValue(null);
-      mockPrisma.dailyPnL.create.mockResolvedValue({
+      global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(null);
+      global.mockDb.upsertDailyPnL.mockResolvedValue({
         id: "1",
         userId: "user1",
         accountId: "acc1",
@@ -490,17 +451,16 @@ describe("/api/daily-pnl", () => {
       };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      mockRetryDatabaseOperation.mockImplementation((fn) => fn());
-      mockPrisma.user.findUnique.mockResolvedValue({
+      global.mockDb.findUserById.mockResolvedValue({
         id: "user1",
-        trading212Accounts: [mockAccount],
       } as any);
+      global.mockDb.findTradingAccountById.mockResolvedValue(mockAccount);
       mockOptimizedTrading212Service.canMakeRequest.mockReturnValue(true);
       mockOptimizedTrading212Service.getAccountData.mockResolvedValue(
         mockAccountData,
       );
-      mockPrisma.dailyPnL.findUnique.mockResolvedValue(null);
-      mockPrisma.dailyPnL.create.mockRejectedValue(new Error("Database error"));
+      global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(null);
+      global.mockDb.upsertDailyPnL.mockRejectedValue(new Error("Database error"));
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl", {
         method: "POST",

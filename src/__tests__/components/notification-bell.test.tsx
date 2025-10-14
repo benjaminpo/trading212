@@ -17,9 +17,9 @@ describe("NotificationBell", () => {
   const mockNotifications = [
     {
       id: "notif-1",
-      type: "trail_stop_triggered",
-      title: "🚨 Trail Stop Triggered - AAPL",
-      message: "Your trail stop order has been triggered",
+      type: "ai_recommendation",
+      title: "New AI Recommendation - AAPL",
+      message: "AI suggests selling AAPL position",
       isRead: false,
       createdAt: "2024-01-01T10:00:00Z",
     },

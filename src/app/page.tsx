@@ -116,7 +116,7 @@ export default function Home() {
               <strong className="text-blue-600 dark:text-blue-400">
                 AI-powered exit strategies
               </strong>
-              , automated trail stop loss orders, comprehensive P/L analytics,
+              , comprehensive P/L analytics,
               and mobile-first design.
             </p>
 
@@ -219,7 +219,7 @@ export default function Home() {
                 <Target className="h-8 w-8 text-white" />
               </div>
               <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                Trail Stop Loss
+                Risk Management
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -450,7 +450,7 @@ export default function Home() {
                   AI Exit Strategies
                 </li>
                 <li className="hover:text-white transition-colors cursor-pointer">
-                  Trail Stop Loss
+                  Risk Management
                 </li>
                 <li className="hover:text-white transition-colors cursor-pointer">
                   P/L Analytics

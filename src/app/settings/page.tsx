@@ -706,7 +706,7 @@ export default function SettingsPage() {
                     </h4>
                     <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
                       <li>• Full API functionality</li>
-                      <li>• Trail stop orders work</li>
+                      <li>• Risk management tools</li>
                       <li>• AI recommendations with execution</li>
                       <li>• Real-time data</li>
                       <li>• No real money involved</li>

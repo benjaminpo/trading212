@@ -10,14 +10,7 @@ jest.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
-jest.mock("@/lib/prisma", () => ({
-  prisma: {
-    user: {
-      findUnique: jest.fn(),
-    },
-  },
-  retryDatabaseOperation: jest.fn(),
-}));
+// Database mocks are handled globally in jest.setup.js
 
 jest.mock("@/lib/optimized-trading212", () => ({
   optimizedTrading212Service: {
@@ -62,11 +55,10 @@ describe("Optimized Trading212 Account Route", () => {
 
   it("should handle users with no Trading212 accounts", async () => {
     const { getServerSession } = require("next-auth");
-    const { prisma, retryDatabaseOperation } = require("@/lib/prisma");
 
     getServerSession.mockResolvedValue({ user: { id: "user1" } });
-    retryDatabaseOperation.mockImplementation((fn) => fn());
-    prisma.user.findUnique.mockResolvedValue({ trading212Accounts: [] });
+    global.mockDb.findUserById.mockResolvedValue({ id: "user1" });
+    global.mockDb.findTradingAccountsByUserId.mockResolvedValue([]);
 
     const request = new NextRequest(
       "http://localhost:3000/api/trading212/optimized/account",
@@ -81,10 +73,9 @@ describe("Optimized Trading212 Account Route", () => {
 
   it("should handle database errors", async () => {
     const { getServerSession } = require("next-auth");
-    const { retryDatabaseOperation } = require("@/lib/prisma");
 
     getServerSession.mockResolvedValue({ user: { id: "user1" } });
-    retryDatabaseOperation.mockRejectedValue(new Error("Database error"));
+    global.mockDb.findUserById.mockRejectedValue(new Error("Database error"));
 
     const request = new NextRequest(
       "http://localhost:3000/api/trading212/optimized/account",
@@ -96,16 +87,15 @@ describe("Optimized Trading212 Account Route", () => {
 
   it("should handle API service errors", async () => {
     const { getServerSession } = require("next-auth");
-    const { prisma, retryDatabaseOperation } = require("@/lib/prisma");
     const {
       optimizedTrading212Service,
     } = require("@/lib/optimized-trading212");
 
     getServerSession.mockResolvedValue({ user: { id: "user1" } });
-    retryDatabaseOperation.mockImplementation((fn) => fn());
-    prisma.user.findUnique.mockResolvedValue({
-      trading212Accounts: [{ id: "acc1", apiKey: "key1", isDefault: true }],
-    });
+    global.mockDb.findUserById.mockResolvedValue({ id: "user1" });
+    global.mockDb.findTradingAccountsByUserId.mockResolvedValue([
+      { id: "acc1", apiKey: "key1", isDefault: true }
+    ]);
     optimizedTrading212Service.getAccount.mockRejectedValue(
       new Error("API error"),
     );

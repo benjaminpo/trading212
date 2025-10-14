@@ -52,7 +52,7 @@ export class Trading212API {
 
     this.api = axios.create({
       baseURL,
-      timeout: 3000, // 3 second timeout - ultra-aggressive for Hobby plan
+      timeout: 20000, // 20 second timeout - Trading212 API is extremely slow
       headers: {
         Authorization: `${apiKey}`,
         "Content-Type": "application/json",
@@ -99,7 +99,7 @@ export class Trading212API {
             const retryAfter = axiosError.response.headers?.["retry-after"];
             const waitTime = retryAfter
               ? parseInt(retryAfter) * 1000
-              : Math.min(Math.pow(2, attempt) * 500, 3000); // Max 3 seconds
+              : Math.min(Math.pow(2, attempt) * 1000, 10000); // Max 10 seconds for retries
 
             logger.info(
               `🔄 429 error on attempt ${attempt}. Waiting ${waitTime / 1000} seconds before retry...`,
@@ -168,32 +168,6 @@ export class Trading212API {
     });
   }
 
-  async createTrailingStopOrder(
-    ticker: string,
-    quantity: number,
-    trailAmount: number,
-    trailPercent?: number,
-  ): Promise<Trading212Order> {
-    if (!this.isPractice) {
-      throw new Error(
-        "Trail stop orders are only available in practice mode due to API limitations",
-      );
-    }
-
-    return this.makeRequestWithRetry(async () => {
-      const orderData = {
-        ticker,
-        quantity,
-        orderType: "STOP",
-        timeValidity: "GTC",
-        trailAmount,
-        ...(trailPercent && { trailPercent }),
-      };
-
-      const response = await this.api.post("/equity/orders", orderData);
-      return response.data;
-    });
-  }
 
   async cancelOrder(orderId: number): Promise<void> {
     return this.makeRequestWithRetry(async () => {

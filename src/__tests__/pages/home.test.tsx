@@ -85,7 +85,7 @@ describe("Home Page", () => {
     render(React.createElement(Home));
 
     expect(screen.getAllByText("AI Exit Strategies")[0]).toBeInTheDocument();
-    expect(screen.getAllByText("Trail Stop Loss")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Risk Management")[0]).toBeInTheDocument();
     expect(screen.getAllByText("P/L Analytics")[0]).toBeInTheDocument();
     expect(screen.getByText("Mobile Ready")).toBeInTheDocument();
   });

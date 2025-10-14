@@ -144,6 +144,7 @@ export class APIBatcher {
       `🔄 Executing batch for account ${accountId}: ${requestTypes.join(", ")}`,
     );
 
+    const batchStartTime = Date.now();
     try {
       // Execute all API calls for this account in parallel with individual timeouts
       const apiPromises = requestTypes.map(async (requestType) => {
@@ -169,13 +170,13 @@ export class APIBatcher {
           }
         })();
 
-        // 2 second timeout per API call (ultra-aggressive for Hobby plan)
+        // 15 second timeout per API call - matches Trading212API timeout with buffer
         return Promise.race([
           apiCallPromise,
           new Promise<never>((_, reject) =>
             setTimeout(
-              () => reject(new Error(`Timeout fetching ${requestType}`)),
-              2000,
+              () => reject(new Error(`Data fetch timeout: ${requestType} took longer than 15s`)),
+              15000,
             ),
           ),
         ]);
@@ -186,7 +187,11 @@ export class APIBatcher {
         .filter((result) => result.status === "fulfilled")
         .map((result) => (result as PromiseFulfilledResult<APIResult>).value);
 
-      // Cache successful results
+      // Cache successful results with extended TTL if requests took a long time
+      const batchEndTime = Date.now();
+      const batchDuration = batchEndTime - batchStartTime;
+      const isSlowAPI = batchDuration > 12000; // If batch took more than 12 seconds
+      
       for (const result of successfulResults) {
         const userId = requests[0].userId;
         await apiCache.set(
@@ -194,6 +199,8 @@ export class APIBatcher {
           accountId,
           result.type as "portfolio" | "account" | "orders" | "positions",
           result.data,
+          undefined,
+          isSlowAPI, // Use extended TTL if API was slow
         );
       }
 

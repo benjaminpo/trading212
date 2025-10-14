@@ -1,5 +1,8 @@
 import { GET } from "../../../../../app/api/trading212/optimized/multi-account/route";
 import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { retryDatabaseOperation } from "@/lib/prisma";
+import { optimizedTrading212Service } from "@/lib/optimized-trading212";
 
 // Mock dependencies
 jest.mock("next-auth", () => ({
@@ -26,15 +29,24 @@ jest.mock("@/lib/optimized-trading212", () => ({
   },
 }));
 
+// Type the mocked functions
+const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
+const mockRetryDatabaseOperation = retryDatabaseOperation as jest.MockedFunction<typeof retryDatabaseOperation>;
+const mockOptimizedTrading212Service = optimizedTrading212Service as jest.Mocked<typeof optimizedTrading212Service>;
+
 describe("Trading212 Multi-Account Route", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset all mocks to ensure clean state
+    mockGetServerSession.mockReset();
+    mockRetryDatabaseOperation.mockReset();
+    mockOptimizedTrading212Service.getMultiAccountData.mockReset();
+    mockOptimizedTrading212Service.getAggregatedAccountData.mockReset();
   });
 
   describe("GET /api/trading212/optimized/multi-account", () => {
     it("should handle unauthorized requests", async () => {
-      const { getServerSession } = require("next-auth");
-      getServerSession.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue(null);
 
       const request = new NextRequest(
         "http://localhost:3000/api/trading212/optimized/multi-account",
@@ -47,11 +59,8 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle user not found", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
-
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation.mockResolvedValue(null);
 
       const request = new NextRequest(
         "http://localhost:3000/api/trading212/optimized/multi-account",
@@ -64,11 +73,9 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle user with no Trading212 accounts", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation.mockResolvedValue({
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation.mockResolvedValue({
         id: "user1",
         trading212Accounts: [],
       });
@@ -87,21 +94,15 @@ describe("Trading212 Multi-Account Route", () => {
         todayPnL: 0,
         todayPnLPercent: 0,
         activePositions: 0,
-        trailStopOrders: 0,
         totalValue: 0,
         connectedAccounts: 0,
       });
     });
 
     it("should handle successful multi-account data retrieval without force refresh", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
-      const {
-        optimizedTrading212Service,
-      } = require("@/lib/optimized-trading212");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation
         .mockResolvedValueOnce({
           id: "user1",
           trading212Accounts: [
@@ -149,10 +150,10 @@ describe("Trading212 Multi-Account Route", () => {
         },
       };
 
-      optimizedTrading212Service.getMultiAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getMultiAccountData.mockResolvedValue(
         mockMultiAccountData,
       );
-      optimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
         mockAggregatedData,
       );
 
@@ -167,7 +168,7 @@ describe("Trading212 Multi-Account Route", () => {
       expect(data.aggregatedStats.totalPnL).toBe(700);
       expect(data.connected).toBe(true);
       expect(
-        optimizedTrading212Service.getMultiAccountData,
+        mockOptimizedTrading212Service.getMultiAccountData,
       ).toHaveBeenCalledWith(
         "user1",
         [
@@ -179,14 +180,9 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle successful multi-account data retrieval with force refresh", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
-      const {
-        optimizedTrading212Service,
-      } = require("@/lib/optimized-trading212");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation
         .mockResolvedValueOnce({
           id: "user1",
           trading212Accounts: [
@@ -199,8 +195,7 @@ describe("Trading212 Multi-Account Route", () => {
             },
           ],
         })
-        .mockResolvedValueOnce(2) // AI recommendations count
-        .mockResolvedValueOnce(1); // Trail stop orders count
+        .mockResolvedValueOnce(2); // AI recommendations count
 
       const mockMultiAccountData = [
         {
@@ -221,10 +216,10 @@ describe("Trading212 Multi-Account Route", () => {
         },
       };
 
-      optimizedTrading212Service.getMultiAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getMultiAccountData.mockResolvedValue(
         mockMultiAccountData,
       );
-      optimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
         mockAggregatedData,
       );
 
@@ -239,7 +234,7 @@ describe("Trading212 Multi-Account Route", () => {
       expect(data.aggregatedStats.totalPnL).toBe(500);
       expect(data.connected).toBe(true);
       expect(
-        optimizedTrading212Service.getMultiAccountData,
+        mockOptimizedTrading212Service.getMultiAccountData,
       ).toHaveBeenCalledWith(
         "user1",
         [{ id: "acc1", apiKey: "key1", isPractice: false, name: "Account 1" }],
@@ -248,14 +243,9 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle API errors", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
-      const {
-        optimizedTrading212Service,
-      } = require("@/lib/optimized-trading212");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation.mockResolvedValue({
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation.mockResolvedValue({
         id: "user1",
         trading212Accounts: [
           {
@@ -268,7 +258,7 @@ describe("Trading212 Multi-Account Route", () => {
         ],
       });
 
-      optimizedTrading212Service.getMultiAccountData.mockRejectedValue(
+      mockOptimizedTrading212Service.getMultiAccountData.mockRejectedValue(
         new Error("API Error"),
       );
 
@@ -283,11 +273,9 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle database errors", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation.mockRejectedValue(new Error("Database error"));
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation.mockRejectedValue(new Error("Database error"));
 
       const request = new NextRequest(
         "http://localhost:3000/api/trading212/optimized/multi-account",
@@ -300,14 +288,9 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle single account scenario", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
-      const {
-        optimizedTrading212Service,
-      } = require("@/lib/optimized-trading212");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation
         .mockResolvedValueOnce({
           id: "user1",
           trading212Accounts: [
@@ -320,8 +303,7 @@ describe("Trading212 Multi-Account Route", () => {
             },
           ],
         })
-        .mockResolvedValueOnce(2) // AI recommendations count
-        .mockResolvedValueOnce(1); // Trail stop orders count
+        .mockResolvedValueOnce(2); // AI recommendations count
 
       const mockMultiAccountData = [
         {
@@ -342,10 +324,10 @@ describe("Trading212 Multi-Account Route", () => {
         },
       };
 
-      optimizedTrading212Service.getMultiAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getMultiAccountData.mockResolvedValue(
         mockMultiAccountData,
       );
-      optimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
         mockAggregatedData,
       );
 
@@ -362,14 +344,9 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle accounts without default account", async () => {
-      const { getServerSession } = require("next-auth");
-      const { retryDatabaseOperation } = require("@/lib/prisma");
-      const {
-        optimizedTrading212Service,
-      } = require("@/lib/optimized-trading212");
 
-      getServerSession.mockResolvedValue({ user: { id: "user1" } });
-      retryDatabaseOperation
+      mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
+      mockRetryDatabaseOperation
         .mockResolvedValueOnce({
           id: "user1",
           trading212Accounts: [
@@ -417,10 +394,10 @@ describe("Trading212 Multi-Account Route", () => {
         },
       };
 
-      optimizedTrading212Service.getMultiAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getMultiAccountData.mockResolvedValue(
         mockMultiAccountData,
       );
-      optimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
+      mockOptimizedTrading212Service.getAggregatedAccountData.mockResolvedValue(
         mockAggregatedData,
       );
 
@@ -433,7 +410,7 @@ describe("Trading212 Multi-Account Route", () => {
       expect(response.status).toBe(200);
       expect(data.accounts).toHaveLength(2);
       expect(
-        optimizedTrading212Service.getMultiAccountData,
+        mockOptimizedTrading212Service.getMultiAccountData,
       ).toHaveBeenCalledWith(
         "user1",
         [

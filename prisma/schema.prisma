@@ -43,7 +43,6 @@ model User {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   trading212Accounts  Trading212Account[]
-  trailStopLossOrders TrailStopLossOrder[]
   tradingHistory      TradingHistory[]
   positions           Position[]
   aiRecommendations   AIRecommendation[]
@@ -74,21 +73,6 @@ model Trading212Account {
   @@unique([userId, name])
 }
 
-model TrailStopLossOrder {
-  id           String   @id @default(cuid())
-  userId       String
-  accountId    String?
-  symbol       String
-  quantity     Float
-  trailAmount  Float
-  trailPercent Float?
-  stopPrice    Float?
-  isActive     Boolean  @default(true)
-  isPractice   Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
 model Notification {
   id        String   @id @default(cuid())

@@ -1,5 +1,42 @@
 import "@testing-library/jest-dom";
 
+// Mock TextEncoder and TextDecoder for Node.js environment (required by pg library)
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Mock database module to prevent actual database connections in tests
+const mockDb = {
+  findUserById: jest.fn(),
+  findUserByEmail: jest.fn(),
+  createUser: jest.fn(),
+  findTradingAccountsByUserId: jest.fn(),
+  findTradingAccountById: jest.fn(),
+  createTradingAccount: jest.fn(),
+  findSessionByToken: jest.fn(),
+  createSession: jest.fn(),
+  deleteSession: jest.fn(),
+  findAccountByProvider: jest.fn(),
+  createAccount: jest.fn(),
+  findNotificationsByUserId: jest.fn(),
+  createNotification: jest.fn(),
+  findDailyPnLByUser: jest.fn(),
+  findDailyPnLByUserAndDate: jest.fn(),
+  upsertDailyPnL: jest.fn(),
+  countAIRecommendationsByUser: jest.fn(),
+  countTrailStopOrdersByUser: jest.fn(),
+};
+
+jest.mock("./src/lib/database", () => ({
+  db: mockDb,
+  dbRetry: jest.fn((fn) => fn()),
+  dbHealthCheck: jest.fn(),
+  dbClose: jest.fn(),
+}));
+
+// Export mockDb for use in tests
+global.mockDb = mockDb;
+
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
   useRouter: () => ({

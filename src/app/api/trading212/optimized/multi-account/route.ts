@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (user.trading212Accounts.length === 0) {
+    if (!user.trading212Accounts || user.trading212Accounts.length === 0) {
       return NextResponse.json({
         accounts: [],
         aggregatedStats: {
@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
           todayPnL: 0,
           todayPnLPercent: 0,
           activePositions: 0,
-          trailStopOrders: 0,
           totalValue: 0,
           connectedAccounts: 0,
         },
@@ -84,15 +83,6 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    // Get trail stop orders count
-    const trailStopCount = await retryDatabaseOperation(() =>
-      prisma.trailStopLossOrder.count({
-        where: {
-          userId: session.user.id,
-          isActive: true,
-        },
-      }),
-    );
 
     // Format response
     const response = {
@@ -107,7 +97,6 @@ export async function GET(request: NextRequest) {
       })),
       aggregatedStats: {
         ...aggregatedData.totalStats,
-        trailStopOrders: trailStopCount,
         aiRecommendations: aiCount,
         connectedAccounts: multiAccountData.filter(
           (result) => result.data && !result.error,
