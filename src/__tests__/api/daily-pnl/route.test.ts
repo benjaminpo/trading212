@@ -150,7 +150,9 @@ describe("/api/daily-pnl", () => {
       const mockSession = { user: { id: "user1" } };
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
-      global.mockDb.findDailyPnLByUser.mockRejectedValue(new Error("Database error"));
+      global.mockDb.findDailyPnLByUser.mockRejectedValue(
+        new Error("Database error"),
+      );
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl");
       const response = await GET(request);
@@ -333,7 +335,9 @@ describe("/api/daily-pnl", () => {
       mockOptimizedTrading212Service.getAccountData.mockResolvedValue(
         mockAccountData,
       );
-      global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(mockExistingRecord);
+      global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(
+        mockExistingRecord,
+      );
       global.mockDb.upsertDailyPnL.mockResolvedValue({
         ...mockExistingRecord,
         totalPnL: 1000,
@@ -460,7 +464,9 @@ describe("/api/daily-pnl", () => {
         mockAccountData,
       );
       global.mockDb.findDailyPnLByUserAndDate.mockResolvedValue(null);
-      global.mockDb.upsertDailyPnL.mockRejectedValue(new Error("Database error"));
+      global.mockDb.upsertDailyPnL.mockRejectedValue(
+        new Error("Database error"),
+      );
 
       const request = new NextRequest("http://localhost:3000/api/daily-pnl", {
         method: "POST",

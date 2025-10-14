@@ -94,7 +94,7 @@ describe("Optimized Trading212 Account Route", () => {
     getServerSession.mockResolvedValue({ user: { id: "user1" } });
     global.mockDb.findUserById.mockResolvedValue({ id: "user1" });
     global.mockDb.findTradingAccountsByUserId.mockResolvedValue([
-      { id: "acc1", apiKey: "key1", isDefault: true }
+      { id: "acc1", apiKey: "key1", isDefault: true },
     ]);
     optimizedTrading212Service.getAccount.mockRejectedValue(
       new Error("API error"),

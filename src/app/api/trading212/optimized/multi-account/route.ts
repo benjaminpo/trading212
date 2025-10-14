@@ -83,7 +83,6 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-
     // Format response
     const response = {
       accounts: multiAccountData.map((result) => ({

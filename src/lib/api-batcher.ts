@@ -175,7 +175,12 @@ export class APIBatcher {
           apiCallPromise,
           new Promise<never>((_, reject) =>
             setTimeout(
-              () => reject(new Error(`Data fetch timeout: ${requestType} took longer than 15s`)),
+              () =>
+                reject(
+                  new Error(
+                    `Data fetch timeout: ${requestType} took longer than 15s`,
+                  ),
+                ),
               15000,
             ),
           ),
@@ -191,7 +196,7 @@ export class APIBatcher {
       const batchEndTime = Date.now();
       const batchDuration = batchEndTime - batchStartTime;
       const isSlowAPI = batchDuration > 12000; // If batch took more than 12 seconds
-      
+
       for (const result of successfulResults) {
         const userId = requests[0].userId;
         await apiCache.set(

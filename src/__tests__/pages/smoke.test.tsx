@@ -71,7 +71,6 @@ describe("App pages smoke tests", () => {
     expect(document.body).toBeInTheDocument();
   });
 
-
   it("renders AI Recommendations page without crashing", async () => {
     const AIRecommendationsPage = (
       await import("@/app/ai-recommendations/page")

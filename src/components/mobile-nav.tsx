@@ -5,14 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  Menu,
-  Home,
-  BarChart3,
-  Brain,
-  Settings,
-  User,
-} from "lucide-react";
+import { Menu, Home, BarChart3, Brain, Settings, User } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import LogoutButton from "@/components/logout-button";
 import { cn } from "@/lib/utils";

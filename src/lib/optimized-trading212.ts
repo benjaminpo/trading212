@@ -149,36 +149,54 @@ export class OptimizedTrading212Service {
           openUntil: 0,
         };
         current.failures += 1;
-        
+
         // Be more tolerant of timeout errors vs other errors
-        const isTimeout = error instanceof Error && (
-          error.message.includes('timeout') || 
-          error.message.includes('Data fetch timeout') ||
-          error.message.includes('exceeded')
-        );
+        const isTimeout =
+          error instanceof Error &&
+          (error.message.includes("timeout") ||
+            error.message.includes("Data fetch timeout") ||
+            error.message.includes("exceeded"));
         const failureThreshold = isTimeout ? 5 : 3; // Allow more timeout failures
-        
+
         // Log the specific error type and timing
         const errorDuration = Date.now() - fetchStartTime;
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.info(`❌ Data fetch failed: ${errorDuration}ms (fetch: ${errorMessage.includes('15s') ? '15000ms+' : 'unknown'}) { error: '${isTimeout ? 'Data fetch timeout' : errorMessage}', accountId: '${accountId}'${isTimeout ? ', timeout: YES' : ''} }`);
-        
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        logger.info(
+          `❌ Data fetch failed: ${errorDuration}ms (fetch: ${errorMessage.includes("15s") ? "15000ms+" : "unknown"}) { error: '${isTimeout ? "Data fetch timeout" : errorMessage}', accountId: '${accountId}'${isTimeout ? ", timeout: YES" : ""} }`,
+        );
+
         if (current.failures >= failureThreshold) {
           // More reasonable - fail after multiple failures
           const openTime = isTimeout ? 45_000 : 30_000; // Longer timeout for timeout errors
           current.openUntil = Date.now() + openTime;
-          logger.info(`🔴 Circuit breaker opened for account ${accountId} (${current.failures} failures, ${isTimeout ? 'timeout' : 'other'} error)`);
-          
+          logger.info(
+            `🔴 Circuit breaker opened for account ${accountId} (${current.failures} failures, ${isTimeout ? "timeout" : "other"} error)`,
+          );
+
           // For timeout errors, try to get at least portfolio data in the background
           if (isTimeout && current.failures === failureThreshold) {
-            logger.info(`🔄 Starting background portfolio fetch for account ${accountId} due to repeated timeouts`);
+            logger.info(
+              `🔄 Starting background portfolio fetch for account ${accountId} due to repeated timeouts`,
+            );
             setImmediate(async () => {
               try {
-                await apiBatcher.request(userId, accountId, "portfolio", apiKey, isPractice);
-                logger.info(`✅ Background portfolio fetch succeeded for account ${accountId}`);
+                await apiBatcher.request(
+                  userId,
+                  accountId,
+                  "portfolio",
+                  apiKey,
+                  isPractice,
+                );
+                logger.info(
+                  `✅ Background portfolio fetch succeeded for account ${accountId}`,
+                );
               } catch (bgError) {
-                const bgErrorMessage = bgError instanceof Error ? bgError.message : String(bgError);
-                logger.info(`❌ Background portfolio fetch failed for account ${accountId}: ${bgErrorMessage}`);
+                const bgErrorMessage =
+                  bgError instanceof Error ? bgError.message : String(bgError);
+                logger.info(
+                  `❌ Background portfolio fetch failed for account ${accountId}: ${bgErrorMessage}`,
+                );
               }
             });
           }
@@ -208,15 +226,19 @@ export class OptimizedTrading212Service {
           logger.info(
             `📊 Composing response from cached portfolio data for account ${accountId} (${stalePortfolio.length} positions)`,
           );
-          
+
           // Calculate stats from portfolio data
           const totalValue = stalePortfolio.reduce(
             (sum, pos) => sum + (pos.quantity || 0) * (pos.currentPrice || 0),
             0,
           );
-          const totalPnL = stalePortfolio.reduce((sum, pos) => sum + (pos.ppl || 0), 0);
-          const totalPnLPercent = totalValue > 0 ? (totalPnL / (totalValue - totalPnL)) * 100 : 0;
-          
+          const totalPnL = stalePortfolio.reduce(
+            (sum, pos) => sum + (pos.ppl || 0),
+            0,
+          );
+          const totalPnLPercent =
+            totalValue > 0 ? (totalPnL / (totalValue - totalPnL)) * 100 : 0;
+
           const composedData: OptimizedAccountData = {
             account: null,
             portfolio: stalePortfolio,
@@ -233,9 +255,9 @@ export class OptimizedTrading212Service {
             lastUpdated: new Date().toISOString(),
             cacheHit: true,
             stale: true,
-            warning: "Serving portfolio data from cache due to API timeout"
+            warning: "Serving portfolio data from cache due to API timeout",
           };
-          
+
           return composedData;
         }
 
@@ -517,8 +539,10 @@ export class OptimizedTrading212Service {
       );
     } catch (err) {
       // Compose from stale pieces if available - improved fallback logic
-      logger.info(`🔄 API batch failed, attempting to compose from cached pieces for account ${accountId}`);
-      
+      logger.info(
+        `🔄 API batch failed, attempting to compose from cached pieces for account ${accountId}`,
+      );
+
       const staleAccount = await apiCache.getStale<Trading212Account | null>(
         userId,
         accountId,
@@ -539,16 +563,22 @@ export class OptimizedTrading212Service {
 
       // If we have at least portfolio data, we can compose a useful response
       if (stalePortfolio && stalePortfolio.length > 0) {
-        logger.info(`✅ Found cached portfolio data with ${stalePortfolio.length} positions for account ${accountId}`);
-        
+        logger.info(
+          `✅ Found cached portfolio data with ${stalePortfolio.length} positions for account ${accountId}`,
+        );
+
         // Calculate stats from portfolio data
         const totalValue = stalePortfolio.reduce(
           (sum, pos) => sum + (pos.quantity || 0) * (pos.currentPrice || 0),
           0,
         );
-        const totalPnL = stalePortfolio.reduce((sum, pos) => sum + (pos.ppl || 0), 0);
-        const totalPnLPercent = totalValue > 0 ? (totalPnL / (totalValue - totalPnL)) * 100 : 0;
-        
+        const totalPnL = stalePortfolio.reduce(
+          (sum, pos) => sum + (pos.ppl || 0),
+          0,
+        );
+        const totalPnLPercent =
+          totalValue > 0 ? (totalPnL / (totalValue - totalPnL)) * 100 : 0;
+
         batchedData = {
           account: staleAccount || null,
           portfolio: stalePortfolio,
@@ -562,11 +592,15 @@ export class OptimizedTrading212Service {
             todayPnLPercent: 0,
           },
         };
-        
-        logger.info(`📊 Composed response from cached data: ${stalePortfolio.length} positions, $${totalValue.toFixed(2)} total value`);
+
+        logger.info(
+          `📊 Composed response from cached data: ${stalePortfolio.length} positions, $${totalValue.toFixed(2)} total value`,
+        );
       } else if (staleAccount) {
         // If we only have account data, create minimal response
-        logger.info(`⚡ Found cached account data only for account ${accountId}`);
+        logger.info(
+          `⚡ Found cached account data only for account ${accountId}`,
+        );
         batchedData = {
           account: staleAccount,
           portfolio: [],
@@ -582,7 +616,9 @@ export class OptimizedTrading212Service {
         };
       } else {
         // No useful cached data available
-        logger.info(`❌ No useful cached data available for account ${accountId}`);
+        logger.info(
+          `❌ No useful cached data available for account ${accountId}`,
+        );
         throw err;
       }
     }

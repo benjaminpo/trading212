@@ -168,7 +168,6 @@ export class Trading212API {
     });
   }
 
-
   async cancelOrder(orderId: number): Promise<void> {
     return this.makeRequestWithRetry(async () => {
       await this.api.delete(`/equity/orders/${orderId}`);

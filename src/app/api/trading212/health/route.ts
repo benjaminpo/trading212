@@ -13,7 +13,7 @@ export async function GET() {
     // Test API health with a minimal request
     const testApiKey = process.env.TRADING212_TEST_API_KEY || "test-key";
     const trading212 = new Trading212API(testApiKey, true); // Use demo mode
-    
+
     const startTime = Date.now();
     let status = "unknown";
     let responseTime = 0;
@@ -24,10 +24,10 @@ export async function GET() {
       const result = await Promise.race([
         trading212.validateConnection(),
         new Promise<boolean>((_, reject) =>
-          setTimeout(() => reject(new Error("Health check timeout")), 5000)
+          setTimeout(() => reject(new Error("Health check timeout")), 5000),
         ),
       ]);
-      
+
       responseTime = Date.now() - startTime;
       status = result ? "healthy" : "degraded";
     } catch (err) {
@@ -42,14 +42,16 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       ...(error && { error }),
       recommendations: {
-        "healthy": "API is responding normally",
-        "degraded": "API is slow but functional - expect delays",
-        "unhealthy": "API is experiencing issues - serving cached data when possible"
+        healthy: "API is responding normally",
+        degraded: "API is slow but functional - expect delays",
+        unhealthy:
+          "API is experiencing issues - serving cached data when possible",
       }[status],
     };
 
-    const httpStatus = status === "healthy" ? 200 : status === "degraded" ? 200 : 503;
-    
+    const httpStatus =
+      status === "healthy" ? 200 : status === "degraded" ? 200 : 503;
+
     return NextResponse.json(healthStatus, { status: httpStatus });
   } catch (error) {
     console.error("Trading212 health check error:", error);

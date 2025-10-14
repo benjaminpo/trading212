@@ -138,7 +138,9 @@ export class APICache {
     useExtendedTTL: boolean = false,
   ): Promise<void> {
     const key = this.generateKey(userId, accountId, dataType, params);
-    const ttl = useExtendedTTL ? EXTENDED_CACHE_TTL[dataType] : CACHE_TTL[dataType];
+    const ttl = useExtendedTTL
+      ? EXTENDED_CACHE_TTL[dataType]
+      : CACHE_TTL[dataType];
 
     const entry: CacheEntry<T> = {
       data,
@@ -154,7 +156,9 @@ export class APICache {
     this.enforceMemoryLimit();
 
     const ttlMinutes = Math.round(ttl / (60 * 1000));
-    logger.info(`💾 Cache SET for ${dataType} (${accountId}): ${key} [TTL: ${ttlMinutes}m${useExtendedTTL ? ' extended' : ''}]`);
+    logger.info(
+      `💾 Cache SET for ${dataType} (${accountId}): ${key} [TTL: ${ttlMinutes}m${useExtendedTTL ? " extended" : ""}]`,
+    );
   }
 
   async invalidate(

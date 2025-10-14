@@ -724,7 +724,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-
             <Card className="group hover:shadow-xl hover:shadow-slate-500/20 transition-all duration-300 border border-slate-200/50 dark:border-slate-700/30 shadow-lg bg-gradient-to-br from-white via-slate-50/70 to-gray-100/80 dark:from-slate-800/95 dark:via-slate-900/30 dark:to-slate-950/40 backdrop-blur-sm hover:scale-105">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center text-slate-900 dark:text-slate-50 text-sm sm:text-base">

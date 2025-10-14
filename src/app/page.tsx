@@ -116,8 +116,7 @@ export default function Home() {
               <strong className="text-blue-600 dark:text-blue-400">
                 AI-powered exit strategies
               </strong>
-              , comprehensive P/L analytics,
-              and mobile-first design.
+              , comprehensive P/L analytics, and mobile-first design.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">

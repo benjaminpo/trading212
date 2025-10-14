@@ -69,7 +69,9 @@ describe("/api/notifications", () => {
   describe("GET /api/notifications", () => {
     it("should return notifications for authenticated user", async () => {
       mockedGetServerSession.mockResolvedValue(mockSession as any);
-      global.mockDb.findNotificationsByUserId.mockResolvedValue(mockNotifications);
+      global.mockDb.findNotificationsByUserId.mockResolvedValue(
+        mockNotifications,
+      );
 
       const request = new NextRequest("http://localhost/api/notifications");
       const response = await GET(request);
@@ -80,7 +82,7 @@ describe("/api/notifications", () => {
       expect(global.mockDb.findNotificationsByUserId).toHaveBeenCalledWith(
         "test-user-id",
         false,
-        50
+        50,
       );
     });
 
@@ -99,7 +101,7 @@ describe("/api/notifications", () => {
       expect(global.mockDb.findNotificationsByUserId).toHaveBeenCalledWith(
         "test-user-id",
         true,
-        50
+        50,
       );
     });
 
@@ -116,7 +118,7 @@ describe("/api/notifications", () => {
       expect(global.mockDb.findNotificationsByUserId).toHaveBeenCalledWith(
         "test-user-id",
         false,
-        10
+        10,
       );
     });
 
@@ -278,5 +280,4 @@ describe("/api/notifications", () => {
       expect(data).toEqual({ error: "Failed to create notification" });
     });
   });
-
 });

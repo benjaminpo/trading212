@@ -42,14 +42,14 @@ export async function GET(request: NextRequest) {
       retryDatabaseOperation(async () => {
         const userData = await db.findUserById(userId);
         if (!userData) return null;
-        
-        const accounts = accountId 
+
+        const accounts = accountId
           ? [await db.findTradingAccountById(accountId)].filter(Boolean)
           : await db.findTradingAccountsByUserId(userId, true);
-        
+
         return {
           id: userData.id,
-          trading212Accounts: accounts
+          trading212Accounts: accounts,
         };
       }),
       new Promise((_, reject) =>
@@ -137,24 +137,32 @@ export async function GET(request: NextRequest) {
 
     // If we have ANY cached data (even expired), serve it immediately unless forceRefresh
     if (cachedData && !forceRefresh) {
-      const cacheAge = Date.now() - new Date(cachedData.lastUpdated as string).getTime();
+      const cacheAge =
+        Date.now() - new Date(cachedData.lastUpdated as string).getTime();
       const thirtyMinutes = 30 * 60 * 1000;
-      
+
       // Serve cached data if it's less than 30 minutes old
       if (cacheAge < thirtyMinutes) {
-        console.log(`⚡ Serving cached data for account ${targetAccount.id} (age: ${Math.round(cacheAge/1000)}s)`);
-        
+        console.log(
+          `⚡ Serving cached data for account ${targetAccount.id} (age: ${Math.round(cacheAge / 1000)}s)`,
+        );
+
         // Always start background refresh (don't await) - fire and forget
         setImmediate(() => {
-          optimizedTrading212Service.getAccountData(
-            userId,
-            targetAccount.id,
-            targetAccount.apiKey,
-            targetAccount.isPractice,
-            includeOrders,
-          ).catch(error => {
-            console.log(`🔄 Background refresh failed for ${targetAccount.id}:`, error.message);
-          });
+          optimizedTrading212Service
+            .getAccountData(
+              userId,
+              targetAccount.id,
+              targetAccount.apiKey,
+              targetAccount.isPractice,
+              includeOrders,
+            )
+            .catch((error) => {
+              console.log(
+                `🔄 Background refresh failed for ${targetAccount.id}:`,
+                error.message,
+              );
+            });
         });
 
         return NextResponse.json({
@@ -168,7 +176,10 @@ export async function GET(request: NextRequest) {
           },
           cacheHit: true,
           stale: cacheAge > 5 * 60 * 1000, // Mark as stale if older than 5 minutes
-          warning: cacheAge > 5 * 60 * 1000 ? "Data may be outdated due to slow API" : undefined,
+          warning:
+            cacheAge > 5 * 60 * 1000
+              ? "Data may be outdated due to slow API"
+              : undefined,
         });
       }
     }
@@ -197,9 +208,9 @@ export async function GET(request: NextRequest) {
         error instanceof Error ? error.message : String(error);
       const fetchTime = Date.now() - dataFetchStart;
       const totalTime = Date.now() - startTime;
-      
+
       console.log(
-        `❌ Data fetch failed: ${totalTime}ms (fetch: ${fetchTime}ms) { error: '${errorMessage}', accountId: '${targetAccount.id}', timeout: ${errorMessage.includes('timeout') ? 'YES' : 'NO'} }`,
+        `❌ Data fetch failed: ${totalTime}ms (fetch: ${fetchTime}ms) { error: '${errorMessage}', accountId: '${targetAccount.id}', timeout: ${errorMessage.includes("timeout") ? "YES" : "NO"} }`,
       );
 
       // Try to serve stale data if available (even if cache is expired)
@@ -234,7 +245,9 @@ export async function GET(request: NextRequest) {
           };
         } else {
           // LAST RESORT: No stale data available - provide minimal response
-          console.log(`🚨 No cached data available for account ${targetAccount.id}, providing minimal response`);
+          console.log(
+            `🚨 No cached data available for account ${targetAccount.id}, providing minimal response`,
+          );
           return NextResponse.json(
             {
               error: "Trading212 API is temporarily unavailable",
@@ -270,7 +283,9 @@ export async function GET(request: NextRequest) {
         }
       } catch (_staleError) {
         void _staleError; // explicit ignore
-        console.log(`🚨 Cache error for account ${targetAccount.id}, providing minimal response`);
+        console.log(
+          `🚨 Cache error for account ${targetAccount.id}, providing minimal response`,
+        );
         return NextResponse.json(
           {
             error: "Trading212 service temporarily unavailable",

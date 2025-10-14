@@ -33,34 +33,42 @@ export async function POST(_request: NextRequest) {
       const accounts = await db.findTradingAccountsByUserId(userId, true);
       return {
         id: userData.id,
-        trading212Accounts: accounts as unknown as Trading212Account[]
+        trading212Accounts: accounts as unknown as Trading212Account[],
       };
     });
 
     if (!user || user.trading212Accounts.length === 0) {
       return NextResponse.json(
         { error: "No Trading212 accounts found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     const warmingPromises = user.trading212Accounts.map(async (account) => {
       try {
-        console.log(`🔥 Warming cache for account ${account.id} (${account.name})`);
-        
+        console.log(
+          `🔥 Warming cache for account ${account.id} (${account.name})`,
+        );
+
         // Start cache warming in background (don't await)
         setImmediate(() => {
-          optimizedTrading212Service.getAccountData(
-            userId,
-            account.id,
-            account.apiKey,
-            account.isPractice,
-            false, // Don't include orders for warming
-          ).then(() => {
-            console.log(`✅ Cache warmed for account ${account.id}`);
-          }).catch(error => {
-            console.log(`❌ Cache warming failed for ${account.id}:`, error.message);
-          });
+          optimizedTrading212Service
+            .getAccountData(
+              userId,
+              account.id,
+              account.apiKey,
+              account.isPractice,
+              false, // Don't include orders for warming
+            )
+            .then(() => {
+              console.log(`✅ Cache warmed for account ${account.id}`);
+            })
+            .catch((error) => {
+              console.log(
+                `❌ Cache warming failed for ${account.id}:`,
+                error.message,
+              );
+            });
         });
 
         return {
@@ -84,14 +92,13 @@ export async function POST(_request: NextRequest) {
       message: "Cache warming initiated",
       accounts: results,
       total: results.length,
-      initiated: results.filter(r => r.status === "warming_started").length,
+      initiated: results.filter((r) => r.status === "warming_started").length,
     });
-
   } catch (error) {
     console.error("Cache warming error:", error);
     return NextResponse.json(
       { error: "Failed to initiate cache warming" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -104,4 +111,3 @@ export async function GET() {
     usage: "POST to this endpoint to warm caches for all accounts",
   });
 }
-

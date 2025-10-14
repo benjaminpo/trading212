@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "50");
 
     const notifications = await retryDatabaseOperation(() =>
-      db.findNotificationsByUserId(session.user.id, unreadOnly, limit)
+      db.findNotificationsByUserId(session.user.id, unreadOnly, limit),
     );
 
     return NextResponse.json({ notifications });
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         title,
         message,
         data: data ? JSON.stringify(data) : undefined,
-      })
+      }),
     );
 
     logger.info(
@@ -73,4 +73,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

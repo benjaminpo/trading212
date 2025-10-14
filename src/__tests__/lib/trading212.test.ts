@@ -235,7 +235,6 @@ describe("Trading212API", () => {
     });
   });
 
-
   describe("cancelOrder", () => {
     beforeEach(() => {
       trading212API = new Trading212API(mockApiKey);

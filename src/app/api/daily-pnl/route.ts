@@ -78,9 +78,9 @@ export async function GET(request: NextRequest) {
     // Check if DailyPnL table exists, if not return empty data
     let dailyPnL: DailyPnLRecord[] = [];
     try {
-      dailyPnL = await retryDatabaseOperation(() =>
-        db.findDailyPnLByUser(session.user.id, days)
-      ) as unknown as DailyPnLRecord[];
+      dailyPnL = (await retryDatabaseOperation(() =>
+        db.findDailyPnLByUser(session.user.id, days),
+      )) as unknown as DailyPnLRecord[];
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -159,14 +159,14 @@ export async function POST(request: NextRequest) {
     const user = await retryDatabaseOperation(async () => {
       const userData = await db.findUserById(session.user.id);
       if (!userData) return null;
-      
-      const accounts = accountId 
+
+      const accounts = accountId
         ? [await db.findTradingAccountById(accountId)].filter(Boolean)
         : await db.findTradingAccountsByUserId(session.user.id, true);
-      
+
       return {
         ...userData,
-        trading212Accounts: accounts as unknown as Trading212Account[]
+        trading212Accounts: accounts as unknown as Trading212Account[],
       };
     });
 
@@ -232,9 +232,9 @@ export async function POST(request: NextRequest) {
               cash: accountData.account?.cash || undefined,
               currency: accountData.account?.currencyCode || "USD",
               positions: accountData.stats.activePositions || 0,
-            })
+            }),
           );
-          
+
           results.push({
             accountId: account.id,
             action: "upserted",

@@ -30,9 +30,13 @@ jest.mock("@/lib/optimized-trading212", () => ({
 }));
 
 // Type the mocked functions
-const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
-const mockRetryDatabaseOperation = retryDatabaseOperation as jest.MockedFunction<typeof retryDatabaseOperation>;
-const mockOptimizedTrading212Service = optimizedTrading212Service as jest.Mocked<typeof optimizedTrading212Service>;
+const mockGetServerSession = getServerSession as jest.MockedFunction<
+  typeof getServerSession
+>;
+const mockRetryDatabaseOperation =
+  retryDatabaseOperation as jest.MockedFunction<typeof retryDatabaseOperation>;
+const mockOptimizedTrading212Service =
+  optimizedTrading212Service as jest.Mocked<typeof optimizedTrading212Service>;
 
 describe("Trading212 Multi-Account Route", () => {
   beforeEach(() => {
@@ -73,7 +77,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle user with no Trading212 accounts", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation.mockResolvedValue({
         id: "user1",
@@ -100,7 +103,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle successful multi-account data retrieval without force refresh", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation
         .mockResolvedValueOnce({
@@ -180,7 +182,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle successful multi-account data retrieval with force refresh", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation
         .mockResolvedValueOnce({
@@ -243,7 +244,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle API errors", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation.mockResolvedValue({
         id: "user1",
@@ -273,7 +273,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle database errors", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation.mockRejectedValue(new Error("Database error"));
 
@@ -288,7 +287,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle single account scenario", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation
         .mockResolvedValueOnce({
@@ -344,7 +342,6 @@ describe("Trading212 Multi-Account Route", () => {
     });
 
     it("should handle accounts without default account", async () => {
-
       mockGetServerSession.mockResolvedValue({ user: { id: "user1" } });
       mockRetryDatabaseOperation
         .mockResolvedValueOnce({
