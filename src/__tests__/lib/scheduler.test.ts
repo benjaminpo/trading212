@@ -24,11 +24,6 @@ jest.mock("@/lib/prisma", () => ({
     aIAnalysisLog: {
       create: jest.fn(),
     },
-    dailyPnL: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-    },
   },
 }));
 
@@ -230,10 +225,6 @@ describe("DailyAnalysisScheduler", () => {
         {},
         10000,
       );
-      (mockedPrisma.dailyPnL.findUnique as jest.Mock).mockResolvedValue(null);
-      (mockedPrisma.dailyPnL.create as jest.Mock).mockResolvedValue({}, 10000);
-      (mockedPrisma.dailyPnL.update as jest.Mock).mockResolvedValue({}, 10000);
-
       // Mock optimizedTrading212Service
       const {
         optimizedTrading212Service,

@@ -105,10 +105,7 @@ export class DailyAnalysisScheduler {
 
       for (const user of users) {
         try {
-          // Capture daily P/L snapshots first
-          await this.captureDailyPnLSnapshots(user.id, user.trading212Accounts);
-
-          // Then analyze positions for each active account
+          // Analyze positions for each active account
           if (
             user.trading212Accounts &&
             Array.isArray(user.trading212Accounts)
@@ -431,126 +428,6 @@ export class DailyAnalysisScheduler {
       account.apiKey,
       account.isPractice,
     );
-  }
-
-  private async captureDailyPnLSnapshots(
-    userId: string,
-    accounts:
-      | { id: string; name: string; apiKey: string; isPractice: boolean }[]
-      | null,
-  ) {
-    logger.info(`📊 Capturing daily P/L snapshots for user ${userId}`);
-
-    if (!accounts || !Array.isArray(accounts)) {
-      logger.info(
-        `⚠️ No accounts provided for user ${userId}, skipping daily P/L capture`,
-      );
-      return;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of day
-
-    for (const account of accounts) {
-      try {
-        // Check rate limiting
-        if (!optimizedTrading212Service.canMakeRequest(userId, account.id)) {
-          logger.info(
-            `⏳ Rate limited for account ${account.id}, skipping daily P/L capture`,
-          );
-          continue;
-        }
-
-        // Get current account data
-        const accountData = await optimizedTrading212Service.getAccountData(
-          userId,
-          account.id,
-          account.apiKey,
-          account.isPractice,
-        );
-
-        if (!accountData.account) {
-          logger.info(
-            `⚠️ Account ${account.id} not connected, skipping daily P/L capture`,
-          );
-          continue;
-        }
-
-        // Check if we already have data for today
-        let existingRecord = null;
-        try {
-          existingRecord = await prisma.dailyPnL.findUnique({
-            where: {
-              userId_accountId_date: {
-                userId,
-                accountId: account.id,
-                date: today,
-              },
-            },
-          });
-        } catch (error: unknown) {
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error";
-          logger.info(
-            "DailyPnL table not found, will create new record:",
-            errorMessage,
-          );
-        }
-
-        const dailyPnLData = {
-          userId,
-          accountId: account.id,
-          date: today,
-          totalPnL: accountData.stats.totalPnL || 0,
-          todayPnL: accountData.stats.todayPnL || 0,
-          totalValue: accountData.stats.totalValue || 0,
-          cash: accountData.account?.cash || null,
-          currency: accountData.account?.currencyCode || "USD",
-          positions: accountData.stats.activePositions || 0,
-        };
-
-        if (existingRecord) {
-          // Update existing record
-          try {
-            await prisma.dailyPnL.update({
-              where: { id: existingRecord.id },
-              data: dailyPnLData,
-            });
-            logger.info(`📊 Updated daily P/L for account ${account.name}`);
-          } catch (error: unknown) {
-            const errorMessage =
-              error instanceof Error ? error.message : "Unknown error";
-            logger.info("Failed to update daily P/L record:", errorMessage);
-          }
-        } else {
-          // Create new record
-          try {
-            await prisma.dailyPnL.create({
-              data: dailyPnLData,
-            });
-            logger.info(
-              `📊 Created daily P/L snapshot for account ${account.name}`,
-            );
-          } catch (error: unknown) {
-            const errorMessage =
-              error instanceof Error ? error.message : "Unknown error";
-            logger.info("Failed to create daily P/L record:", errorMessage);
-          }
-        }
-
-        logger.info(
-          `📊 Daily P/L captured for account ${account.name}: Total P/L: ${dailyPnLData.totalPnL}, Today P/L: ${dailyPnLData.todayPnL}`,
-        );
-
-        // Add delay between accounts to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-      } catch (error: unknown) {
-        console.error(
-          `Error capturing daily P/L for account ${account.id}:`,
-          error,
-        );
-      }
-    }
   }
 }
 

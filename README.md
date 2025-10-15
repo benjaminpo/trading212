@@ -151,7 +151,6 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 
 ### Portfolio Management
 
-- `GET /api/daily-pnl` - Get daily P/L data
 - `GET /api/notifications` - Get user notifications
 - `POST /api/notifications` - Create notifications
 

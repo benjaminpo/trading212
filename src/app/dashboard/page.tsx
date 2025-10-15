@@ -32,7 +32,6 @@ import { Badge } from "@/components/ui/badge";
 import AccountSelector from "@/components/account-selector";
 import NotificationBell from "@/components/notification-bell";
 import MobileNav from "@/components/mobile-nav";
-import DailyPnLChart from "@/components/daily-pnl-chart";
 import { formatCurrency } from "@/lib/currency";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -748,26 +747,6 @@ export default function Dashboard() {
                 </Link>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Daily P/L Chart */}
-          <div className="mt-8">
-            {dataLoading ? (
-              <Card className="p-6">
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex flex-col items-center space-y-4">
-                    <Spinner size="xl" variant="primary" />
-                    <p className="text-sm text-muted-foreground">
-                      Loading chart data...
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <DailyPnLChart
-                selectedAccountId={selectedAccountId || undefined}
-              />
-            )}
           </div>
 
           {/* AI Recommendations Preview */}

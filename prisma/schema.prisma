@@ -47,7 +47,6 @@ model User {
   positions           Position[]
   aiRecommendations   AIRecommendation[]
   aiAnalysisLogs      AIAnalysisLog[]
-  dailyPnL            DailyPnL[]
   accounts            Account[]
   notifications       Notification[]
   sessions            Session[]
@@ -166,21 +165,3 @@ model MarketData {
   lastUpdated   DateTime @default(now())
 }
 
-model DailyPnL {
-  id            String   @id @default(cuid())
-  userId        String
-  accountId     String?
-  date          DateTime @db.Date
-  totalPnL      Float
-  todayPnL      Float
-  totalValue    Float
-  cash          Float?
-  currency      String   @default("USD")
-  positions     Int      @default(0)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  @@unique([userId, accountId, date])
-  @@index([userId, date])
-}

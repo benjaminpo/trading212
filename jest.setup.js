@@ -20,9 +20,6 @@ const mockDb = {
   createAccount: jest.fn(),
   findNotificationsByUserId: jest.fn(),
   createNotification: jest.fn(),
-  findDailyPnLByUser: jest.fn(),
-  findDailyPnLByUserAndDate: jest.fn(),
-  upsertDailyPnL: jest.fn(),
   countAIRecommendationsByUser: jest.fn(),
   countTrailStopOrdersByUser: jest.fn(),
 };

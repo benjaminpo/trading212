@@ -374,62 +374,6 @@ export const db = {
     return result.rows[0];
   },
 
-  // DailyPnL operations
-  async findDailyPnLByUser(userId: string, days: number = 30) {
-    const result = await query(
-      `SELECT * FROM "DailyPnL" 
-       WHERE "userId" = $1 AND date >= CURRENT_DATE - INTERVAL '${days} days'
-       ORDER BY date DESC`,
-      [userId],
-    );
-    return result.rows;
-  },
-
-  async upsertDailyPnL(pnlData: {
-    userId: string;
-    accountId?: string;
-    date: Date;
-    totalPnL: number;
-    todayPnL: number;
-    totalValue: number;
-    cash?: number;
-    currency?: string;
-    positions?: number;
-  }) {
-    const id = generateId();
-    const now = new Date();
-
-    const result = await query(
-      `INSERT INTO "DailyPnL" (id, "userId", "accountId", date, "totalPnL", "todayPnL", "totalValue", cash, currency, positions, "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-       ON CONFLICT ("userId", "accountId", date) 
-       DO UPDATE SET 
-         "totalPnL" = EXCLUDED."totalPnL",
-         "todayPnL" = EXCLUDED."todayPnL", 
-         "totalValue" = EXCLUDED."totalValue",
-         cash = EXCLUDED.cash,
-         currency = EXCLUDED.currency,
-         positions = EXCLUDED.positions,
-         "updatedAt" = EXCLUDED."updatedAt"
-       RETURNING *`,
-      [
-        id,
-        pnlData.userId,
-        pnlData.accountId || null,
-        pnlData.date,
-        pnlData.totalPnL,
-        pnlData.todayPnL,
-        pnlData.totalValue,
-        pnlData.cash || null,
-        pnlData.currency || "USD",
-        pnlData.positions || 0,
-        now,
-        now,
-      ],
-    );
-    return result.rows[0];
-  },
-
   // AI Recommendation operations
   async countAIRecommendationsByUser(
     userId: string,
